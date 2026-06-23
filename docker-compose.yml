@@ -1,0 +1,60 @@
+services:
+  web:
+    build: .
+    container_name: rinconsuizo-web
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - .:/var/www/html
+      - ./sistema/fotos:/var/www/html/sistema/fotos
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-rinconsuizo}
+      DB_PASS: ${MYSQL_PASSWORD:-rinconsuizo_secret}
+      DB_NAME: ${MYSQL_DATABASE:-rinconsuizo}
+      DB_NAME_ECOMMERCE: ${MYSQL_DATABASE_ECOMMERCE:-rinconsuizo}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mariadb:10.6
+    container_name: rinconsuizo-db
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-rinconsuizo}
+      MYSQL_USER: ${MYSQL_USER:-rinconsuizo}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-rinconsuizo_secret}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./rinconsuizo.sql:/docker-entrypoint-initdb.d/01-rinconsuizo.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:5-apache
+    container_name: rinconsuizo-phpmyadmin
+    ports:
+      - "${PHPMYADMIN_PORT:-8081}:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret}
+      UPLOAD_LIMIT: 64M
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db_data:

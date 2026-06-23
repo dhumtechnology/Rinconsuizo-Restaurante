@@ -1,0 +1,35 @@
+# Entorno local / Docker
+.env
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs y temporales
+*.log
+*.tmp
+*.bak
+
+# Dependencias (si se añaden en el futuro)
+vendor/
+node_modules/
+
+# Docker (volúmenes locales, no commitear datos)
+docker/mysql/data/
+
+# Archivos sensibles
+*.pem
+*.key
+credentials.json
+
+# Backups generados en runtime
+sistema/backups/
+*.sql.gz
