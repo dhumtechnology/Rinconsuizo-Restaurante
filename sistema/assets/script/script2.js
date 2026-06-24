@@ -1015,6 +1015,10 @@ $.ajax({
                 $("#salas-mesas").load("salas-mesas.php?prod_categorias=si");           
                 $('#recibemesa').empty();
                 $('#recibemesa').append(''+response+'').fadeIn("slow");
+                $('#panel-carrito-orden').show();
+                if ($('#carrito tbody').length && $('#carrito tbody tr').length === 0) {
+                    $('#carrito tbody').html('<tr><td colspan="4"><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td></tr>');
+                }
            }
       });
 }

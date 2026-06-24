@@ -267,6 +267,7 @@ $('document').ready(function(){
   $('#mostrar-mesa').click(function(){
 
   $("#error").html("");
+  $("#panel-carrito-orden").hide();
   $("#salas-mesas").load("funciones.php?MesasPanel=si", function() {
       if (typeof actualizarTimersMesas === 'function') {
           actualizarTimersMesas();

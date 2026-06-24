@@ -626,4 +626,36 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
     return ob_get_clean();
 }
 
+function renderCarritoMesaTabla()
+{
+    ob_start();
+    ?>
+<div class="panel panel-info mesa-carrito-panel" style="margin-bottom:0;">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-shopping-cart"></i> Orden en curso</h3>
+    </div>
+    <div class="panel-body" style="padding:8px;">
+        <div class="table-responsive" data-pattern="priority-columns">
+            <table id="carrito" class="table table-small-font table-striped">
+                <thead>
+                    <tr style="background:#01ba9a;">
+                        <th style="color:#FFFFFF;">Cant.</th>
+                        <th style="color:#FFFFFF;">Producto</th>
+                        <th style="color:#FFFFFF;">Precio</th>
+                        <th style="color:#FFFFFF;">Acci&oacute;n</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4"><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+    <?php
+    return ob_get_clean();
+}
+
 ?>

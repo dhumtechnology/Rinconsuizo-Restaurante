@@ -530,23 +530,23 @@ for($i=0;$i<sizeof($reg);$i++){
             <h3 class="panel-title"><i class="fa fa-edit"></i> Control de Mesas/Productos</h3>
                                     </div>
                                     <div class="panel-body">
-                                        <div class="row">
-                                            <div class="col-sm-12 col-xs-12">
-                                                <div class="box-body">
-                                                   
-                                                    <div id="error">
-                                                        <!-- error will be shown here ! -->
-                                                    </div>
+                                        <div id="error">
+                                            <!-- error will be shown here ! -->
+                                        </div>
 
+        <div class="row" id="ventas-layout-row">
+            <div class="col-sm-8 col-xs-12" id="salas-mesas-col">
         <?php
         $tra = new Login();
         $caja = $tra->VerificaArqueo();
         ?>
+            </div>
+            <div class="col-sm-4 col-xs-12" id="panel-carrito-orden" style="display:none;">
+                <?php echo renderCarritoMesaTabla(); ?>
+            </div>
+        </div>
 
-                                                    </div>
-                                                </div>
-                                          </div>
-                                     </div>
+                                    </div>
                                 </div>
                             </div>
 

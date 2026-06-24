@@ -1889,25 +1889,6 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 <input type="hidden" name="existencia" id="existencia" placeholder="Existencia">
 <input type="hidden" name="cantidad" id="cantidad" value="1" placeholder="Cantidad">
 
-        <div class="row"> 
-          <div class="col-md-12"> 
-            <div class="table-responsive" data-pattern="priority-columns">
-              <table  id="carrito" class="table table-small-font table-striped">
-                <thead>
-<tr style="background:#01ba9a;">
-<th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Cantidad</div></h3></th>
-<th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Descripci&oacute;n de Producto</div></h3></th>
-<th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Precio</div></h3></th>
-<th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Acci&oacute;n</div></h3></th>
-</tr>
-                                </thead>
-                <tbody>
-                  <tr>
-<td colspan=4><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td>
-                  </tr>
-                </tbody>
-              </table>
-
               <table width="250" id="carritototal">
                 <tr>
 <td colspan=3><span class="Estilo9"><label>Total a Confirmar:</label></span></td>
@@ -1921,9 +1902,6 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 <input type="hidden" name="txtTotalCompra" id="txtTotalCompra" value="0.00"/></div></td>
                         </tr>
                     </table>
-              </div>
-            </div>
-          </div>
 
 <hr>
 
