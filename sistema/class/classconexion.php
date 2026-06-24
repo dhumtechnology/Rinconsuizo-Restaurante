@@ -21,7 +21,7 @@ class Db{
                 setlocale(LC_ALL,"es_VE.UTF-8","es_VE","esp");
 	
                 $conn = new PDO("mysql:host=".$this->dbHost.";dbname=".$this->dbName, $this->dbUsername, $this->dbPassword,
-				array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+				array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8, time_zone = '-04:00'"));
                 $conn -> setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $this->dbh = $conn;
             }catch(PDOException $e){

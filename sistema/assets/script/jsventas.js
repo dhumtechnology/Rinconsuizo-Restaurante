@@ -267,7 +267,11 @@ $('document').ready(function(){
   $('#mostrar-mesa').click(function(){
 
   $("#error").html("");
-  $("#salas-mesas").load("salas-mesas.php?salas_mesas=si");
+  $("#salas-mesas").load("funciones.php?MesasPanel=si", function() {
+      if (typeof actualizarTimersMesas === 'function') {
+          actualizarTimersMesas();
+      }
+  });
   $("#recibemesa").html("");
 
     var CarritoV = new Object();

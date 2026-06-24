@@ -363,7 +363,7 @@
                     <div class="row">
                         <div class="col-sm-12">
                             <div class="page-header-title">
-<h4 class="pull-left page-title"><i class="fa fa-tasks"></i> <?php echo $user = ( $_SESSION["acceso"] == 'cocinero' ? "Mostrador de Pedidos" : "Gestión de Ventas"); ?></h4>
+<h4 class="pull-left page-title"><i class="fa fa-tasks"></i> <?php echo $user = ( $_SESSION["acceso"] == 'cocinero' ? "Pedidos en Cocina" : "Gestión de Ventas"); ?></h4>
                                 <ol class="breadcrumb pull-right">
                                     <li><a href="panel">Inicio</a></li>
                                     <li class="active">Mostrador</li>
@@ -382,78 +382,14 @@
                <div class="col-sm-12">
                                 <div class="panel panel-primary">
                                     <div class="panel-heading">
-                                        <h3 class="panel-title"><i class="fa fa-desktop"></i> Mostrador de Pedidos</h3>
+                                        <h3 class="panel-title"><i class="fa fa-desktop"></i> Pedidos en Cocina</h3>
                                     </div>
                                     <div class="panel-body">
-                                        <div class="row">
-                                            <div class="col-sm-12 col-xs-12">
-                                                <div class="box-body">
-
-
-<div class="panel-body">
-<div id="datatable-responsive_wrapper" class="dataTables_wrapper form-inline dt-bootstrap no-footer">
-
-
-<div class="row">
-<div class="col-sm-12">
-
-
-       <div id="entrega"></div>
-
- <div id="pedidos"><div id="div1"><div class="table-responsive" data-pattern="priority-columns">
-                  <table id="tech-companies-1" class="table table-small-font table-bordered table-striped">
-                                                 <thead>
-                                                 <tr role="row">
-                                  <th>N°</th>
-                                  <th>Sala/Mesa</th>
-                                  <th>Cliente</th>
-                                  <th>Platillos</th>
-                                  <th>Observaciones</th>
-                                  <th>Status</th>
-                                  <th>Procesar</th>
-                              </tr>
-                                                 </thead>
-                                                 <tbody>
-<?php 
-$a=1;
-$mostrador = new Login();
-$reg = $mostrador->ListarMostrador(); 
-
-if($reg==""){
-
-    echo "";      
-    
-} else {
-
-for($i=0;$i<sizeof($reg);$i++){  
-?>
-                                               <tr role="row" class="odd">
-                                  <td class="sorting_1" tabindex="0"><?php echo $a++; ?></td>
-<td><?php echo $sala = ( $reg[$i]['codmesa'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nombresala']."<br>".$reg[$i]['nombremesa']); ?></td>
-
-<td><?php echo $cliente = ( $reg[$i]['cliente'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nomcliente']); ?></td>
-
-<td><?php echo "<span style='font-size:12px;'><strong>".$reg[$i]['detalles']."</strong></span>"; ?></td>
-
-<td><?php echo $observaciones = ( $reg[$i]['observaciones'] == '' ? "SIN OBSERVACIONES" : $reg[$i]['observaciones']); ?></td>
-
-<td><?php if($reg[$i]['cocinero']== '0') { echo "<span class='label label-success'><i class='fa fa-check'></i> ENTREGADA</span>"; } else { echo "<span class='label label-danger'><i class='fa fa-times'></i> PENDIENTE</span>"; } ?></td>
-                                               <td>
-<a href="#" class="btn btn-success btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Realizar Entrega" onClick="EntregarPedidos('<?php echo base64_encode($reg[$i]["codventa"]) ?>','<?php echo base64_encode($reg[$i]['nombresala']); ?>','<?php echo base64_encode($reg[$i]['nombremesa']); ?>','<?php echo base64_encode("ENTREGASPEDIDOS") ?>')"><i class="fa fa-refresh"></i></a>
-</td>
-                                               </tr>
-                                               <?php } } ?>
-                                               </tbody>
-</table></div></div></div>
-                                                 </div>
-                                             </div>
-                </div>
-        </div>
-</div>
-                                                </div>
-                                                <!-- /.box-body -->
-                                            </div>
+                                        <div id="entrega"></div>
+                                        <div class="row" id="salas-mesas-cocinero">
+<?php echo renderMesasPanelCocinero('padding:12px;margin:11px;float:left;width:90px;'); ?>
                                         </div>
+                                        <div id="recibemesa-cocinero"></div>
                                     </div>
                                 </div>
                             </div>
@@ -464,13 +400,18 @@ for($i=0;$i<sizeof($reg);$i++){
 
 <script type="text/javascript">
     $('document').ready(function() {
-    setTimeout(function run() {        
-        $("#pedidos").load("funciones.php?PedidosMostrador=si");
-        setTimeout(run, 2000);
-    }, 2000);
-                           
+    setTimeout(function run() {
+        if (typeof recargarMesasPanelCocinero === 'function') {
+            recargarMesasPanelCocinero(function() {
+                setTimeout(run, 3000);
+            });
+        } else {
+            setTimeout(run, 3000);
+        }
+    }, 3000);
 });
     </script>
+<script src="assets/script/mesas-timer.js"></script>
 
 <?php } elseif($_SESSION["acceso"] == 'repartidor'){ ?>
 
@@ -639,7 +580,7 @@ for($i=0;$i<sizeof($reg);$i++){
         <!-- jQuery  -->
         <script src="assets/pages/jquery.dashboard.js"></script>
         <script src="assets/plugins/noty/packaged/jquery.noty.packaged.min.js"></script>
-        
+        <script src="assets/script/mesas-timer.js"></script>
     </body>
 </html>
 <?php } else { ?>   

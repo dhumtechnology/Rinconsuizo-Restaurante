@@ -7,7 +7,7 @@ $tags = htmlentities($tags);
 return $tags;
 }
 
-#####CONTRASE—A DE-ENCRIPTAR
+#####CONTRASEùA DE-ENCRIPTAR
 
 function encrypt($string, $key) {
 		$result = ''; $key=$key.'2013';
@@ -41,10 +41,10 @@ function limpiarEntrada($texto) {
 	'@<script[^>]*?>.*?</script>@si',   // quitar javascript
 	'@<[\/\!]*?[^<>]*?>@si',            // quitar tags de HTML
 	'@<style[^>]*?>.*?</style>@siU',    // quitar estilos
-	'@<![\s\S]*?--[ \t\n\r]*>@'         // quitar comentarios multilÌnea
+	'@<![\s\S]*?--[ \t\n\r]*>@'         // quitar comentarios multilùnea
 	);
  
- 	//utilizamos la funciÛn preg_replace que busca en una cadena patrones para sustituir
+ 	//utilizamos la funciùn preg_replace que busca en una cadena patrones para sustituir
     $salida = preg_replace($busqueda, '', $texto);
     //devolvemos la cadena sin los patrones encontrados
     return $salida;
@@ -131,7 +131,7 @@ function generar_clave($longitud){
            0, $longitud); 
     }
 
-//MÈtodo con rand()
+//Mùtodo con rand()
 function GenerateRandomString($length = 10) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
@@ -142,7 +142,7 @@ function GenerateRandomString($length = 10) {
     return $randomString;
 } 
 
-//MÈtodo con str_shuffle() 
+//Mùtodo con str_shuffle() 
 function generateRandomString2($length = 10) { 
     return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length); 
 } 
@@ -273,39 +273,39 @@ function numtoletras($xcifra)
     for ($xz = 0; $xz < 3; $xz++) {
         $xaux = substr($XAUX, $xz * 6, 6);
         $xi = 0;
-        $xlimite = 6; // inicializo el contador de centenas xi y establezco el lÌmite a 6 dÌgitos en la parte entera
+        $xlimite = 6; // inicializo el contador de centenas xi y establezco el lùmite a 6 dùgitos en la parte entera
         $xexit = true; // bandera para controlar el ciclo del While
         while ($xexit) {
-            if ($xi == $xlimite) { // si ya llegÛ al lÌmite m·ximo de enteros
+            if ($xi == $xlimite) { // si ya llegù al lùmite mùximo de enteros
                 break; // termina el ciclo
             }
 
             $x3digitos = ($xlimite - $xi) * -1; // comienzo con los tres primeros digitos de la cifra, comenzando por la izquierda
-            $xaux = substr($xaux, $x3digitos, abs($x3digitos)); // obtengo la centena (los tres dÌgitos)
+            $xaux = substr($xaux, $x3digitos, abs($x3digitos)); // obtengo la centena (los tres dùgitos)
             for ($xy = 1; $xy < 4; $xy++) { // ciclo para revisar centenas, decenas y unidades, en ese orden
                 switch ($xy) {
                     case 1: // checa las centenas
-                        if (substr($xaux, 0, 3) < 100) { // si el grupo de tres dÌgitos es menor a una centena ( < 99) no hace nada y pasa a revisar las decenas
+                        if (substr($xaux, 0, 3) < 100) { // si el grupo de tres dùgitos es menor a una centena ( < 99) no hace nada y pasa a revisar las decenas
                             
                         } else {
                             $key = (int) substr($xaux, 0, 3);
-                            if (TRUE === array_key_exists($key, $xarray)){  // busco si la centena es n˙mero redondo (100, 200, 300, 400, etc..)
+                            if (TRUE === array_key_exists($key, $xarray)){  // busco si la centena es nùmero redondo (100, 200, 300, 400, etc..)
                                 $xseek = $xarray[$key];
-                                $xsub = subfijo($xaux); // devuelve el subfijo correspondiente (MillÛn, Millones, Mil o nada)
+                                $xsub = subfijo($xaux); // devuelve el subfijo correspondiente (Millùn, Millones, Mil o nada)
                                 if (substr($xaux, 0, 3) == 100)
                                     $xcadena = " " . $xcadena . " CIEN " . $xsub;
                                 else
                                     $xcadena = " " . $xcadena . " " . $xseek . " " . $xsub;
                                 $xy = 3; // la centena fue redonda, entonces termino el ciclo del for y ya no reviso decenas ni unidades
                             }
-                            else { // entra aquÌ si la centena no fue numero redondo (101, 253, 120, 980, etc.)
+                            else { // entra aquù si la centena no fue numero redondo (101, 253, 120, 980, etc.)
                                 $key = (int) substr($xaux, 0, 1) * 100;
                                 $xseek = $xarray[$key]; // toma el primer caracter de la centena y lo multiplica por cien y lo busca en el arreglo (para que busque 100,200,300, etc)
                                 $xcadena = " " . $xcadena . " " . $xseek;
                             } // ENDIF ($xseek)
                         } // ENDIF (substr($xaux, 0, 3) < 100)
                         break;
-                    case 2: // checa las decenas (con la misma lÛgica que las centenas)
+                    case 2: // checa las decenas (con la misma lùgica que las centenas)
                         if (substr($xaux, 1, 2) < 10) {
                             
                         } else {
@@ -350,7 +350,7 @@ function numtoletras($xcifra)
         if (substr(trim($xcadena), -7, 7) == "ILLONES") // si la cadena obtenida en MILLONES o BILLONES, entoncea le agrega al final la conjuncion DE
             $xcadena.= " DE";
 
-        // ----------- esta lÌnea la puedes cambiar de acuerdo a tus necesidades o a tu paÌs -------
+        // ----------- esta lùnea la puedes cambiar de acuerdo a tus necesidades o a tu paùs -------
         if (trim($xaux) != "") {
             switch ($xz) {
                 case 0:
@@ -378,7 +378,7 @@ function numtoletras($xcifra)
                     break;
             } // endswitch ($xz)
         } // ENDIF (trim($xaux) != "")
-        // ------------------      en este caso, para MÈxico se usa esta leyenda     ----------------
+        // ------------------      en este caso, para Mùxico se usa esta leyenda     ----------------
         $xcadena = str_replace("VEINTI ", "VEINTI", $xcadena); // quito el espacio para el VEINTI, para que quede: VEINTICUATRO, VEINTIUN, VEINTIDOS, etc
         $xcadena = str_replace("  ", " ", $xcadena); // quito espacios dobles
         $xcadena = str_replace("UN UN", "UN", $xcadena); // quito la duplicidad
@@ -393,7 +393,7 @@ function numtoletras($xcifra)
 // END FUNCTION
 
 function subfijo($xx)
-{ // esta funciÛn regresa un subfijo para la cifra
+{ // esta funciùn regresa un subfijo para la cifra
     $xx = trim($xx);
     $xstrlen = strlen($xx);
     if ($xstrlen == 1 || $xstrlen == 2 || $xstrlen == 3)
@@ -417,6 +417,213 @@ function getSubString($string, $length=NULL)
     if (strlen(strip_tags($string)) > $length)
         $stringDisplay .= '.';
     return $stringDisplay;
+}
+
+function renderEsperaBadge($fechapedido)
+{
+    if (empty($fechapedido) || $fechapedido === '0000-00-00 00:00:00') {
+        return '';
+    }
+    $inicioTs = strtotime($fechapedido);
+    if ($inicioTs === false || $inicioTs <= 0) {
+        return '';
+    }
+    return '<span class="mesa-espera" data-inicio-ts="' . (int) $inicioTs . '" style="display:inline-block;margin-top:3px;font-size:10px;background:#333;color:#fff;padding:2px 7px;border-radius:12px;line-height:1.4;"><i class="fa fa-clock-o"></i> <span class="mesa-espera-text">00:00</span></span>';
+}
+
+function renderMesaListItem($mesa, $imgStyle = 'display:inline;margin:18px;float:left;width:78px;height:65px;')
+{
+    $codmesaEnc = base64_encode($mesa['codmesa']);
+    $nombre = htmlspecialchars($mesa['nombremesa'], ENT_QUOTES, 'UTF-8');
+    $bg = ($mesa['statusmesa'] == '0') ? '#5cb85c' : 'red';
+    $timer = ($mesa['statusmesa'] == '1') ? renderEsperaBadge(isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '') : '';
+    ob_start();
+    ?>
+            <li style="display:inline;float: left; margin-right: 4px;">
+<div class="users-list-name codMesa" title="<?php echo $nombre; ?>" style="cursor:pointer;" onclick="RecibeMesa('<?php echo $codmesaEnc; ?>')">
+                    <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:<?php echo $bg; ?>" class="miMesa"><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
+                    <center><strong><?php echo $nombre; ?></strong><br><?php echo $timer; ?></center>
+                </div>
+            </li>
+    <?php
+    return ob_get_clean();
+}
+
+function renderMesasPanel($imgStyle = 'display:inline;margin:18px;float:left;width:78px;height:65px;')
+{
+    ob_start();
+    $sala = new Login();
+    $salas = $sala->ListarSalas();
+    if ($salas == "") {
+        echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> NO EXISTEN SALAS REGISTRADAS ACTUALMENTE</center></div>";
+        return ob_get_clean();
+    }
+    ?>
+                        <ul class="nav nav-tabs tabs">
+    <?php for ($i = 0; $i < sizeof($salas); $i++) { ?>
+    <li class="tab <?php echo $i === 0 ? 'active' : ''; ?>">
+        <a href="#<?php echo $salas[$i]['codsala'];?>" data-toggle="tab" aria-expanded="true" role="tab">
+        <span class="visible-xs" title="<?php echo htmlspecialchars($salas[$i]['nombresala']);?>"><i class="fa fa-building"></i></span>
+        <span class="hidden-xs"><?php echo htmlspecialchars($salas[$i]['nombresala']);?></span>
+        </a>
+    </li>
+    <?php } ?>
+</ul>
+<div class="tab-content">
+    <?php for ($i = 0; $i < sizeof($salas); $i++) {
+            $codigo_sala = $salas[$i]['codsala'];
+    ?>
+    <div class="tab-pane <?php echo $i === 0 ? 'active' : ''; ?>" id="<?php echo $codigo_sala;?>">
+        <p>
+        <ul class="users-list clearfix" id="listMesas">
+            <?php
+                $mesaObj = new Login();
+                $mesas = $mesaObj->ListarMesas();
+                if ($mesas == "") {
+                    echo "<div class='alert alert-danger'><center><span class='fa fa-info-circle'></span> NO EXISTEN MESAS REGISTRADAS EN LAS SALAS ACTUALMENTE</center></div>";
+                } else {
+                    for ($ii = 0; $ii < sizeof($mesas); $ii++) {
+                        if ($mesas[$ii]['codsala'] == $codigo_sala) {
+                            echo renderMesaListItem($mesas[$ii], $imgStyle);
+                        }
+                    }
+                }
+            ?>
+        </ul>
+        </p>
+    </div>
+    <?php } ?>
+</div>
+    <?php
+    return ob_get_clean();
+}
+
+function renderMesaListItemCocinero($mesa, $imgStyle = 'display:inline;margin:18px;float:left;width:78px;height:65px;')
+{
+    $codmesaEnc = base64_encode($mesa['codmesa']);
+    $nombre = htmlspecialchars($mesa['nombremesa'], ENT_QUOTES, 'UTF-8');
+    $pendientes = isset($mesa['pedidos_cocina']) ? (int) $mesa['pedidos_cocina'] : 0;
+    $bg = ($pendientes > 0) ? 'red' : '#5cb85c';
+    $timer = ($pendientes > 0) ? renderEsperaBadge(isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '') : '';
+    $badge = ($pendientes > 1) ? '<span class="label label-danger" style="position:absolute;top:0;right:0;border-radius:50%;padding:3px 6px;font-size:10px;">' . $pendientes . '</span>' : '';
+    ob_start();
+    ?>
+            <li style="display:inline;float: left; margin-right: 4px;">
+<div class="users-list-name codMesa" title="<?php echo $nombre; ?>" style="cursor:pointer;position:relative;" onclick="RecibeMesaCocinero('<?php echo $codmesaEnc; ?>')">
+                    <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:<?php echo $bg; ?>;position:relative;" class="miMesa"><?php echo $badge; ?><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
+                    <center><strong><?php echo $nombre; ?></strong><br><?php echo $timer; ?></center>
+                </div>
+            </li>
+    <?php
+    return ob_get_clean();
+}
+
+function renderDeliveryTileCocinero($deliveryInfo, $imgStyle = 'display:inline;margin:18px;float:left;width:78px;height:65px;')
+{
+    $count = isset($deliveryInfo['total']) ? (int) $deliveryInfo['total'] : 0;
+    if ($count <= 0) {
+        return '';
+    }
+    $codmesaEnc = base64_encode('0');
+    $timer = renderEsperaBadge(isset($deliveryInfo['fechapedido']) ? $deliveryInfo['fechapedido'] : '');
+    ob_start();
+    ?>
+            <li style="display:inline;float: left; margin-right: 4px;">
+<div class="users-list-name codMesa" title="Delivery" style="cursor:pointer;position:relative;" onclick="RecibeMesaCocinero('<?php echo $codmesaEnc; ?>')">
+                    <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:red;position:relative;" class="miMesa"><span class="label label-danger" style="position:absolute;top:0;right:0;border-radius:50%;padding:3px 6px;font-size:10px;"><?php echo $count; ?></span><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
+                    <center><strong>DELIVERY</strong><br><?php echo $timer; ?></center>
+                </div>
+            </li>
+    <?php
+    return ob_get_clean();
+}
+
+function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:left;width:78px;height:65px;')
+{
+    ob_start();
+    $sala = new Login();
+    $salas = $sala->ListarSalas();
+    $deliveryObj = new Login();
+    $deliveryInfo = $deliveryObj->ContarDeliveryCocina();
+    $deliveryCount = isset($deliveryInfo['total']) ? (int) $deliveryInfo['total'] : 0;
+
+    $mesaObj = new Login();
+    $mesas = $mesaObj->ListarMesasCocinero();
+    $pendientesPorSala = array();
+    $mesasPorSala = array();
+    if ($mesas != "") {
+        for ($ii = 0; $ii < sizeof($mesas); $ii++) {
+            $codsala = (string) $mesas[$ii]['codsala'];
+            $count = isset($mesas[$ii]['pedidos_cocina']) ? (int) $mesas[$ii]['pedidos_cocina'] : 0;
+            if (!isset($pendientesPorSala[$codsala])) {
+                $pendientesPorSala[$codsala] = 0;
+                $mesasPorSala[$codsala] = array();
+            }
+            $pendientesPorSala[$codsala] += $count;
+            $mesasPorSala[$codsala][] = $mesas[$ii];
+        }
+    }
+
+    if ($salas == "" && $deliveryCount == 0) {
+        echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> NO EXISTEN SALAS REGISTRADAS ACTUALMENTE</center></div>";
+        return ob_get_clean();
+    }
+    ?>
+                        <ul class="nav nav-tabs tabs" id="cocinero-tabs">
+    <?php if ($deliveryCount > 0) { ?>
+    <li class="tab">
+        <a href="#cocina-delivery" data-toggle="tab" aria-expanded="false" role="tab">
+        <span class="visible-xs" title="Delivery"><i class="fa fa-motorcycle"></i> <span class="label label-danger"><?php echo $deliveryCount; ?></span></span>
+        <span class="hidden-xs">Delivery <span class="label label-danger"><?php echo $deliveryCount; ?></span></span>
+        </a>
+    </li>
+    <?php } ?>
+    <?php for ($i = 0; $i < sizeof($salas); $i++) {
+            $codigoSala = (string) $salas[$i]['codsala'];
+            $countSala = isset($pendientesPorSala[$codigoSala]) ? (int) $pendientesPorSala[$codigoSala] : 0;
+    ?>
+    <li class="tab <?php echo $i === 0 ? 'active' : ''; ?>">
+        <a href="#cocina-sala-<?php echo $codigoSala;?>" data-toggle="tab" aria-expanded="<?php echo $i === 0 ? 'true' : 'false'; ?>" role="tab">
+        <span class="visible-xs" title="<?php echo htmlspecialchars($salas[$i]['nombresala']);?>"><i class="fa fa-building"></i><?php if ($countSala > 0) { ?> <span class="label label-danger"><?php echo $countSala; ?></span><?php } ?></span>
+        <span class="hidden-xs"><?php echo htmlspecialchars($salas[$i]['nombresala']); ?><?php if ($countSala > 0) { ?> <span class="label label-danger"><?php echo $countSala; ?></span><?php } ?></span>
+        </a>
+    </li>
+    <?php } ?>
+</ul>
+<div class="tab-content">
+    <?php if ($deliveryCount > 0) { ?>
+    <div class="tab-pane" id="cocina-delivery">
+        <p>
+        <ul class="users-list clearfix">
+            <?php echo renderDeliveryTileCocinero($deliveryInfo, $imgStyle); ?>
+        </ul>
+        </p>
+    </div>
+    <?php } ?>
+    <?php for ($i = 0; $i < sizeof($salas); $i++) {
+            $codigo_sala = (string) $salas[$i]['codsala'];
+            $mesasEnSala = isset($mesasPorSala[$codigo_sala]) ? $mesasPorSala[$codigo_sala] : array();
+            $countSala = isset($pendientesPorSala[$codigo_sala]) ? (int) $pendientesPorSala[$codigo_sala] : 0;
+    ?>
+    <div class="tab-pane <?php echo $i === 0 ? 'active' : ''; ?>" id="cocina-sala-<?php echo $codigo_sala;?>">
+        <p>
+        <ul class="users-list clearfix" id="listMesasCocinero">
+            <?php
+                if (empty($mesasEnSala)) {
+                    echo "<div class='alert alert-info'><center><span class='fa fa-info-circle'></span> NO HAY PEDIDOS EN ESTA SALA</center></div>";
+                } else {
+                    foreach ($mesasEnSala as $mesaItem) {
+                        echo renderMesaListItemCocinero($mesaItem, $imgStyle);
+                    }
+                }
+            ?>
+        </ul>
+        </p>
+    </div>
+    <?php } ?>
+</div>
+    <?php
+    return ob_get_clean();
 }
 
 ?>

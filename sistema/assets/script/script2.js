@@ -756,9 +756,17 @@ $.ajax({
             success: function(response) {            
                 $('#entrega').empty();
                 $('#entrega').append(''+response+'').fadeIn("slow");
-        $("#pedidos").load("funciones.php?PedidosMostrador=si");
+        if ($("#pedidos").length) {
+            $("#pedidos").load("funciones.php?PedidosMostrador=si");
+        }
+        if (typeof recargarMesasPanelCocinero === 'function') {
+            recargarMesasPanelCocinero(function() {
+                if (typeof cocineroMesaActual !== 'undefined' && cocineroMesaActual) {
+                    RecibeMesaCocinero(cocineroMesaActual);
+                }
+            });
+        }
         setTimeout(function() { $("#entrega").html(""); }, 5000);
-                $('#'+parent).remove();
            }
       });
    }
@@ -1007,9 +1015,37 @@ $.ajax({
                 $("#salas-mesas").load("salas-mesas.php?prod_categorias=si");           
                 $('#recibemesa').empty();
                 $('#recibemesa').append(''+response+'').fadeIn("slow");
-                $('#'+parent).remove();
            }
       });
+}
+
+// FUNCION PARA MOSTRAR PEDIDOS DE COCINA POR MESA
+var cocineroMesaActual = '';
+
+function RecibeMesaCocinero(codmesa){
+cocineroMesaActual = codmesa;
+
+$('#recibemesa-cocinero').html('<div class="progress"><div class="progress-bar progress-bar-primary progress-bar-striped active" role="progressbar" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100" style="width: 100%"><span class="sr-only">100% Complete</span></div></div>');
+
+var dataString = 'PedidoCocina=si&codmesa='+codmesa;
+
+$.ajax({
+            type: "GET",
+            url: "funciones.php",
+            data: dataString,
+            success: function(response) {
+                $('#recibemesa-cocinero').empty();
+                $('#recibemesa-cocinero').append(''+response+'').fadeIn("slow");
+                if (typeof actualizarTimersMesas === 'function') {
+                    actualizarTimersMesas();
+                }
+           }
+      });
+}
+
+function CocineroMostrarMesas(){
+cocineroMesaActual = '';
+$('#recibemesa-cocinero').html('');
 }
 
 // FUNCION PARA MOSTRAR FORMA DE PAGO PARA VENTAS

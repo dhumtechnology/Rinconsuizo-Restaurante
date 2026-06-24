@@ -1,7 +1,8 @@
 <?php
 ###### DORAINEGRETE - 29111988
-ini_set('memory_limit', '-1'); //evita el error Fatal error: Allowed memory size of X bytes exhausted (tried to allocate Y bytes)...
-ini_set('max_execution_time', 800); // es lo mismo que set_time_limit(300) ;
+ini_set('memory_limit', '-1');
+ini_set('max_execution_time', 800);
+date_default_timezone_set('America/Caracas');
 require_once("classconexion.php");
 session_start();
 include_once('funciones_basicas.php');
@@ -575,7 +576,7 @@ public function RegistrarUsuarios()
 				if (isset($_FILES['imagen']['name'])) { $nombre_archivo = $_FILES['imagen']['name']; } else { $nombre_archivo =''; }
 				if (isset($_FILES['imagen']['type'])) { $tipo_archivo = $_FILES['imagen']['type']; } else { $tipo_archivo =''; }
 				if (isset($_FILES['imagen']['size'])) { $tamano_archivo = $_FILES['imagen']['size']; } else { $tamano_archivo =''; }  
-//compruebo si las características del archivo son las que deseo  
+//compruebo si las caracter?sticas del archivo son las que deseo  
 				if ((strpos($tipo_archivo,'image/jpeg')!==false)&&$tamano_archivo<50000) 
 				{  
 					if (move_uploaded_file($_FILES['imagen']['tmp_name'], "fotos/".$nombre_archivo) && rename("fotos/".$nombre_archivo,"fotos/".$_POST["cedula"].".jpg"))
@@ -750,7 +751,7 @@ public function UsuariosPorId()
 					if (isset($_FILES['imagen']['name'])) { $nombre_archivo = $_FILES['imagen']['name']; } else { $nombre_archivo =''; }
 					if (isset($_FILES['imagen']['type'])) { $tipo_archivo = $_FILES['imagen']['type']; } else { $tipo_archivo =''; }
 					if (isset($_FILES['imagen']['size'])) { $tamano_archivo = $_FILES['imagen']['size']; } else { $tamano_archivo =''; }  
-//compruebo si las características del archivo son las que deseo  
+//compruebo si las caracter?sticas del archivo son las que deseo  
 					if ((strpos($tipo_archivo,'image/jpeg')!==false)&&$tamano_archivo<50000) 
 					{  
 						if (move_uploaded_file($_FILES['imagen']['tmp_name'], "fotos/".$nombre_archivo) && rename("fotos/".$nombre_archivo,"fotos/".$_POST["cedula"].".jpg"))
@@ -1128,7 +1129,10 @@ public function RegistrarMesas()
 public function ListarMesas()
 {
 	self::SetNames();
-	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala";
+	$this->p = array();
+	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
+		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS fechapedido
+		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -1137,6 +1141,37 @@ public function ListarMesas()
 	$this->dbh=null;
 }
 ############################ FUNCION PARA LISTAR MESAS ###########################
+
+############################ FUNCION PARA LISTAR MESAS (COCINERO) ###########################
+public function ListarMesasCocinero()
+{
+	self::SetNames();
+	$this->p = array();
+	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
+		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1') AS fechapedido,
+		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1') AS pedidos_cocina
+		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala";
+	foreach ($this->dbh->query($sql) as $row)
+	{
+		$this->p[] = $row;
+	}
+	return $this->p;
+	$this->dbh=null;
+}
+############################ FUNCION PARA LISTAR MESAS (COCINERO) ###########################
+
+############################ FUNCION CONTAR DELIVERY PENDIENTE EN COCINA ###########################
+public function ContarDeliveryCocina()
+{
+	self::SetNames();
+	$sql = "SELECT COUNT(*) AS total, MIN(fechaventa) AS fechapedido FROM ventas WHERE codmesa = '0' AND cocinero = '1'";
+	foreach ($this->dbh->query($sql) as $row)
+	{
+		return $row;
+	}
+	return array('total' => 0, 'fechapedido' => '');
+}
+############################ FUNCION CONTAR DELIVERY PENDIENTE EN COCINA ###########################
 
 
 ############################ FUNCION ID DE MESAS ###########################
@@ -2501,7 +2536,7 @@ public function ProveedoresPorId()
 			echo "1";
 			exit;
 		}
-        //Aquí es donde seleccionamos nuestro csv
+        //Aqu? es donde seleccionamos nuestro csv
          $fname = $_FILES['sel_file']['name'];
          //echo 'Cargando nombre del archivo: '.$fname.' ';
          $chk_ext = explode(".",$fname);
@@ -2937,7 +2972,7 @@ public function BuscarKardexIngrediente()
 			echo "1";
 			exit;
 		}
-        //Aquí es donde seleccionamos nuestro csv
+        //Aqu? es donde seleccionamos nuestro csv
          $fname = $_FILES['sel_file']['name'];
          //echo 'Cargando nombre del archivo: '.$fname.' ';
          $chk_ext = explode(".",$fname);
@@ -3136,7 +3171,7 @@ exit;
 			if (isset($_FILES['imagen']['name'])) { $nombre_archivo = $_FILES['imagen']['name']; } else { $nombre_archivo =''; }
 			if (isset($_FILES['imagen']['type'])) { $tipo_archivo = $_FILES['imagen']['type']; } else { $tipo_archivo =''; }
 			if (isset($_FILES['imagen']['size'])) { $tamano_archivo = $_FILES['imagen']['size']; } else { $tamano_archivo =''; } 
-//compruebo si las características del archivo son las que deseo  
+//compruebo si las caracter?sticas del archivo son las que deseo  
 			if ((strpos($tipo_archivo,'image/jpeg')!==false)&&$tamano_archivo<200000) 
 			{  
 				if (move_uploaded_file($_FILES['imagen']['tmp_name'], "fotos/".$nombre_archivo) && rename("fotos/".$nombre_archivo,"fotos/".$codproducto.".jpg"))
@@ -3430,7 +3465,7 @@ public function VerDetallesIngredientesProductos()
 		if (isset($_FILES['imagen']['name'])) { $nombre_archivo = $_FILES['imagen']['name']; } else { $nombre_archivo =''; }
 		if (isset($_FILES['imagen']['type'])) { $tipo_archivo = $_FILES['imagen']['type']; } else { $tipo_archivo =''; }
 		if (isset($_FILES['imagen']['size'])) { $tamano_archivo = $_FILES['imagen']['size']; } else { $tamano_archivo =''; } 
-//compruebo si las características del archivo son las que deseo  
+//compruebo si las caracter?sticas del archivo son las que deseo  
 		if ((strpos($tipo_archivo,'image/jpeg')!==false)&&$tamano_archivo<200000) 
 		{  
 			if (move_uploaded_file($_FILES['imagen']['tmp_name'], "fotos/".$nombre_archivo) && rename("fotos/".$nombre_archivo,"fotos/".$codproducto.".jpg"))
@@ -5754,7 +5789,7 @@ $config = $config->ConfiguracionPorId();
 
  <div id="carga-productos">  
 
-<!-- Aquí todo el código para producto --> 
+<!-- Aqu? todo el c?digo para producto --> 
 
 
          <div class="tabs-vertical-env">
@@ -5840,7 +5875,7 @@ echo "<img src='fotos/producto.png' class='img-circle' style='width:60px;height:
                         ?>
                    </div>
          </div>
-                                <!-- Fin de todo el código para productos -->
+                                <!-- Fin de todo el c?digo para productos -->
 
 </div>
                             </div><!-- /.box-body -->
@@ -6014,7 +6049,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 <label for="field-6" class="control-label">B&uacute;squeda de Cliente: <span class="symbol required"></span></label>
 			<div class="input-group">
     <input type="hidden" name="codcaja" id="codcaja" value="<?php echo $codcaja ?>">
-	<input type="hidden" name="cliente" id="cliente" value="">
+	<input type="hidden" name="cliente" id="cliente" value="0">
 	<input type="hidden" name="delivery" id="delivery" value="1">
 	<input type="hidden" name="tipo" id="tipo" value="1">
 	<input type="text" id="busquedacliente" name="busquedacliente" class="form-control" placeholder="B&uacute;squeda del Cliente">
@@ -6321,7 +6356,7 @@ if (strip_tags(isset($_POST['montodevuelto']))) { $montodevuelto = strip_tags($_
 if (strip_tags(isset($_POST['fechavencecredito']))) { $fechavencecredito = strip_tags(date("Y-m-d",strtotime($_POST['fechavencecredito']))); } else { $fechavencecredito =''; }
 if (strip_tags($_POST["tipopagove"]=="CONTADO")) { $statusventa = strip_tags("PAGADA"); } else { $statusventa = "PENDIENTE"; }
 					$statuspago = "0";
-					$fechaventa = strip_tags(date("Y-m-d h:i:s"));
+					$fechaventa = strip_tags(date("Y-m-d H:i:s"));
 					$codigo = strip_tags($_SESSION["codigo"]);
 					$cocinero = strip_tags('1');
 					$delivery = strip_tags($_POST["delivery"]);
@@ -6643,102 +6678,12 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 		{
 			?>
 
-	<!-- Aquí todo el código para mesas y sillas -->                                         
+	<!-- Aqu? todo el c?digo para mesas y sillas -->                                         
 
                                                     <div class="row" id="salas-mesas">
-                                                    
-                        <ul class="nav nav-tabs tabs">
-    <?php
-    $sala = new Login();
-    $sala = $sala->ListarSalas();
-    if($sala==""){ 
-    echo "<div class='alert alert-danger'>";
-    echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-    echo "<center><span class='fa fa-info-circle'></span> NO EXISTEN SALAS REGISTRADAS ACTUALMENTE</center>";
-    echo "</div>";      
-    } else {
-    for ($i = 0; $i < sizeof($sala); $i++) {
-    ?>
-    <?php if ($i === 0): ?>
-    <li class="tab active">
-    <?php else: ?>
-    <li class="tab">
-    <?php endif; ?>
-        <a href="#<?php echo $sala[$i]['codsala'];?>" data-toggle="tab" aria-expanded="true" role="tab">
-        <span class="visible-xs" title="<?php echo $sala[$i]['nombresala'];?>"><i class="fa fa-building"></i></span>
-        <span class="hidden-xs"><?php echo $sala[$i]['nombresala'];?></span>
-        </a>
-    </li>
-    <?php
-        }
-    }
-        ?>
-</ul>
-<div class="tab-content">
-    <?php
-        $sala = new Login();
-        $sala = $sala->ListarSalas();
-        if($sala==""){ echo "";      
-        } else {
-        for ($i = 0; $i < sizeof($sala); $i++) {
-        ?>
-    <?php if ($i === 0): ?>
-    <div class="tab-pane active" id="<?php echo $sala[$i]['codsala'];?>">
-    <?php else: ?>
-    <div class="tab-pane" id="<?php echo $sala[$i]['codsala'];?>">
-    <?php endif; ?>
-        <?php
-            $codigo_sala = $sala[$i]['codsala'];
-            ?>
-        <p>
-            <!--AQUI LISTO LAS MESAS -->
-        <ul class="users-list clearfix" id="listMesas">
-            <?php
-                $mesa = new Login();
-                $mesa = $mesa->ListarMesas();
-    if($mesa==""){ 
-    echo "<div class='alert alert-danger'>";
-    echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-    echo "<center><span class='fa fa-info-circle'></span> NO EXISTEN MESAS REGISTRADAS EN LAS SALAS ACTUALMENTE</center>";
-    echo "</div>";      
-    } else {
-                for ($ii = 0; $ii < sizeof($mesa); $ii++) {
-                ?>
-            <?php
-                if ($mesa[$ii]['codsala'] == $codigo_sala) {
-                ?>
-            <li style="display:inline;float: left; margin-right: 4px;">
-<div class="users-list-name codMesa" title="<?php echo $mesa[$ii]['nombremesa']; ?>" style="cursor:pointer;" onclick="RecibeMesa('<?php echo base64_encode($mesa[$ii]['codmesa']); ?>')">
-                    <div id="<?php
-                        echo $mesa[$ii]['nombremesa'];
-                        ?>" style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius: 50%;border-radius: 50%;background:<?php
-                        if ($mesa[$ii]['statusmesa'] == '0') {
-                        ?>#5cb85c;<?php
-                        }
-                        ?>red" class="miMesa"><img src="assets/images/mesa.png" style="display:inline;margin:18px;float:left;width:78px;height:65px;"></div>
-                    <center><strong><?php
-                        echo $mesa[$ii]['nombremesa'];
-                        ?></strong></center>
-                </div>
-            </li>
-            <?php
-                }
-                ?>
-            <?php
-                }
-              }
-                ?>
-        </ul>
-        <!--AQUI LISTO LAS MESAS FIN -->
-        </p>
-    </div>
-    <?php
-        }
-    }
-        ?>
-         </div>
-</div>
-<!-- Fin de todo el código para mesas y sillas -->
+<?php echo renderMesasPanel('display:inline;margin:18px;float:left;width:78px;height:65px;'); ?>
+                                                    </div>
+<!-- Fin de todo el c?digo para mesas y sillas -->
 
 			<?php
 		} 
@@ -6760,102 +6705,12 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 		{
 			?>
 
-	<!-- Aquí todo el código para mesas y sillas -->                                         
+	<!-- Aqu? todo el c?digo para mesas y sillas -->                                         
 
                                      <div class="row" id="salas-mesas">
-                                                    
-                        <ul class="nav nav-tabs tabs">
-    <?php
-    $sala = new Login();
-    $sala = $sala->ListarSalas();
-    if($sala==""){  
-    echo "<div class='alert alert-danger'>";
-    echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-    echo "<center><span class='fa fa-info-circle'></span> NO EXISTEN SALAS REGISTRADAS ACTUALMENTE</center>";
-    echo "</div>";      
-    } else {
-    for ($i = 0; $i < sizeof($sala); $i++) {
-    ?>
-    <?php if ($i === 0): ?>
-    <li class="tab active">
-    <?php else: ?>
-    <li class="tab">
-    <?php endif; ?>
-        <a href="#<?php echo $sala[$i]['codsala'];?>" data-toggle="tab" aria-expanded="true" role="tab">
-            <span class="visible-xs"><i class="fa fa-building"></i></span>
-            <span class="hidden-xs"><?php echo $sala[$i]['nombresala'];?></span>
-        </a>
-    </li>
-    <?php
-        }
-    }
-        ?>
-</ul>
-<div class="tab-content">
-    <?php
-        $sala = new Login();
-        $sala = $sala->ListarSalas();
-        if($sala==""){ echo "";      
-        } else {
-        for ($i = 0; $i < sizeof($sala); $i++) {
-        ?>
-    <?php if ($i === 0): ?>
-    <div class="tab-pane active" id="<?php echo $sala[$i]['codsala'];?>">
-    <?php else: ?>
-    <div class="tab-pane" id="<?php echo $sala[$i]['codsala'];?>">
-    <?php endif; ?>
-        <?php
-            $codigo_sala = $sala[$i]['codsala'];
-            ?>
-        <p>
-            <!--AQUI LISTO LAS MESAS -->
-        <ul class="users-list clearfix" id="listMesas">
-            <?php
-                $mesa = new Login();
-                $mesa = $mesa->ListarMesas();
-    if($mesa==""){ 
-    echo "<div class='alert alert-danger'>";
-    echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-    echo "<center><span class='fa fa-info-circle'></span> NO EXISTEN MESAS REGISTRADAS EN LAS SALAS ACTUALMENTE</center>";
-    echo "</div>";      
-    } else {
-                for ($ii = 0; $ii < sizeof($mesa); $ii++) {
-                ?>
-            <?php
-                if ($mesa[$ii]['codsala'] == $codigo_sala) {
-                ?>
-            <li style="display:inline;float: left; margin-right: 4px;">
-<div class="users-list-name codMesa" title="<?php echo $mesa[$ii]['nombremesa']; ?>" style="cursor:pointer;" onclick="RecibeMesa('<?php echo base64_encode($mesa[$ii]['codmesa']); ?>')">
-                    <div id="<?php
-                        echo $mesa[$ii]['nombremesa'];
-                        ?>" style="width: 110px;height: 110px;-moz-border-radius: 50%;-webkit-border-radius: 50%;border-radius: 50%;background:<?php
-                        if ($mesa[$ii]['statusmesa'] == '0') {
-                        ?>#5cb85c;<?php
-                        }
-                        ?>red" class="miMesa"><img src="assets/images/mesa.png" style="padding:12px;margin:11px;float:left;width:90px;"></div>
-                    <center><strong><?php
-                        echo $mesa[$ii]['nombremesa'];
-                        ?></strong></center>
-                </div>
-            </li>
-            <?php
-                }
-                ?>
-            <?php
-                }
-              }
-                ?>
-        </ul>
-        <!--AQUI LISTO LAS MESAS FIN -->
-        </p>
-    </div>
-    <?php
-        }
-    }
-        ?>
-       </div>
-</div>
-<!-- Fin de todo el código para mesas y sillas -->
+<?php echo renderMesasPanel('padding:12px;margin:11px;float:left;width:90px;'); ?>
+                                     </div>
+<!-- Fin de todo el c?digo para mesas y sillas -->
 
 			<?php
 		}
@@ -7052,7 +6907,7 @@ $mesa = $mesa->MesasPorId();
 <input type="hidden" name="nombremesa" id="nombremesa" value="<?php echo $mesa[0]['nombremesa'] ?>">
 <input type="hidden" name="delivery" id="delivery" value="0">
 <input type="hidden" name="repartidor" id="repartidor" value="0">
-<input type="hidden" name="cliente" id="cliente" value="">
+<input type="hidden" name="cliente" id="cliente" value="0">
 <input type="hidden" name="tipo" id="tipo" value="0">
 					</div> 
 				</div>
@@ -7147,11 +7002,12 @@ public function RegistrarVentas()
 		}
 
 	$sql1 = " select codarqueo from arqueocaja  order by codarqueo desc limit 1";
+	$codarqueocaja = 1;
 					foreach ($this->dbh->query($sql1) as $row){
 
 	$codarqueocaja=$row["codarqueo"];
 
-	}	
+	}
 
 
 	$sql = " select codventa from ventas order by codventa desc limit 1";
@@ -7217,7 +7073,8 @@ public function RegistrarVentas()
 		$aceptado = strip_tags('no');
 		$enviado = strip_tags('1');
 
-		$codcliente = strip_tags($_POST["cliente"]);
+		$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
+		if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
 		$codmesa = strip_tags($_POST["codmesa"]);
 		$subtotalivasive = strip_tags($_POST["txtsubtotal"]);
 		$subtotalivanove = strip_tags($_POST["txtsubtotal2"]);
@@ -7229,12 +7086,12 @@ if (strip_tags(isset($_POST['txtDescuento']))) { $totaldescuentove = strip_tags(
 					$totalpago2 = strip_tags($_POST["txtTotalCompra"]);
 if (strip_tags(isset($_POST['tipopagove']))) { $tipopagove = strip_tags($_POST['tipopagove']); } else { $tipopagove =''; }
 if (strip_tags(isset($_POST['formapagove']))) { $formapagove = strip_tags($_POST['formapagove']); } else { $formapagove =''; }
-if (strip_tags(isset($_POST['montopagado']))) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado =''; }
-if (strip_tags(isset($_POST['montodevuelto']))) { $montodevuelto = strip_tags($_POST['montodevuelto']); } else { $montodevuelto =''; }
-if (strip_tags(isset($_POST['fechavencecredito']))) { $fechavencecredito = strip_tags(date("Y-m-d",strtotime($_POST['fechavencecredito']))); } else { $fechavencecredito =''; }
+if (strip_tags(isset($_POST['montopagado']))) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado ='0.00'; }
+if (strip_tags(isset($_POST['montodevuelto']))) { $montodevuelto = strip_tags($_POST['montodevuelto']); } else { $montodevuelto ='0.00'; }
+if (strip_tags(isset($_POST['fechavencecredito'])) && $_POST['fechavencecredito'] != '') { $fechavencecredito = strip_tags(date("Y-m-d",strtotime($_POST['fechavencecredito']))); } else { $fechavencecredito ='0000-00-00'; }
 					$statusventa = "PENDIENTE";
 					$statuspago = "1";
-					$fechaventa = strip_tags(date("Y-m-d h:i:s"));
+					$fechaventa = strip_tags(date("Y-m-d H:i:s"));
 					$codigo = strip_tags($_SESSION["codigo"]);
 					$cocinero = strip_tags('1');
 					$delivery = strip_tags($_POST["delivery"]);
@@ -7287,7 +7144,8 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 						$stmt->bindParam(15, $comanda);
 
 						$comanda = "1";
-						$codcliente = strip_tags($_POST["cliente"]);
+						$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
+						if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
 						$codproducto = strip_tags($venta[$i]['txtCodigo']);
 						$producto = strip_tags($venta[$i]['descripcion']);
 						$codcategoria = strip_tags($venta[$i]['tipo']);
@@ -7339,7 +7197,8 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 						$stmt->bindParam(11, $documento);
 						$stmt->bindParam(12, $fechakardex);
 
-						$codcliente = strip_tags($_POST["cliente"]);
+						$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
+						if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
 						$codproducto = strip_tags($venta[$i]['txtCodigo']);
 						$movimiento = strip_tags("SALIDAS");
 						$entradas = strip_tags("0");
@@ -7438,6 +7297,7 @@ echo "<span class='fa fa-check-square-o'></span> EL PEDIDO DE LA ".$_POST["nombr
 echo "</div>";
 
 echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."', '_blank');</script>";
+echo "<script>if (typeof recargarMesasPanel === 'function') { recargarMesasPanel(); }</script>";
 					exit;
 				}
 ########################### FUNCION PARA REGISTRAR VENTAS DE PRODUCTOS #############################
@@ -7951,14 +7811,19 @@ public function CerrarMesa()
 		echo "6";
 		exit;
 	}
-	if (strip_tags(isset($_POST['fechavencecredito']))) { $fechavencecredito = strip_tags(date("Y-m-d",strtotime($_POST['fechavencecredito']))); } else { $fechavencecredito =''; }
-	$f1 = new DateTime($fechavencecredito);
-	$f2 = new DateTime("now");
+	if (isset($_POST['fechavencecredito']) && $_POST['fechavencecredito'] !== '') {
+		$fechavencecredito = strip_tags(date("Y-m-d", strtotime($_POST['fechavencecredito'])));
+	} else {
+		$fechavencecredito = '';
+	}
 
-	if($_POST["tipopagove"] == "CREDITO" && $f2 > $f1) { 
-
-		echo "7";
-		exit;
+	if ($_POST["tipopagove"] == "CREDITO" && $fechavencecredito !== '') {
+		$f1 = new DateTime($fechavencecredito);
+		$f2 = new DateTime("now");
+		if ($f2 > $f1) {
+			echo "7";
+			exit;
+		}
 	}
 
 	$sql = " update ventas set "
@@ -8011,7 +7876,10 @@ public function CerrarMesa()
 
 	$codmesa = strip_tags($_POST["codmesa"]);
 	$codcaja = strip_tags($_POST["codcaja"]);
-	$codcliente = strip_tags($_POST["cliente"]);
+	$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
+	if ($codcliente === '' || !is_numeric($codcliente)) {
+		$codcliente = 0;
+	}
 	$subtotalivasive = strip_tags($_POST["txtsubtotall"]);
 	$subtotalivanove = strip_tags($_POST["txtsubtotall2"]);
 	$ivave = strip_tags($_POST["iva"]);
@@ -8298,7 +8166,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 	public function ListarMostrador()
 	{
 		self::SetNames();
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' GROUP BY detalleventas.codventa";
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' GROUP BY ventas.codventa";
         foreach ($this->dbh->query($sql) as $row)
 		{
 			$this->p[] = $row;
@@ -8331,11 +8199,108 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
         echo "<div class='alert alert-info'>";
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
 		echo "<center><span class='fa fa-check-square-o'></span> EL PEDIDO DE LA ".$sala." Y ".$mesa." FUE ENTREGADO EXITOSAMENTE </center>";
-		echo "</div>"; 
+		echo "</div>";
+		echo "<script>if (typeof recargarMesasPanelCocinero === 'function') { recargarMesasPanelCocinero(); }</script>";
 		exit;
 	
   }
 ############################# FUNCION PARA ENTREGA DE PEDIDOS POR COCINERO #################################
+
+############################# FUNCION PARA MOSTRAR PEDIDO DE COCINA POR MESA ###########################
+	public function MostrarPedidoCocina()
+	{
+		self::SetNames();
+		$codmesa = strip_tags(base64_decode($_GET['codmesa']));
+
+		if ($codmesa === '0') {
+			$nombresala = 'DELIVERY';
+			$nombremesa = 'SIN MESA';
+		} else {
+			$sqlMesa = "SELECT salas.nombresala, mesas.nombremesa FROM mesas INNER JOIN salas ON mesas.codsala = salas.codsala WHERE mesas.codmesa = ?";
+			$stmtMesa = $this->dbh->prepare($sqlMesa);
+			$stmtMesa->execute(array($codmesa));
+			if ($stmtMesa->rowCount() == 0) {
+				echo "<div class='alert alert-danger'><center>MESA NO ENCONTRADA</center></div>";
+				exit;
+			}
+			$mesaInfo = $stmtMesa->fetch(PDO::FETCH_ASSOC);
+			$nombresala = $mesaInfo['nombresala'];
+			$nombremesa = $mesaInfo['nombremesa'];
+		}
+
+		$sql = "SELECT ventas.codventa, ventas.fechaventa, ventas.observaciones, ventas.cocinero, ventas.totalpago,
+			clientes.nomcliente, clientes.cedcliente,
+			salas.nombresala, mesas.nombremesa,
+			GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' x ', detalleventas.producto) SEPARATOR '<br>') AS detalles
+			FROM ventas
+			INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa
+			LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente
+			LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa
+			LEFT JOIN salas ON mesas.codsala = salas.codsala
+			WHERE ventas.codmesa = ? AND ventas.cocinero = '1'
+			GROUP BY ventas.codventa
+			ORDER BY ventas.fechaventa ASC";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codmesa));
+		$pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		?>
+<div class="col-sm-12">
+	<div class="panel panel-primary">
+		<div class="panel-heading">
+			<h3 class="panel-title"><i class="fa fa-cutlery"></i> Pedido en Cocina &mdash; <?php echo htmlspecialchars($nombresala); ?> / <?php echo htmlspecialchars($nombremesa); ?></h3>
+		</div>
+		<div class="panel-body">
+			<?php if (empty($pedidos)) { ?>
+			<div class="alert alert-info"><center><i class="fa fa-info-circle"></i> NO HAY PEDIDOS PENDIENTES EN COCINA PARA ESTA MESA</center></div>
+			<?php } else { ?>
+			<div class="table-responsive">
+				<table class="table table-small-font table-bordered table-striped">
+					<thead>
+						<tr>
+							<th>N&deg;</th>
+							<th>Cliente</th>
+							<th>Platillos</th>
+							<th>Espera</th>
+							<th>Observaciones</th>
+							<th>Status</th>
+							<th>Procesar</th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php $n = 1; foreach ($pedidos as $pedido) {
+						$salaPed = ($pedido['nombresala'] != '' ? $pedido['nombresala'] : $nombresala);
+						$mesaPed = ($pedido['nombremesa'] != '' ? $pedido['nombremesa'] : $nombremesa);
+						$cliente = ($pedido['nomcliente'] == '' ? "<span class='label label-warning'>SIN ASIGNAR</span>" : htmlspecialchars($pedido['nomcliente']));
+						$obs = ($pedido['observaciones'] == '' ? 'SIN OBSERVACIONES' : htmlspecialchars($pedido['observaciones']));
+					?>
+						<tr>
+							<td><?php echo $n++; ?></td>
+							<td><?php echo $cliente; ?></td>
+							<td><span style="font-size:12px;"><strong><?php echo $pedido['detalles']; ?></strong></span></td>
+							<td><?php echo renderEsperaBadge($pedido['fechaventa']); ?></td>
+							<td><?php echo $obs; ?></td>
+							<td><span class="label label-danger"><i class="fa fa-times"></i> PENDIENTE</span></td>
+							<td>
+								<a href="#" class="btn btn-success btn-xs" data-toggle="tooltip" data-placement="left" title="Realizar Entrega" onClick="EntregarPedidos('<?php echo base64_encode($pedido['codventa']); ?>','<?php echo base64_encode($salaPed); ?>','<?php echo base64_encode($mesaPed); ?>','<?php echo base64_encode('ENTREGASPEDIDOS'); ?>')"><i class="fa fa-refresh"></i> Procesar</a>
+								<a href="reportepdf?codventa=<?php echo base64_encode($pedido['codventa']); ?>&tipo=<?php echo base64_encode('TICKETCOMANDA'); ?>" class="btn btn-info btn-xs" target="_blank" title="Imprimir Comanda"><i class="fa fa-print"></i></a>
+							</td>
+						</tr>
+					<?php } ?>
+					</tbody>
+				</table>
+			</div>
+			<?php } ?>
+			<div class="modal-footer" style="border-top:none;padding-left:0;">
+				<button type="button" class="btn btn-warning" onClick="CocineroMostrarMesas()"><span class="fa fa-cutlery"></span> Mostrar Mesas</button>
+			</div>
+		</div>
+	</div>
+</div>
+<script>if (typeof actualizarTimersMesas === 'function') { actualizarTimersMesas(); }</script>
+		<?php
+		exit;
+	}
+############################# FUNCION PARA MOSTRAR PEDIDO DE COCINA POR MESA ###########################
 
 
 ################################# FUNCION PARA ID VENTAS ##################################

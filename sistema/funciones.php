@@ -631,7 +631,7 @@ if (isset($_GET['muestracodigoproducto'])) {
   
 $tra = new Login();
   ?>
-<input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Código de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo $reg = $tra->CodigoProducto(); ?>" <?php } ?> required="" aria-required="true">
+<input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese C?digo de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo $reg = $tra->CodigoProducto(); ?>" <?php } ?> required="" aria-required="true">
 
 <?php 
   }
@@ -841,7 +841,7 @@ for($i=0;$i<sizeof($busq);$i++){
                                                     <tr>
                                         <td><?php echo $a++; ?></td>
 <td><input type="hidden" name="codingrediente[]" id="codingrediente" value="<?php echo $busq[$i]["codingrediente"]; ?>"><?php echo $busq[$i]["nomingrediente"]; ?></td>
-<td><input type="text" class="form-control" name="cantidad[]" id="cantidad" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Cantidad Porción" value="<?php echo $busq[$i]["cantracion"]; ?>" required="" aria-required="true"></td>
+<td><input type="text" class="form-control" name="cantidad[]" id="cantidad" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Cantidad Porci?n" value="<?php echo $busq[$i]["cantracion"]; ?>" required="" aria-required="true"></td>
 <td><?php echo $busq[$i]["cantingrediente"]." ".$busq[$i]["unidadingrediente"]; ?></td>
 <td><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($busq[$i]["costoingrediente"], 2, '.', ','); ?></td>
 <td data-priority="7"><center><a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Ingrediente" onClick="EliminaIngrediente('<?php echo base64_encode($busq[$i]['codproducto']) ?>','<?php echo base64_encode($busq[$i]['codingrediente']) ?>','<?php echo base64_encode("ELIMINAINGREDIENTES") ?>')"><i class="fa fa-trash-o"></i></a></center></td>
@@ -1246,8 +1246,8 @@ $co = $tra->ComprasPorId();
                                             <div class="col-md-12">
                                                 <div class="pull-right">
                          <address>
-<abbr title="N° de Compra"><strong>N&deg; DE COMPRA: </strong> <?php echo $co[0]["codcompra"]; ?></abbr><br>
-<abbr title="N° de Serie"><strong>N&deg; DE SERIE: </strong> <?php echo $co[0]["codseriec"]; ?></abbr><br>
+<abbr title="N? de Compra"><strong>N&deg; DE COMPRA: </strong> <?php echo $co[0]["codcompra"]; ?></abbr><br>
+<abbr title="N? de Serie"><strong>N&deg; DE SERIE: </strong> <?php echo $co[0]["codseriec"]; ?></abbr><br>
 <abbr title="<?php echo $co[0]["contactoproveedor"]; ?>"><strong><?php echo $co[0]["ritproveedor"].": ".$co[0]["nomproveedor"]; ?></strong></abbr><br>
 <abbr title="Direcci&oacute;n de Proveedor"><?php echo $co[0]["direcproveedor"]; ?></abbr><br>
 <abbr title="Email de Proveedor"><?php echo $co[0]["emailproveedor"]; ?></abbr> <abbr title="Telefono"><strong>TLF:</strong></abbr> <?php echo $co[0]["tlfproveedor"]; ?><br />
@@ -1256,7 +1256,7 @@ $co = $tra->ComprasPorId();
 <abbr title="Forma de Compra"><strong>MEDIO DE PAGO:</strong></abbr> <?php echo $variable = ( $co[0]['tipocompra'] == 'CONTADO' ? $co[0]['mediopago'] : $co[0]['formapago']); ?><br />
 <abbr title="Fecha de Vencimiento de Cr&eacute;dito"><strong>FECHA DE VENCIMIENTO:</strong></abbr> <?php echo $vence = ( $co[0]['fechavencecredito'] == '0000-00-00' ? "0" : date("d-m-Y",strtotime($co[0]['fechavencecredito']))); ?><br />
 
-<abbr title="Dias Vencidos de Crédito"><strong>DIAS VENCIDOS:</strong></abbr> <?php 
+<abbr title="Dias Vencidos de Cr?dito"><strong>DIAS VENCIDOS:</strong></abbr> <?php 
 if($co[0]['fechavencecredito']== '0000-00-00') { echo "0"; } 
 elseif($co[0]['fechavencecredito'] >= date("Y-m-d")) { echo "0"; } 
 elseif($co[0]['fechavencecredito'] < date("Y-m-d")) { echo Dias_Transcurridos(date("Y-m-d"),$co[0]['fechavencecredito']); } ?><br />
@@ -1658,6 +1658,31 @@ $TotalMonto+=$reg[$i]['totalc'];
 
 
 <?php 
+############################ RECARGA GRILLA DE MESAS CON CRONOMETRO ###########################
+if (isset($_GET['MesasPanel'])) {
+    echo renderMesasPanel('padding:12px;margin:11px;float:left;width:90px;');
+    exit;
+}
+?>
+
+<?php 
+############################ RECARGA GRILLA DE MESAS COCINERO ###########################
+if (isset($_GET['MesasPanelCocinero'])) {
+    echo renderMesasPanelCocinero('padding:12px;margin:11px;float:left;width:90px;');
+    exit;
+}
+?>
+
+<?php 
+############################ DETALLE DE PEDIDO COCINA POR MESA ###########################
+if (isset($_GET['PedidoCocina']) && isset($_GET['codmesa'])) {
+    $cocina = new Login();
+    $cocina->MostrarPedidoCocina();
+    exit;
+}
+?>
+
+<?php 
 ############################ MUESTRA PEDIDOS DE PLATOS EN MOSTRADOR ###########################
 if (isset($_GET['PedidosMostrador'])) { 
   
@@ -1671,6 +1696,7 @@ $tra = new Login(); ?>
                                   <th>Sala/Mesa</th>
                                   <th>Cliente</th>
                                   <th>Platillos</th>
+                                  <th>Espera</th>
                                   <th>Observaciones</th>
                                   <th>Status</th>
                                   <th>Procesar</th>
@@ -1697,6 +1723,8 @@ for($i=0;$i<sizeof($reg);$i++){
 <td><?php echo $cliente = ( $reg[$i]['cliente'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nomcliente']); ?></td>
 
 <td><?php echo "<span style='font-size:12px;'><strong>".$reg[$i]['detalles']."</strong></span>"; ?></td>
+
+<td><?php echo renderEsperaBadge($reg[$i]['fechaventa']); ?></td>
 
 <td><?php echo $observaciones = ( $reg[$i]['observaciones'] == '' ? " SIN OBSERVACIONES" : $reg[$i]['observaciones']); ?></td>
 
@@ -2010,7 +2038,7 @@ for($i=0;$i<sizeof($arqueo);$i++){
 <input type="hidden" name="codmesa" id="codmesa" value="<?php echo $arqueo[0]['codmesa'] ?>">
 <input type="hidden" name="codcaja" id="codcaja" value="<?php echo $cajero[0]['codcaja'] ?>">
 <input type="hidden" name="nombremesa" id="nombremesa" value="<?php echo $arqueo[0]['nombremesa'] ?>">
-<input type="hidden" name="cliente" id="cliente" value="<?php echo $arqueo[0]['codcliente'] ?>">
+<input type="hidden" name="cliente" id="cliente" value="<?php echo isset($arqueo[0]['cliente']) && $arqueo[0]['cliente'] !== '' ? $arqueo[0]['cliente'] : '0'; ?>">
 <input type="hidden" name="tipo" id="tipo" value="0">
     </div> 
   </div>
@@ -2417,7 +2445,7 @@ $ve = $tra->VentasPorId();
                                             <div class="col-md-12">
                                                 <div class="pull-right">
                          <address>
-<abbr title="N° de Venta"><strong>N&deg; DE VENTA: </strong> <?php echo $ve[0]["codventa"]; ?></abbr><br>
+<abbr title="N? de Venta"><strong>N&deg; DE VENTA: </strong> <?php echo $ve[0]["codventa"]; ?></abbr><br>
 <abbr title="N&deg; de Caja"><strong>N&deg; DE CAJA: </strong> <?php echo $caja = ( $ve[0]['codcaja'] == '0' ? "<span class='label label-warning'> SIN COBRAR</span>" : $ve[0]["nrocaja"]); ?></abbr><br>
         
 <?php if($ve[0]["cliente"]=='0'){ ?>
@@ -2543,7 +2571,7 @@ if (isset($_GET['BuscarDetallesVentas']) && isset($_GET['tipobusquedad']) && iss
 
    echo "<center><div class='alert alert-danger'>";
    echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-   echo "<span class='fa fa-info-circle'></span> POR FAVOR INGRESE Nº DE FACTURA PARA TU B&Uacute;SQUEDA</div></center>";
+   echo "<span class='fa fa-info-circle'></span> POR FAVOR INGRESE N? DE FACTURA PARA TU B&Uacute;SQUEDA</div></center>";
    exit;
     
 } else if($tipobusquedad=="2" && $codcaja=="") {
@@ -3779,7 +3807,7 @@ $ve = $tra->CreditosPorId();
                                             <div class="col-md-12">
                                                 <div class="pull-right">
                          <address>
-        <abbr title="N° de Venta"><strong>N&deg; DE VENTA: </strong> <?php echo $ve[0]["codventa"]; ?></abbr><br>
+        <abbr title="N? de Venta"><strong>N&deg; DE VENTA: </strong> <?php echo $ve[0]["codventa"]; ?></abbr><br>
         <abbr title="N&deg; de Caja"><strong>N&deg; DE CAJA: </strong> <?php echo $caja = ( $ve[0]['codcaja'] == '0' ? "<span class='label label-warning'> SIN COBRAR</span>" : $ve[0]["nrocaja"]); ?></abbr><br>
         
         <?php if($ve[0]["codcliente"]=='0'){ ?>

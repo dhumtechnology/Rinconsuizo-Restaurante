@@ -54,22 +54,7 @@ require_once("class/class.php");
                 ?>
             <?php
                 if ($mesa[$ii]['codsala'] == $codigo_sala) {
-                ?>
-            <li style="display:inline;float: left; margin-right: 4px;">
-<div class="users-list-name codMesa" title="<?php echo $mesa[$ii]['nombremesa']; ?>" style="cursor:pointer;" onclick="RecibeMesa('<?php echo base64_encode($mesa[$ii]['codmesa']); ?>')">
-                    <div id="<?php
-                        echo $mesa[$ii]['nombremesa'];
-                        ?>" style="width: 110px;height: 110px;-moz-border-radius: 50%;-webkit-border-radius: 50%;border-radius: 50%;background:<?php
-                        if ($mesa[$ii]['statusmesa'] == '0') {
-                        ?>#5cb85c;<?php
-                        }
-                        ?>red" class="miMesa"><img src="assets/images/mesa.png" style="display:inline;margin:18px;float:left;width:78px;height:65px;"></div>
-                    <center><strong><?php
-                        echo $mesa[$ii]['nombremesa'];
-                        ?></strong></center>
-                </div>
-            </li>
-            <?php
+                    echo renderMesaListItem($mesa[$ii], 'display:inline;margin:18px;float:left;width:78px;height:65px;');
                 }
                 ?>
             <?php
