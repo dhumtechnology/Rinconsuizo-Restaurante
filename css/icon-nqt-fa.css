@@ -1,0 +1,23 @@
+/* icon-nqt-* usa Font Awesome local (icomoon del tema demo ya no está disponible) */
+[class^="icon-nqt-"],
+[class*=" icon-nqt-"] {
+  font-family: FontAwesome !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-nqt-badge-dollar:before { content: "\f155"; }
+.icon-nqt-eye:before { content: "\f06e"; }
+.icon-nqt-heart:before { content: "\f004"; }
+.icon-nqt-phone:before { content: "\f095"; }
+.icon-nqt-search:before { content: "\f002"; }
+.icon-nqt-shipping-timed:before { content: "\f017"; }
+.icon-nqt-shopping-basket:before { content: "\f07a"; }
+.icon-nqt-tree-christmas:before { content: "\f1bb"; }
+.icon-nqt-user-cog:before { content: "\f007"; }

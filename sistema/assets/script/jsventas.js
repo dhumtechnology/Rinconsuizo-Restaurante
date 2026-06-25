@@ -2,6 +2,14 @@ window.codmesaActiva = '';
 window.carritoQueue = [];
 window.carritoProcessing = false;
 window.carritoRequestSeq = 0;
+window.ventasAccionSubmit = 'btn-venta';
+
+$(document).on('click', '#btn-venta', function() {
+    window.ventasAccionSubmit = 'btn-venta';
+});
+$(document).on('click', '#btn-agregapedidos', function() {
+    window.ventasAccionSubmit = 'btn-agregapedidos';
+});
 
 function processCarritoQueue() {
     if (window.carritoProcessing || window.carritoQueue.length === 0) {
@@ -61,10 +69,24 @@ function cargarCarritoMesa(codmesa, callback) {
     window.carritoQueue = [];
     window.carritoProcessing = false;
     window.carritoRequestSeq++;
-    postCarrito({ cambiarMesa: codmesa }, function(data) {
+
+    var tienePedidoActivo = $('#recibemesa input#codventa').length && $('#recibemesa input#codventa').val() !== '';
+
+    function finalizarCarga(data) {
         pintarCarritoDesdeServidor(data);
+        if (typeof toggleAccionesPedido === 'function') {
+            toggleAccionesPedido();
+        }
         if (callback) {
             callback(data);
+        }
+    }
+
+    postCarrito({ cambiarMesa: codmesa }, function(data) {
+        if (tienePedidoActivo) {
+            postCarrito({ MiCarritoV: JSON.stringify({ Codigo: 'vaciar' }), codmesa: codmesa }, finalizarCarga);
+        } else {
+            finalizarCarga(data);
         }
     });
 }
@@ -325,6 +347,9 @@ $('document').ready(function(){
   $("#salas-mesas").load("funciones.php?MesasPanel=si", function() {
       if (typeof actualizarTimersMesas === 'function') {
           actualizarTimersMesas();
+      }
+      if (typeof window.restaurarModoJuntarMesas === 'function') {
+          window.restaurarModoJuntarMesas();
       }
   });
   $("#recibemesa").html("");

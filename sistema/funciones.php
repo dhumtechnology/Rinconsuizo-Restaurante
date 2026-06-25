@@ -1,5 +1,14 @@
 <?php
 require_once("class/class.php");
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'JuntarMesas') {
+    $union = new Login();
+    $union->JuntarMesas();
+}
+if (isset($_POST['accion']) && $_POST['accion'] === 'SepararMesasUnion') {
+    $union = new Login();
+    $union->SepararMesasUnion();
+}
 ?>
 <script type="text/javascript" src="assets/script/script2.js"></script>
 <script type="text/javascript" src="assets/script/jscompras.js"></script>

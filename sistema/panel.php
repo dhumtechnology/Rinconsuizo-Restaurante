@@ -33,6 +33,15 @@
             $reg = $tra->AgregaPedidos();
             exit;
             }
+            elseif(isset($_POST['txtTotal']) && isset($_POST['codmesa']) && !isset($_POST['btn-cerrar']))
+            {
+            if (!empty($_POST['codventa'])) {
+                $tra->AgregaPedidos();
+            } else {
+                $tra->RegistrarVentas();
+            }
+            exit;
+            }
             
     ?>
 <!DOCTYPE html>
@@ -56,6 +65,9 @@
         <script type="text/javascript" src="assets/script/titulos.js"></script>
         <script type="text/javascript" src="assets/script/script2.js"></script>
         <script type="text/javascript" src="assets/script/jsventas.js"></script>
+<?php if ($_SESSION['acceso'] === 'mesero') { ?>
+        <script type="text/javascript" src="assets/script/mesas-union.js"></script>
+<?php } ?>
         <script type="text/javascript" src="assets/script/validation.min.js"></script>
         <script type="text/javascript" src="assets/script/script.js"></script>
 <script type="text/javascript">
@@ -532,10 +544,12 @@ for($i=0;$i<sizeof($reg);$i++){
             <h3 class="panel-title"><i class="fa fa-cutlery"></i> Control de Mesas</h3>
                                     </div>
                                     <div class="panel-body">
+        <div id="salas-mesas">
         <?php
         $tra = new Login();
         $caja = $tra->VerificaArqueo();
         ?>
+        </div>
                                     </div>
                                 </div>
 
@@ -563,7 +577,8 @@ for($i=0;$i<sizeof($reg);$i++){
 <script type="text/javascript">
     $('document').ready(function() {
         setTimeout(function run() {
-            if ($('#salas-mesas').length && typeof recargarMesasPanel === 'function' && $('#panel-control-mesas').is(':visible')) {
+            var enModoJuntar = typeof window.mesasUnionModoActivo === 'function' && window.mesasUnionModoActivo();
+            if ($('#salas-mesas').length && typeof recargarMesasPanel === 'function' && $('#panel-control-mesas').is(':visible') && !enModoJuntar) {
                 recargarMesasPanel();
             }
             setTimeout(run, 3000);

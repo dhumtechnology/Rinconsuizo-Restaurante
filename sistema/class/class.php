@@ -1162,6 +1162,267 @@ public function ListarMesasCocinero()
 }
 ############################ FUNCION PARA LISTAR MESAS (COCINERO) ###########################
 
+############################ FUNCIONES MESAS UNIDAS ###########################
+public function TablaMesasUnidasExiste()
+{
+	try {
+		$this->dbh->query("SELECT 1 FROM mesas_unidas LIMIT 1");
+		return true;
+	} catch (Exception $e) {
+		return false;
+	}
+}
+
+public function ObtenerMapaMesasUnidas()
+{
+	$vacio = array('por_mesa' => array(), 'grupos' => array());
+	if (!$this->TablaMesasUnidasExiste()) {
+		return $vacio;
+	}
+	self::SetNames();
+	$sql = "SELECT mu.codmesa_principal, mu.codmesa, mu.codsala, m.nombremesa
+		FROM mesas_unidas mu
+		INNER JOIN mesas m ON m.codmesa = mu.codmesa
+		WHERE mu.activa = 1
+		ORDER BY mu.codmesa_principal, mu.codmesa";
+	$porMesa = array();
+	$grupos = array();
+	foreach ($this->dbh->query($sql) as $row) {
+		$principal = (string) $row['codmesa_principal'];
+		$codmesa = (string) $row['codmesa'];
+		$porMesa[$codmesa] = $principal;
+		if (!isset($grupos[$principal])) {
+			$grupos[$principal] = array('codsala' => $row['codsala'], 'mesas' => array(), 'nombres' => array());
+		}
+		$grupos[$principal]['mesas'][] = $codmesa;
+		$grupos[$principal]['nombres'][] = $row['nombremesa'];
+	}
+	return array('por_mesa' => $porMesa, 'grupos' => $grupos);
+}
+
+public function ResolverMesaPrincipal($codmesa)
+{
+	$codmesa = (string) $codmesa;
+	if (!$this->TablaMesasUnidasExiste()) {
+		return $codmesa;
+	}
+	self::SetNames();
+	$sql = "SELECT codmesa_principal FROM mesas_unidas WHERE codmesa = ? AND activa = 1 LIMIT 1";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute(array($codmesa));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		return (string) $row['codmesa_principal'];
+	}
+	return $codmesa;
+}
+
+public function ObtenerCodmesasGrupoActivo($codmesa)
+{
+	$principal = $this->ResolverMesaPrincipal($codmesa);
+	if (!$this->TablaMesasUnidasExiste()) {
+		return array($principal);
+	}
+	self::SetNames();
+	$sql = "SELECT codmesa FROM mesas_unidas WHERE codmesa_principal = ? AND activa = 1";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute(array($principal));
+	$mesas = array();
+	while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$mesas[] = $row['codmesa'];
+	}
+	return !empty($mesas) ? $mesas : array($principal);
+}
+
+public function OcuparMesasUnion($codmesa)
+{
+	$mesas = $this->ObtenerCodmesasGrupoActivo($codmesa);
+	if (count($mesas) <= 1) {
+		return;
+	}
+	self::SetNames();
+	$sql = "UPDATE mesas SET statusmesa = '1' WHERE codmesa = ?";
+	$stmt = $this->dbh->prepare($sql);
+	foreach ($mesas as $m) {
+		if ((string) $m !== (string) $codmesa) {
+			$stmt->execute(array($m));
+		}
+	}
+}
+
+public function LiberarMesasUnion($codmesa)
+{
+	if (!$this->TablaMesasUnidasExiste()) {
+		return;
+	}
+	$principal = $this->ResolverMesaPrincipal($codmesa);
+	$mesas = $this->ObtenerCodmesasGrupoActivo($principal);
+	self::SetNames();
+	$sql = "UPDATE mesas SET statusmesa = '0' WHERE codmesa = ?";
+	$stmt = $this->dbh->prepare($sql);
+	foreach ($mesas as $m) {
+		$stmt->execute(array($m));
+	}
+	$sqlDel = "DELETE FROM mesas_unidas WHERE codmesa_principal = ? AND activa = 1";
+	$stmtDel = $this->dbh->prepare($sqlDel);
+	$stmtDel->execute(array($principal));
+}
+
+public function NombreMesaConUnion($codmesa)
+{
+	$principal = $this->ResolverMesaPrincipal($codmesa);
+	$mapa = $this->ObtenerMapaMesasUnidas();
+	if (isset($mapa['grupos'][$principal])) {
+		return implode(' + ', $mapa['grupos'][$principal]['nombres']);
+	}
+	self::SetNames();
+	$sql = "SELECT nombremesa FROM mesas WHERE codmesa = ? LIMIT 1";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute(array($codmesa));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		return $row['nombremesa'];
+	}
+	return '';
+}
+
+public function MesaTieneUnionActiva($codmesa)
+{
+	$principal = $this->ResolverMesaPrincipal($codmesa);
+	$mesas = $this->ObtenerCodmesasGrupoActivo($principal);
+	return count($mesas) > 1;
+}
+
+public function MesaTienePedidoActivo($codmesa)
+{
+	$principal = $this->ResolverMesaPrincipal($codmesa);
+	self::SetNames();
+	$sql = "SELECT statusmesa FROM mesas WHERE codmesa = ? LIMIT 1";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute(array($principal));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		if ($row['statusmesa'] != '0') {
+			return true;
+		}
+	}
+	$sqlV = "SELECT codventa FROM ventas WHERE codmesa = ? AND statusventa = 'PENDIENTE' LIMIT 1";
+	$stmtV = $this->dbh->prepare($sqlV);
+	$stmtV->execute(array($principal));
+	return $stmtV->rowCount() > 0;
+}
+
+public function GrupoUnionTienePedidoActivo($codmesa)
+{
+	$principal = $this->ResolverMesaPrincipal($codmesa);
+	$mesas = $this->ObtenerCodmesasGrupoActivo($principal);
+	foreach ($mesas as $m) {
+		if ($this->MesaTienePedidoActivo($m)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+public function JuntarMesas()
+{
+	header('Content-Type: application/json; charset=UTF-8');
+	if (!isset($_SESSION['acceso']) || $_SESSION['acceso'] !== 'mesero') {
+		echo json_encode(array('ok' => false, 'msg' => 'Solo el mesero puede juntar mesas.'));
+		exit;
+	}
+	if (!$this->TablaMesasUnidasExiste()) {
+		echo json_encode(array('ok' => false, 'msg' => 'Ejecute la migración sistema/migrations/001_mesas_unidas.sql en la base de datos.'));
+		exit;
+	}
+	if (empty($_POST['mesas']) || !is_array($_POST['mesas'])) {
+		echo json_encode(array('ok' => false, 'msg' => 'Seleccione al menos dos mesas.'));
+		exit;
+	}
+	$codmesas = array();
+	foreach ($_POST['mesas'] as $m) {
+		$codmesas[] = (int) $m;
+	}
+	$codmesas = array_values(array_unique($codmesas));
+	if (count($codmesas) < 2) {
+		echo json_encode(array('ok' => false, 'msg' => 'Seleccione al menos dos mesas.'));
+		exit;
+	}
+	self::SetNames();
+	$codsala = null;
+	foreach ($codmesas as $cm) {
+		$sql = "SELECT codsala, statusmesa FROM mesas WHERE codmesa = ?";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($cm));
+		if ($stmt->rowCount() == 0) {
+			echo json_encode(array('ok' => false, 'msg' => 'Mesa no encontrada.'));
+			exit;
+		}
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		if ($this->MesaTienePedidoActivo($cm)) {
+			echo json_encode(array('ok' => false, 'msg' => 'No puede juntar mesas con pedido en curso. Espere a que el cajero cierre la cuenta.'));
+			exit;
+		}
+		if ($codsala === null) {
+			$codsala = $row['codsala'];
+		} elseif ($codsala != $row['codsala']) {
+			echo json_encode(array('ok' => false, 'msg' => 'Las mesas deben estar en el mismo salón.'));
+			exit;
+		}
+		$sqlU = "SELECT idunion FROM mesas_unidas WHERE codmesa = ? AND activa = 1 LIMIT 1";
+		$stmtU = $this->dbh->prepare($sqlU);
+		$stmtU->execute(array($cm));
+		if ($stmtU->rowCount() > 0) {
+			echo json_encode(array('ok' => false, 'msg' => 'Una de las mesas ya pertenece a un grupo unido.'));
+			exit;
+		}
+	}
+	sort($codmesas, SORT_NUMERIC);
+	$principal = $codmesas[0];
+	$fecha = date('Y-m-d H:i:s');
+	$sqlIns = "INSERT INTO mesas_unidas (codmesa_principal, codmesa, codsala, activa, fechacreacion) VALUES (?, ?, ?, 1, ?)";
+	$stmtIns = $this->dbh->prepare($sqlIns);
+	foreach ($codmesas as $cm) {
+		$stmtIns->execute(array($principal, $cm, $codsala, $fecha));
+	}
+	echo json_encode(array('ok' => true, 'msg' => 'Mesas unidas correctamente.', 'principal' => $principal));
+	exit;
+}
+
+public function SepararMesasUnion()
+{
+	header('Content-Type: application/json; charset=UTF-8');
+	if (!isset($_SESSION['acceso']) || $_SESSION['acceso'] !== 'mesero') {
+		echo json_encode(array('ok' => false, 'msg' => 'Solo el mesero puede separar mesas.'));
+		exit;
+	}
+	$codmesa = isset($_POST['codmesa']) ? (int) $_POST['codmesa'] : 0;
+	if ($codmesa <= 0) {
+		echo json_encode(array('ok' => false, 'msg' => 'Mesa no válida.'));
+		exit;
+	}
+	$principal = $this->ResolverMesaPrincipal($codmesa);
+	$mesas = $this->ObtenerCodmesasGrupoActivo($principal);
+	if (count($mesas) < 2) {
+		echo json_encode(array('ok' => false, 'msg' => 'Esta mesa no está unida a otras.'));
+		exit;
+	}
+	self::SetNames();
+	if ($this->GrupoUnionTienePedidoActivo($principal)) {
+		echo json_encode(array('ok' => false, 'msg' => 'No puede separar mesas con un pedido activo. Espere a que el cajero cierre la cuenta.'));
+		exit;
+	}
+	foreach ($mesas as $m) {
+		if ($this->MesaTienePedidoActivo($m)) {
+			echo json_encode(array('ok' => false, 'msg' => 'No puede separar mesas con un pedido activo. Espere a que el cajero cierre la cuenta.'));
+			exit;
+		}
+	}
+	$sqlDel = "DELETE FROM mesas_unidas WHERE codmesa_principal = ? AND activa = 1";
+	$stmtDel = $this->dbh->prepare($sqlDel);
+	$stmtDel->execute(array($principal));
+	echo json_encode(array('ok' => true, 'msg' => 'Mesas separadas correctamente.'));
+	exit;
+}
+############################ FUNCIONES MESAS UNIDAS ###########################
+
 ############################ FUNCION CONTAR DELIVERY PENDIENTE EN COCINA ###########################
 public function ContarDeliveryCocina()
 {
@@ -1180,9 +1441,11 @@ public function ContarDeliveryCocina()
 public function MesasPorId()
 {
 	self::SetNames();
+	$codmesaReq = base64_decode($_GET["codmesa"]);
+	$codmesaPrincipal = $this->ResolverMesaPrincipal($codmesaReq);
 	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM mesas INNER JOIN salas ON salas.codsala = mesas.codsala where mesas.codmesa = ? ";
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codmesa"])) );
+	$stmt->execute( array($codmesaPrincipal) );
 	$num = $stmt->rowCount();
 	if($num==0)
 	{
@@ -1192,6 +1455,8 @@ public function MesasPorId()
 	{
 		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
 			{
+				$row['nombremesa'] = $this->NombreMesaConUnion($row['codmesa']);
+				$row['tiene_union'] = $this->MesaTieneUnionActiva($row['codmesa']) ? 1 : 0;
 				$this->p[] = $row;
 			}
 			return $this->p;
@@ -6680,12 +6945,9 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 		{
 			?>
 
-	<!-- Aqu? todo el c?digo para mesas y sillas -->                                         
-
-                                                    <div id="salas-mesas">
+	<!-- Aquí todo el código para mesas y sillas -->
 <?php echo renderMesasPanel('display:inline;margin:18px;float:left;width:78px;height:65px;'); ?>
-                                                    </div>
-<!-- Fin de todo el c?digo para mesas y sillas -->
+<!-- Fin de todo el código para mesas y sillas -->
 
 			<?php
 		} 
@@ -6707,12 +6969,9 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 		{
 			?>
 
-	<!-- Aqu? todo el c?digo para mesas y sillas -->                                         
-
-                                     <div id="salas-mesas">
+	<!-- Aquí todo el código para mesas y sillas -->
 <?php echo renderMesasPanel('padding:12px;margin:11px;float:left;width:90px;'); ?>
-                                     </div>
-<!-- Fin de todo el c?digo para mesas y sillas -->
+<!-- Fin de todo el código para mesas y sillas -->
 
 			<?php
 		}
@@ -6744,9 +7003,10 @@ public function VerificaVentas()
 	$ivav = $rowcon['ivav'];
 	$simbolo = $rowcon['simbolo'];
 
+$codmesaPrincipal = $this->ResolverMesaPrincipal(base64_decode($_GET["codmesa"]));
 $sql = " SELECT clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.tlfcliente, clientes.direccliente, clientes.emailcliente, ventas.codventa, ventas.codcaja, ventas.codcliente as cliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.totalpago2, ventas.codigo, ventas.observaciones, detalleventas.coddetalleventa, detalleventas.codproducto, detalleventas.producto, detalleventas.cantventa, detalleventas.ivaproducto, detalleventas.importe, salas.nombresala, mesas.codmesa, mesas.nombremesa, usuarios.nombres FROM mesas INNER JOIN ventas ON mesas.codmesa = ventas.codmesa INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente INNER JOIN salas ON salas.codsala = mesas.codsala LEFT JOIN usuarios ON ventas.codigo = usuarios.codigo WHERE mesas.codmesa = ? and mesas.statusmesa = '1' AND detalleventas.statusdetalle = '1'";
 		$stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array(base64_decode($_GET["codmesa"])) );
+		$stmt->execute( array($codmesaPrincipal) );
 		$num = $stmt->rowCount();
 		if($num==0)
 		{
@@ -6805,6 +7065,12 @@ $mesa = $mesa->MesasPorId();
 
 <input type="hidden" name="descuento" id="descuento" value="0.00">
 
+<?php if (!empty($mesa[0]['tiene_union'])) { ?>
+     <div class="modal-footer" style="padding-top:0;">
+<button type="button" id="btn-separar-mesas" class="btn btn-default btn-block" data-codmesa="<?php echo (int) $mesa[0]['codmesa']; ?>"><span class="fa fa-unlink"></span> Separar mesas</button>
+					</div>
+<?php } ?>
+
      <div class="modal-footer"> 
 <button type="button" id="mostrar-mesa" class="btn btn-warning btn-block"><span class="fa fa-cutlery"></span> Mostrar Mesas</button>   
 					</div>
@@ -6822,6 +7088,7 @@ $mesa = $mesa->MesasPorId();
 				} else {
 		while($row = $stmt->fetch(PDO::FETCH_ASSOC))
 		{
+			$row['nombremesa'] = $this->NombreMesaConUnion($row['codmesa']);
 			$this->p[]=$row;
 		}
 		return $this->p;
@@ -6835,7 +7102,8 @@ $mesa = $mesa->MesasPorId();
 public function RegistrarVentas()
 {
 	self::SetNames();
-	activarCarritoMesa(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
+	$codmesaPedido = isset($_POST['codmesa']) ? $_POST['codmesa'] : '';
+	activarCarritoMesa($codmesaPedido);
 	if(empty($_POST["txtTotal"]) or empty($_POST["txtTotalCompra"]))
 	{
 		echo "1";
@@ -6847,14 +7115,23 @@ public function RegistrarVentas()
 		echo "2";
 		exit;
 
-	} else if(empty(getCarritoVentas()))
+	} else if(empty(getCarritoVentas($codmesaPedido)))
 	{
 		echo "3";
 		exit;
 
-	} 
+	}
 
-	$ver = getCarritoVentas();
+	$codmesaVenta = $this->ResolverMesaPrincipal(strip_tags($_POST["codmesa"]));
+	$sqlVentaActiva = "SELECT codventa FROM ventas WHERE codmesa = ? AND statusventa = 'PENDIENTE' LIMIT 1";
+	$stmtVentaActiva = $this->dbh->prepare($sqlVentaActiva);
+	$stmtVentaActiva->execute(array($codmesaVenta));
+	if ($stmtVentaActiva->rowCount() > 0) {
+		echo "8";
+		exit;
+	}
+
+	$ver = getCarritoVentas($codmesaPedido);
 	for($i=0;$i<count($ver);$i++){ 
 
 		$sql = "select existencia from productos where codproducto = '".$ver[$i]['txtCodigo']."'";
@@ -6944,7 +7221,7 @@ public function RegistrarVentas()
 
 		$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
 		if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
-		$codmesa = strip_tags($_POST["codmesa"]);
+		$codmesa = $this->ResolverMesaPrincipal(strip_tags($_POST["codmesa"]));
 		$subtotalivasive = strip_tags($_POST["txtsubtotal"]);
 		$subtotalivanove = strip_tags($_POST["txtsubtotal2"]);
 		$ivave = strip_tags($_POST["iva"]);
@@ -6980,11 +7257,11 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 					$stmt->bindParam(2, $codmesa);
 
 					$statusmesa = strip_tags('1');
-					$codmesa = strip_tags($_POST["codmesa"]);
 					$stmt->execute();
+					$this->OcuparMesasUnion($codmesa);
 #################### AQUI ACTUALIZAMOS EL STATUS DE MESA ####################
 
-					$venta = getCarritoVentas();
+					$venta = getCarritoVentas($codmesaPedido);
 					for($i=0;$i<count($venta);$i++){
 
 		$sql = "select existencia from productos where codproducto = '".$venta[$i]['txtCodigo']."'";
@@ -7158,15 +7435,13 @@ if($num>0) {
          }
 
 ###### AQUI DESTRUIMOS TODAS LAS VARIABLES DE SESSION QUE RECIBIMOS EN CARRITO DE VENTAS ######
-					unsetCarritoVentas(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
+					unsetCarritoVentas($codmesaPedido);
 
 echo "<div class='alert alert-success'>";
 echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
 echo "<span class='fa fa-check-square-o'></span> EL PEDIDO DE LA ".$_POST["nombremesa"].", FUE CONFIRMADO EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."' class='on-default' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda' target='_black'><strong>IMPRIMIR COMANDA</strong></a>";
+echo "<span id='venta-comanda-cod' data-codventa='".base64_encode($codventa)."' style='display:none;'></span>";
 echo "</div>";
-
-echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."', '_blank');</script>";
-echo "<script>if (typeof recargarMesasPanel === 'function') { recargarMesasPanel(); }</script>";
 					exit;
 				}
 ########################### FUNCION PARA REGISTRAR VENTAS DE PRODUCTOS #############################
@@ -7175,7 +7450,26 @@ echo "<script>if (typeof recargarMesasPanel === 'function') { recargarMesasPanel
 public function AgregaPedidos()
 {
 
-	activarCarritoMesa(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
+	$codmesaPedido = isset($_POST['codmesa']) ? $_POST['codmesa'] : '';
+	activarCarritoMesa($codmesaPedido);
+
+	$codmesaPrincipal = $this->ResolverMesaPrincipal(strip_tags($codmesaPedido));
+	if (empty($_POST['codventa'])) {
+		echo "3";
+		exit;
+	}
+	$sqlValVenta = "SELECT codmesa FROM ventas WHERE codventa = ? AND statusventa = 'PENDIENTE' LIMIT 1";
+	$stmtValVenta = $this->dbh->prepare($sqlValVenta);
+	$stmtValVenta->execute(array(strip_tags($_POST['codventa'])));
+	if ($stmtValVenta->rowCount() == 0) {
+		echo "3";
+		exit;
+	}
+	$ventaMesa = $stmtValVenta->fetch(PDO::FETCH_ASSOC);
+	if ((string) $ventaMesa['codmesa'] !== (string) $codmesaPrincipal) {
+		echo "9";
+		exit;
+	}
 
 if(isset($_POST["codventa"]))
 			{
@@ -7196,24 +7490,26 @@ if(isset($_POST["codventa"]))
 					$sql = " update detalleventas set "
 					." comanda = ? "
 					." where "
-					." codventa = '".$_POST["codventa"]."';
+					." codventa = ? AND comanda = '1';
 					";
 					$stmt = $this->dbh->prepare($sql);
 					$stmt->bindParam(1, $comanda);
+					$stmt->bindParam(2, $codventaUpd);
 
 					$comanda = "0";
+					$codventaUpd = strip_tags($_POST["codventa"]);
 					$stmt->execute();
 				}
 			}
 			
-	if(empty(getCarritoVentas()))
+	if(empty(getCarritoVentas($codmesaPedido)))
 				{
 					echo "3";
 					exit;
 
 				} 
 
-	$ver = getCarritoVentas();
+	$ver = getCarritoVentas($codmesaPedido);
 	for($i=0;$i<count($ver);$i++){ 
 
 		$sql = "select existencia from productos where codproducto = '".$ver[$i]['txtCodigo']."'";
@@ -7229,7 +7525,7 @@ if(isset($_POST["codventa"]))
 			exit;                           }
 		}
 
-	$ven = getCarritoVentas();
+	$ven = getCarritoVentas($codmesaPedido);
 	for($i=0;$i<count($ven);$i++){
 
 	$sql = "select existencia from productos where codproducto = '".$ven[$i]['txtCodigo']."'";
@@ -7244,7 +7540,7 @@ if(isset($_POST["codventa"]))
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array( $_POST["codventa"], $ven[$i]['txtCodigo'] ) );
 		$num = $stmt->rowCount();
-		if($num>900)
+		if(false)
 		{
 
 			if($row = $stmt->fetch(PDO::FETCH_ASSOC))
@@ -7648,15 +7944,14 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 			$stmt->execute();
 
 ###### AQUI DESTRUIMOS TODAS LAS VARIABLES DE SESSION QUE RECIBIMOS EN CARRITO DE VENTAS ######
-			unsetCarritoVentas(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
+			unsetCarritoVentas($codmesaPedido);
 
 
 echo "<div class='alert alert-success'>";
 echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
 echo "<span class='fa fa-check-square-o'></span> LOS DETALLES FUERON AGREGADOS A LA ".$_POST["nombremesa"].", EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."' class='on-default' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda' target='_black'><strong>IMPRIMIR COMANDA</strong></a>";
+echo "<span id='venta-comanda-cod' data-codventa='".base64_encode($codventa)."' style='display:none;'></span>";
 echo "</div>";
-
-echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."', '_blank');</script>";
 exit;
 
 		}
@@ -7776,20 +8071,9 @@ public function CerrarMesa()
 	$codventa = strip_tags($_POST["codventa"]);
 	$stmt->execute();	
 
-#################### AQUI ACTUALIZAMOS EL STATUS DE MESA ####################
-	$sql = " update mesas set "
-	." statusmesa = ? "
-	." where "
-	." codmesa = ?;
-	";
-	$stmt = $this->dbh->prepare($sql);
-	$stmt->bindParam(1, $statusmesa); 
-	$stmt->bindParam(2, $codmesa);
-
-	$statusmesa = strip_tags('0');
-	$codmesa = strip_tags($_POST["codmesa"]);
-	$stmt->execute();
-#################### AQUI ACTUALIZAMOS EL STATUS DE MESA ####################
+#################### AQUI LIBERAMOS MESA Y GRUPO UNIDO ####################
+	$this->LiberarMesasUnion(strip_tags($_POST["codmesa"]));
+#################### AQUI LIBERAMOS MESA Y GRUPO UNIDO ####################
 
 #################### AQUI AGREGAMOS EL INGRESO A ARQUEO DE CAJA ####################
 	if ($_POST["tipopagove"]=="CONTADO"){
@@ -8038,9 +8322,12 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 	public function ListarMostrador()
 	{
 		self::SetNames();
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' GROUP BY ventas.codventa";
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' | ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa AND detalleventas.comanda = '1' AND detalleventas.statusdetalle = '1' LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' AND ventas.statusventa = 'PENDIENTE' GROUP BY ventas.codventa HAVING detalles IS NOT NULL AND detalles != ''";
         foreach ($this->dbh->query($sql) as $row)
 		{
+			if (!empty($row['codmesa'])) {
+				$row['nombremesa'] = $this->NombreMesaConUnion($row['codmesa']);
+			}
 			$this->p[] = $row;
 		}
 		return $this->p;
@@ -8067,6 +8354,10 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 		$sala = strip_tags(base64_decode($_GET["nombresala"]));
 		$mesa = strip_tags(base64_decode($_GET["nombremesa"]));
 		$stmt->execute();
+
+		$sqlComanda = "UPDATE detalleventas SET comanda = '0' WHERE codventa = ?";
+		$stmtComanda = $this->dbh->prepare($sqlComanda);
+		$stmtComanda->execute(array($codventa));
 		
         echo "<div class='alert alert-info'>";
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
@@ -8082,7 +8373,8 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 	public function MostrarPedidoCocina()
 	{
 		self::SetNames();
-		$codmesa = strip_tags(base64_decode($_GET['codmesa']));
+		$codmesaReq = strip_tags(base64_decode($_GET['codmesa']));
+		$codmesa = ($codmesaReq === '0') ? '0' : $this->ResolverMesaPrincipal($codmesaReq);
 
 		if ($codmesa === '0') {
 			$nombresala = 'DELIVERY';
@@ -8097,20 +8389,23 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 			}
 			$mesaInfo = $stmtMesa->fetch(PDO::FETCH_ASSOC);
 			$nombresala = $mesaInfo['nombresala'];
-			$nombremesa = $mesaInfo['nombremesa'];
+			$nombremesa = $this->NombreMesaConUnion($codmesa);
 		}
 
 		$sql = "SELECT ventas.codventa, ventas.fechaventa, ventas.observaciones, ventas.cocinero, ventas.totalpago,
 			clientes.nomcliente, clientes.cedcliente,
 			salas.nombresala, mesas.nombremesa,
-			GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' x ', detalleventas.producto) SEPARATOR '<br>') AS detalles
+			GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' x ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles
 			FROM ventas
 			INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa
+				AND detalleventas.comanda = '1'
+				AND detalleventas.statusdetalle = '1'
 			LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente
 			LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa
 			LEFT JOIN salas ON mesas.codsala = salas.codsala
-			WHERE ventas.codmesa = ? AND ventas.cocinero = '1'
+			WHERE ventas.codmesa = ? AND ventas.cocinero = '1' AND ventas.statusventa = 'PENDIENTE'
 			GROUP BY ventas.codventa
+			HAVING detalles IS NOT NULL AND detalles != ''
 			ORDER BY ventas.fechaventa ASC";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute(array($codmesa));

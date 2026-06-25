@@ -27,6 +27,7 @@ include "db/core/app/model/CarritoData.php";
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 
 <link rel="stylesheet" href="css/font-awesome.min.css">
+<link rel="stylesheet" href="css/icon-nqt-fa.css">
 
 
 

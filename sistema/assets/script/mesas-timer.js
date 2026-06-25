@@ -71,8 +71,11 @@
         });
     };
 
-    window.recargarMesasPanel = function() {
+    window.recargarMesasPanel = function(forzar) {
         if (!$('#salas-mesas').length) {
+            return;
+        }
+        if (!forzar && typeof window.mesasUnionModoActivo === 'function' && window.mesasUnionModoActivo()) {
             return;
         }
         var $panel = $('#salas-mesas');
@@ -87,6 +90,9 @@
                 $panel.find('.nav-tabs a[href="' + tabActiva + '"]').tab('show');
             }
             actualizarTimersMesas();
+            if (typeof window.restaurarModoJuntarMesas === 'function') {
+                window.restaurarModoJuntarMesas();
+            }
         });
     };
 

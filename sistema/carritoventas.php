@@ -1,6 +1,5 @@
 <?php
-session_start();
-require_once('class/funciones_basicas.php');
+require_once('class/class.php');
 
 header('Content-Type: application/json; charset=UTF-8');
 

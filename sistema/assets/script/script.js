@@ -11,7 +11,7 @@ function set_salas_mesas(element) {
 }
 
 jQuery.validator.addMethod("lettersonly", function(value, element) {
-    return this.optional(element) || /^[a-zA-ZÒ—·ÈÌÛ˙¡…Õ”⁄,. ]+$/i.test(value);
+    return this.optional(element) || /^[a-zA-Zùùùùùùùùùùùù,. ]+$/i.test(value);
 });
 
 /* FUNCION JQUERY PARA VALIDAR ACCESO DE USUARIOS*/
@@ -148,7 +148,7 @@ $('document').ready(function()
 
 
 
-/* FUNCION JQUERY PARA RECUPERAR CONTRASE—A DE USUARIOS */	 
+/* FUNCION JQUERY PARA RECUPERAR CONTRASEùA DE USUARIOS */	 
 	 
 $('document').ready(function()
 { 
@@ -196,7 +196,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#errorr").fadeIn(1000, function(){
@@ -230,12 +230,12 @@ $('document').ready(function()
 	   
 });
 
-/*  FIN DE FUNCION PARA RECUPERAR CONTRASE—A DE USUARIOS */
+/*  FIN DE FUNCION PARA RECUPERAR CONTRASEùA DE USUARIOS */
 
 
 
 
-/* FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE CONTRASE—A */	 
+/* FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE CONTRASEùA */	 
 	 
 $('document').ready(function()
 { 
@@ -307,7 +307,7 @@ $('document').ready(function()
 	   /* form submit */
 });
 
- /* FIN DE  FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE CONTRASE—A */
+ /* FIN DE  FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE CONTRASEùA */
  
  
  
@@ -544,7 +544,7 @@ $('document').ready(function()
 									});
 																				
 								}  
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -556,7 +556,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==3){
+								else if(data=='3'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -568,7 +568,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==4)
+								else if(data=='4')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -675,7 +675,7 @@ $('document').ready(function()
 									});
 																				
 								}  
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -687,7 +687,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==3){
+								else if(data=='3'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -699,7 +699,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==4)
+								else if(data=='4')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -812,7 +812,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -891,7 +891,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -1018,7 +1018,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -1101,7 +1101,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -1216,7 +1216,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -1296,7 +1296,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -1406,7 +1406,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -1488,7 +1488,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -1603,7 +1603,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -1615,7 +1615,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==3)
+								else if(data=='3')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -1699,7 +1699,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -1711,7 +1711,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==3)
+								else if(data=='3')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -1845,7 +1845,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#read").fadeIn(1000, function(){
@@ -1932,7 +1932,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#update").fadeIn(1000, function(){
@@ -2055,7 +2055,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -2146,7 +2146,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -2262,7 +2262,7 @@ $('document').ready(function()
 									});
 																				
 								}  
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#erroringrediente").fadeIn(1000, function(){
 											
@@ -2357,7 +2357,7 @@ $('document').ready(function()
 									});
 																				
 								}  
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -2368,7 +2368,7 @@ $('document').ready(function()
 										
 									});
 								}  
-								else if(data==3){
+								else if(data=='3'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -2472,7 +2472,7 @@ $('document').ready(function()
 									});
 																				
 								}  
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -2596,7 +2596,7 @@ $('document').ready(function()
 									});
 																				
 								}  
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#errorproduc").fadeIn(1000, function(){
 											
@@ -2731,7 +2731,7 @@ $('document').ready(function()
 										
 									});
 								}  
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -2741,7 +2741,7 @@ $('document').ready(function()
 										
 									});
 								} 
-								else if(data==3){
+								else if(data=='3'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -2886,7 +2886,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -2971,7 +2971,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -2981,7 +2981,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==3){
+								else if(data=='3'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3065,7 +3065,7 @@ $('document').ready(function()
 									});
 																				
 								}  
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3208,7 +3208,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -3220,7 +3220,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==3)
+								else if(data=='3')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -3232,7 +3232,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==4)
+								else if(data=='4')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -3362,7 +3362,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -3477,7 +3477,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3562,7 +3562,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3661,7 +3661,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3807,7 +3807,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -3819,7 +3819,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==3)
+								else if(data=='3')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -3832,7 +3832,7 @@ $('document').ready(function()
 									});
 								}
 
-								else if(data==4)
+								else if(data=='4')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -3930,7 +3930,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -3943,7 +3943,7 @@ $('document').ready(function()
 									});
 								}
 
-								else if(data==3)
+								else if(data=='3')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4164,7 +4164,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#errores").fadeIn(1000, function(){
@@ -4281,7 +4281,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4293,7 +4293,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==3)
+								else if(data=='3')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4306,7 +4306,7 @@ $('document').ready(function()
 									});
 								}
 								
-								else if(data==4)
+								else if(data=='4')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4318,7 +4318,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==5)
+								else if(data=='5')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4330,7 +4330,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==6)
+								else if(data=='6')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4342,7 +4342,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==7)
+								else if(data=='7')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4480,7 +4480,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#errores").fadeIn(1000, function(){
@@ -4546,14 +4546,18 @@ $('document').ready(function()
 	  function submitForm()
 	   {		
 			  var data = $("#ventas").serialize();
+			  var accion = window.ventasAccionSubmit || 'btn-venta';
+			  if (data.indexOf(accion + '=') === -1) {
+			      data += (data ? '&' : '') + encodeURIComponent(accion) + '=1';
+			  }
 			  var nuevaFila ="<tr>"+"<td colspan=4><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td>"+"</tr>";
 			  var codmesa = $('#codmesa').val();
 			  var total = $('#txtTotal').val();
 			  var totalin = $('#txtTotall').val();
 			  var cliente = $('#codcliente').val();
-			  var texto = (totalin == "0.00") ? total : totalin;
+			  var texto = (totalin == "0.00" || totalin === undefined || totalin === '') ? total : totalin;
 	
-	     if (texto==0.00) {
+	     if (texto==0.00 || texto === '0' || texto === '' || texto === undefined) {
 	            
 				$("#producto").focus();
 				$('#producto').css('border-color','#01ba9a');
@@ -4567,14 +4571,25 @@ $('document').ready(function()
 				type : 'POST',
 				url  : 'panel.php',
 				data : data,
+				dataType: 'text',
 				beforeSend: function()
 				{	
 					$("#error").fadeOut();
 					$("#btn-venta").html('<i class="fa fa-refresh"></i> Verificando...');
+					$("#btn-agregapedidos").html('<i class="fa fa-refresh"></i> Verificando...');
 				},
 				success :  function(data)
-						   {						
-								if(data==1){
+						   {
+								data = $.trim(data);
+								if (data.indexOf('<!DOCTYPE') !== -1 || data.indexOf('<html') !== -1) {
+									$("#error").fadeIn(1000, function() {
+										$("#error").html('<center><div class="alert alert-danger"><span class="fa fa-info-circle"></span> No se pudo confirmar el pedido. Recargue la pùgina e intente de nuevo.</div></center>');
+										$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
+										$("#btn-agregapedidos").html('<span class="fa fa-save"></span> Confirmar Pedido');
+									});
+									return;
+								}
+								if(data=='1'){
 									
 						$("#error").fadeIn(1000, function(){
 											
@@ -4586,7 +4601,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4598,7 +4613,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==3)
+								else if(data=='3')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4611,7 +4626,7 @@ $('document').ready(function()
 									});
 								}
 								
-								else if(data==4)
+								else if(data=='4')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4623,7 +4638,17 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==5)
+								else if(data=='8')
+								{
+					$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTA MESA YA TIENE UN PEDIDO ACTIVO. AGREGUE SOLO LOS PRODUCTOS NUEVOS Y USE EL BOT&Oacute;N CONFIRMAR PEDIDO (MODO ADICIONAL).</div></center>');
+					$("#btn-venta").hide();
+					$("#btn-agregapedidos").show();
+					$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
+									});
+								}
+								
+								else if(data=='5')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4635,7 +4660,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==6)
+								else if(data=='6')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4647,7 +4672,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data==7)
+								else if(data=='7')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4663,11 +4688,32 @@ $('document').ready(function()
 										
 									$("#error").fadeIn(1000, function(){
 											
-		$("#error").html('<center> '+data+' </center>');
+		$("#error").html(data);
 	    $("#carrito tbody").html("");
-		$("#recibemesa").load("funciones.php?BuscaMesaReservas=si&codmesa="+btoa(codmesa));
+		var $linkComanda = $('#error a[href*="reportepdf"]').first();
+		if ($linkComanda.length) {
+		    window.open($linkComanda.attr('href'), '_blank');
+		}
+		var mesaRef = window.codmesaActiva || (codmesa ? btoa(String(codmesa)) : '');
+		if (typeof mostrarVistaMesas === 'function') {
+		    mostrarVistaMesas();
+		}
+		if (typeof recargarMesasPanel === 'function') {
+		    recargarMesasPanel();
+		}
+		if (mesaRef) {
+		    $("#recibemesa").load("funciones.php?BuscaMesaReservas=si&codmesa="+mesaRef, function() {
+		        if (typeof toggleAccionesPedido === 'function') {
+		            toggleAccionesPedido();
+		        }
+		        if (typeof cargarCarritoMesa === 'function') {
+		            cargarCarritoMesa(mesaRef);
+		        }
+		    });
+		}
 		setTimeout(function() { $("#error").html(""); }, 15000);
 		$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
+		$("#btn-agregapedidos").html('<span class="fa fa-save"></span> Confirmar Pedido');
 						
 									});
 								}
@@ -4765,7 +4811,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2){
+								else if(data=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -4906,7 +4952,7 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data==2)
+								else if(data=='2')
 								{
 									
 					$("#error").fadeIn(1000, function(){

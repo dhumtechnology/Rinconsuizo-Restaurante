@@ -28,6 +28,7 @@ include "db/core/app/model/ClientesData.php";
 <link rel="stylesheet" href="css/bos.css" type="text/css" media="all">
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
+<link rel="stylesheet" href="css/icon-nqt-fa.css">
 
 </head>
 

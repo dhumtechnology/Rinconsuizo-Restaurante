@@ -431,6 +431,38 @@ function renderEsperaBadge($fechapedido)
     return '<span class="mesa-espera" data-inicio-ts="' . (int) $inicioTs . '" style="display:inline-block;margin-top:3px;font-size:10px;background:#333;color:#fff;padding:2px 7px;border-radius:12px;line-height:1.4;"><i class="fa fa-clock-o"></i> <span class="mesa-espera-text">00:00</span></span>';
 }
 
+function aplicarMapaUnionAMesas($mesas, $mapa)
+{
+    if ($mesas == "" || empty($mesas)) {
+        return array();
+    }
+    if (!is_array($mesas)) {
+        return array();
+    }
+    if (empty($mapa['por_mesa'])) {
+        return $mesas;
+    }
+    $resultado = array();
+    foreach ($mesas as $mesa) {
+        $cod = (string) $mesa['codmesa'];
+        if (isset($mapa['por_mesa'][$cod]) && $mapa['por_mesa'][$cod] !== $cod) {
+            continue;
+        }
+        if (isset($mapa['grupos'][$cod])) {
+            $mesa['nombremesa'] = implode(' + ', $mapa['grupos'][$cod]['nombres']);
+            $mesa['es_union'] = 1;
+            $mesa['codmesa_principal'] = $cod;
+        }
+        $resultado[] = $mesa;
+    }
+    return $resultado;
+}
+
+function esMeseroSesion()
+{
+    return isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'mesero';
+}
+
 function getMesaEstadoMesero($mesa)
 {
     if ($mesa['statusmesa'] == '0') {
@@ -481,12 +513,27 @@ function renderMesaListItem($mesa, $imgStyle = 'display:inline;margin:18px;float
     $badgeListo = $estado['listo']
         ? '<span class="label label-warning" style="display:inline-block;margin-top:3px;font-size:10px;"><i class="fa fa-check"></i> LISTO</span>'
         : '';
+    $badgeUnion = !empty($mesa['es_union'])
+        ? '<span class="label label-info" style="display:inline-block;margin-top:3px;font-size:9px;"><i class="fa fa-link"></i> UNIDAS</span>'
+        : '';
+    $pedidoActivo = ((int) $mesa['statusmesa'] !== 0)
+        || (isset($mesa['pedidos_activos']) && (int) $mesa['pedidos_activos'] > 0)
+        || (isset($mesa['pedidos_cocina']) && (int) $mesa['pedidos_cocina'] > 0);
+    $claseExtra = (esMeseroSesion() && !$pedidoActivo) ? ' mesa-unible' : '';
+    $onclick = esMeseroSesion()
+        ? "manejarClickMesa(this, '" . $codmesaEnc . "')"
+        : "RecibeMesa('" . $codmesaEnc . "')";
     ob_start();
     ?>
             <li style="display:inline;float: left; margin-right: 4px;">
-<div class="users-list-name codMesa" title="<?php echo $nombre; ?>" style="cursor:pointer;" onclick="RecibeMesa('<?php echo $codmesaEnc; ?>')">
+<div class="users-list-name codMesa<?php echo $claseExtra; ?>" title="<?php echo $nombre; ?>" style="cursor:pointer;"
+     data-codmesa="<?php echo (int) $mesa['codmesa']; ?>"
+     data-codsala="<?php echo (int) $mesa['codsala']; ?>"
+     data-statusmesa="<?php echo (int) $mesa['statusmesa']; ?>"
+     data-pedido-activo="<?php echo $pedidoActivo ? '1' : '0'; ?>"
+     onclick="<?php echo $onclick; ?>">
                     <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:<?php echo $bg; ?>" class="miMesa"><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
-                    <center><strong><?php echo $nombre; ?></strong><br><?php echo $timer . $badgeListo; ?></center>
+                    <center><strong style="font-size:11px;"><?php echo $nombre; ?></strong><br><?php echo $timer . $badgeListo . $badgeUnion; ?></center>
                 </div>
             </li>
     <?php
@@ -498,9 +545,22 @@ function renderMesasPanel($imgStyle = 'display:inline;margin:18px;float:left;wid
     ob_start();
     $sala = new Login();
     $salas = $sala->ListarSalas();
+    $mesaObj = new Login();
+    $mapaUnion = $mesaObj->ObtenerMapaMesasUnidas();
     if ($salas == "") {
         echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> NO EXISTEN SALAS REGISTRADAS ACTUALMENTE</center></div>";
         return ob_get_clean();
+    }
+    if (esMeseroSesion()) {
+        ?>
+        <div id="barra-juntar-mesas" class="clearfix" style="margin-bottom:12px;padding:8px;background:#f9f9f9;border-radius:4px;">
+            <button type="button" id="btn-modo-juntar" class="btn btn-info btn-sm"><i class="fa fa-link"></i> Juntar mesas</button>
+            <span id="juntar-mesas-ayuda" style="display:none;margin-left:8px;color:#555;font-size:12px;">Seleccione 2 o más mesas <strong>disponibles (verdes)</strong> sin pedido en curso, del mismo salón.</span>
+            <button type="button" id="btn-confirmar-juntar" class="btn btn-success btn-sm" style="display:none;margin-left:6px;"><i class="fa fa-check"></i> Confirmar unión</button>
+            <button type="button" id="btn-cancelar-juntar" class="btn btn-default btn-sm" style="display:none;margin-left:4px;">Cancelar</button>
+            <span id="juntar-mesas-contador" class="label label-primary" style="display:none;margin-left:8px;">0</span>
+        </div>
+        <?php
     }
     ?>
                         <ul class="nav nav-tabs tabs">
@@ -521,15 +581,19 @@ function renderMesasPanel($imgStyle = 'display:inline;margin:18px;float:left;wid
         <p>
         <ul class="users-list clearfix" id="listMesas">
             <?php
-                $mesaObj = new Login();
                 $mesas = $mesaObj->ListarMesas();
                 if ($mesas == "") {
                     echo "<div class='alert alert-danger'><center><span class='fa fa-info-circle'></span> NO EXISTEN MESAS REGISTRADAS EN LAS SALAS ACTUALMENTE</center></div>";
                 } else {
+                    $mesasSala = array();
                     for ($ii = 0; $ii < sizeof($mesas); $ii++) {
                         if ($mesas[$ii]['codsala'] == $codigo_sala) {
-                            echo renderMesaListItem($mesas[$ii], $imgStyle);
+                            $mesasSala[] = $mesas[$ii];
                         }
+                    }
+                    $mesasSala = aplicarMapaUnionAMesas($mesasSala, $mapaUnion);
+                    foreach ($mesasSala as $mesaItem) {
+                        echo renderMesaListItem($mesaItem, $imgStyle);
                     }
                 }
             ?>
@@ -550,12 +614,15 @@ function renderMesaListItemCocinero($mesa, $imgStyle = 'display:inline;margin:18
     $bg = ($pendientes > 0) ? 'red' : '#5cb85c';
     $timer = ($pendientes > 0) ? renderEsperaBadge(isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '') : '';
     $badge = ($pendientes > 1) ? '<span class="label label-danger" style="position:absolute;top:0;right:0;border-radius:50%;padding:3px 6px;font-size:10px;">' . $pendientes . '</span>' : '';
+    $badgeUnion = !empty($mesa['es_union'])
+        ? '<span class="label label-info" style="display:inline-block;margin-top:3px;font-size:9px;"><i class="fa fa-link"></i></span>'
+        : '';
     ob_start();
     ?>
             <li style="display:inline;float: left; margin-right: 4px;">
 <div class="users-list-name codMesa" title="<?php echo $nombre; ?>" style="cursor:pointer;position:relative;" onclick="RecibeMesaCocinero('<?php echo $codmesaEnc; ?>')">
                     <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:<?php echo $bg; ?>;position:relative;" class="miMesa"><?php echo $badge; ?><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
-                    <center><strong><?php echo $nombre; ?></strong><br><?php echo $timer; ?></center>
+                    <center><strong style="font-size:11px;"><?php echo $nombre; ?></strong><br><?php echo $timer . $badgeUnion; ?></center>
                 </div>
             </li>
     <?php
@@ -593,6 +660,7 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
 
     $mesaObj = new Login();
     $mesas = $mesaObj->ListarMesasCocinero();
+    $mapaUnion = $mesaObj->ObtenerMapaMesasUnidas();
     $pendientesPorSala = array();
     $mesasPorSala = array();
     if ($mesas != "") {
@@ -656,6 +724,7 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
                 if (empty($mesasEnSala)) {
                     echo "<div class='alert alert-info'><center><span class='fa fa-info-circle'></span> NO HAY PEDIDOS EN ESTA SALA</center></div>";
                 } else {
+                    $mesasEnSala = aplicarMapaUnionAMesas($mesasEnSala, $mapaUnion);
                     foreach ($mesasEnSala as $mesaItem) {
                         echo renderMesaListItemCocinero($mesaItem, $imgStyle);
                     }
@@ -682,9 +751,28 @@ function carritoMesaDecode($codmesaRef)
     return (string) $codmesaRef;
 }
 
+function resolverClaveCarritoMesa($codmesaRef = null)
+{
+    if ($codmesaRef === null || $codmesaRef === '') {
+        $codmesaRef = isset($_SESSION['CarritoMesaActiva']) ? $_SESSION['CarritoMesaActiva'] : '';
+        if ($codmesaRef === '') {
+            return '';
+        }
+    }
+    $codmesa = carritoMesaDecode($codmesaRef);
+    if ($codmesa === '') {
+        return '';
+    }
+    $login = new Login();
+    return (string) $login->ResolverMesaPrincipal($codmesa);
+}
+
 function activarCarritoMesa($codmesaRef)
 {
-    $codmesa = carritoMesaDecode($codmesaRef);
+    $codmesa = resolverClaveCarritoMesa($codmesaRef);
+    if ($codmesa === '') {
+        return '';
+    }
     $_SESSION['CarritoMesaActiva'] = $codmesa;
     if (!isset($_SESSION['CarritoVentasPorMesa']) || !is_array($_SESSION['CarritoVentasPorMesa'])) {
         $_SESSION['CarritoVentasPorMesa'] = array();
@@ -710,10 +798,10 @@ function sincronizarCarritoVentasActivo($codmesa = null)
 
 function getCarritoVentas($codmesa = null)
 {
-    if ($codmesa === null) {
-        $codmesa = isset($_SESSION['CarritoMesaActiva']) ? $_SESSION['CarritoMesaActiva'] : '';
+    $codmesa = resolverClaveCarritoMesa($codmesa);
+    if ($codmesa === '') {
+        return array();
     }
-    $codmesa = carritoMesaDecode($codmesa);
     if (!isset($_SESSION['CarritoVentasPorMesa']) || !is_array($_SESSION['CarritoVentasPorMesa'])) {
         return array();
     }
@@ -722,10 +810,10 @@ function getCarritoVentas($codmesa = null)
 
 function setCarritoVentas($items, $codmesa = null)
 {
-    if ($codmesa === null) {
-        $codmesa = isset($_SESSION['CarritoMesaActiva']) ? $_SESSION['CarritoMesaActiva'] : '';
+    $codmesa = resolverClaveCarritoMesa($codmesa);
+    if ($codmesa === '') {
+        return;
     }
-    $codmesa = carritoMesaDecode($codmesa);
     if (!isset($_SESSION['CarritoVentasPorMesa']) || !is_array($_SESSION['CarritoVentasPorMesa'])) {
         $_SESSION['CarritoVentasPorMesa'] = array();
     }
@@ -735,10 +823,10 @@ function setCarritoVentas($items, $codmesa = null)
 
 function unsetCarritoVentas($codmesa = null)
 {
-    if ($codmesa === null) {
-        $codmesa = isset($_SESSION['CarritoMesaActiva']) ? $_SESSION['CarritoMesaActiva'] : '';
+    $codmesa = resolverClaveCarritoMesa($codmesa);
+    if ($codmesa === '') {
+        return;
     }
-    $codmesa = carritoMesaDecode($codmesa);
     if (isset($_SESSION['CarritoVentasPorMesa'][$codmesa])) {
         unset($_SESSION['CarritoVentasPorMesa'][$codmesa]);
     }

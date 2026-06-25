@@ -22,6 +22,7 @@ include "db/core/app/model/ClientesData.php";
 <link rel="stylesheet" href="css/bos.css" type="text/css" media="all">
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
+<link rel="stylesheet" href="css/icon-nqt-fa.css">
 
 </head>
 
@@ -423,7 +424,7 @@ include "db/core/app/model/ClientesData.php";
                 <input type="hidden" class="form-control"  id="cantidad_<?php echo $productoc->codalmacen; ?>"  value="1" min="1" >
                 <input type="hidden" class="form-control" id="precio_venta_<?php echo $productoc->codalmacen; ?>"  value="<?php echo $productoc->precioventa;?>" >
 
-                  <a class="btn btn-product add-to-cart leo-bt-cart leo-bt-cart_1"  href="#" onclick="agregar('<?php echo $productoc->codalmacen; ?>')" data-bs-toggle="modal" data-bs-target="#exampleModal<?php echo $productoc->codalmacen; ?>">
+                  <a class="btn btn-product add-to-cart leo-bt-cart leo-bt-cart_1" href="#" onclick="return agregar('<?php echo $productoc->codalmacen; ?>', event);">
                     <i class="icon-nqt-shopping-basket"></i>
                     <span class="name-btn-product">Agregar a carrito</span>
                   </span>
@@ -460,10 +461,10 @@ include "db/core/app/model/ClientesData.php";
                       <div class="col-md-7" style="border-left: solid 1px #bcbcbc;">
                         <div class="cart-content">
                           <p class="cart-products-count" style="text-align: left;">Hay <?php echo @count(CarritoData::getAllTemporal($session_id));?> artículos en su carrito.</p>
-                          <p style="text-align: left;">Subtotal: <b>$ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
+                          <p class="js-cart-subtotal" style="text-align: left;">Subtotal: <b>$ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
                           <p style="text-align: left;">Transporte: <b>$ 0</b></p>
                           <p style="text-align: left;">IVA: <b>$ 20</b></p>
-                          <p style="text-align: left;">Total: <b>$ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
+                          <p class="js-cart-total" style="text-align: left;">Total: <b>$ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
                           <div class="">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">CONTINUAR COMPRANDO</button>
                             <a  href="carrito.php" type="button" class="btn btn-primary">PASAR POR LA CAJA</a>
@@ -617,49 +618,7 @@ include "db/core/app/model/ClientesData.php";
 
 
 <script src="css/jquery.js"></script>
-<script type="text/javascript">
-     
-
-  function agregar(id)
-    {
-      var precio_venta=$('#precio_venta_'+id).val();
-      var cantidad=$('#cantidad_'+id).val();
-      //Inicia validacion
-      if (isNaN(cantidad)) 
-      {
-      alert('Esto no es un numero');
-      document.getElementById('cantidad_'+id).focus();
-      return false;
-      }
-      if (isNaN(precio_venta))
-      { 
-      alert('Esto no es un numero');
-      document.getElementById('precio_venta_'+id).focus();
-      return false;
-      }
-      
-      //Fin validacion
-    var parametros={"id":id,"precio_venta":precio_venta,"cantidad":cantidad}; 
-    $.ajax({
-        type: "POST",
-        url: "agregar_tmp.php", 
-        data: parametros,
-     beforeSend: function(objeto){
-      $("#resultados").html("Mensaje: Cargando...");
-      },
-        success: function(datos){
-
-        $("#resultados").html(datos);
-
-    }
-      });
-    }
-    
-      
-    
-    
-  
-</script>
+<script src="js/carrito-home.js"></script>
 
 
 
