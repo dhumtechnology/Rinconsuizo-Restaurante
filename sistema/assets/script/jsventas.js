@@ -1,3 +1,196 @@
+window.codmesaActiva = '';
+window.carritoQueue = [];
+window.carritoProcessing = false;
+window.carritoRequestSeq = 0;
+
+function processCarritoQueue() {
+    if (window.carritoProcessing || window.carritoQueue.length === 0) {
+        return;
+    }
+    window.carritoProcessing = true;
+    var job = window.carritoQueue.shift();
+    var payload = job.payload;
+    if (window.codmesaActiva) {
+        payload.codmesa = window.codmesaActiva;
+    }
+    var seq = ++window.carritoRequestSeq;
+    $.post('carritoventas.php', payload, function(data) {
+        if (seq === window.carritoRequestSeq) {
+            if (job.callback) {
+                job.callback(data);
+            }
+        }
+        window.carritoProcessing = false;
+        processCarritoQueue();
+    }, 'json').fail(function() {
+        window.carritoProcessing = false;
+        processCarritoQueue();
+    });
+}
+
+function postCarrito(payload, callback) {
+    window.carritoQueue.push({ payload: payload, callback: callback });
+    processCarritoQueue();
+}
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function escJs(str) {
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function toggleAccionesPedido() {
+    if ($('#recibemesa input#codventa').length && $('#recibemesa input#codventa').val() !== '') {
+        $('#btn-agregapedidos').show();
+        $('#btn-venta').hide();
+    } else {
+        $('#btn-venta').show();
+        $('#btn-agregapedidos').hide();
+    }
+}
+
+function cargarCarritoMesa(codmesa, callback) {
+    window.codmesaActiva = codmesa;
+    window.carritoQueue = [];
+    window.carritoProcessing = false;
+    window.carritoRequestSeq++;
+    postCarrito({ cambiarMesa: codmesa }, function(data) {
+        pintarCarritoDesdeServidor(data);
+        if (callback) {
+            callback(data);
+        }
+    });
+}
+
+function pintarCarritoDesdeServidor(data) {
+    $("#carrito tbody").html("");
+    var SubtotalFact = 0;
+    var BaseImpIva1 = 0;
+    var contador = 0;
+    var TotalCompra = 0;
+    var er_num = /^([0-9])*[.]?[0-9]*$/;
+
+    if (!data || !data.length) {
+        var filaVacia = "<tr><td colspan=4><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td></tr>";
+        $(filaVacia).appendTo("#carrito tbody");
+        $("#lblsubtotal").text("0.00");
+        $("#lblsubtotal2").text("0.00");
+        $("#lbliva").text("0.00");
+        $("#lbldescuento").text("0.00");
+        $("#lbltotal").text("0.00");
+        $("#txtsubtotal").val("0.00");
+        $("#txtsubtotal2").val("0.00");
+        $("#txtIva").val("0.00");
+        $("#txtDescuento").val("0.00");
+        $("#txtTotal").val("0.00");
+        $("#txtTotalCompra").val("0.00");
+        return;
+    }
+
+    $.each(data, function(i, item) {
+        var cantsincero = item.cantidad;
+        if (!er_num.test(cantsincero)) {
+            return;
+        }
+        contador = contador + 1;
+        var OperacionCompra = parseFloat(item.precio);
+        TotalCompra = parseFloat(TotalCompra) + parseFloat(OperacionCompra);
+        var Operacion = parseFloat(item.precio2) * parseFloat(item.cantidad);
+        var Operacion3 = parseFloat(item.precioconiva) * parseFloat(item.cantidad);
+        var Subbaseimponiva = Operacion3.toFixed(2);
+        BaseImpIva1 = parseFloat(BaseImpIva1) + parseFloat(Subbaseimponiva);
+        var ivg = $('input#iva').val();
+        var ivg2 = ivg / 100;
+        var TotalIvaGeneral = parseFloat(BaseImpIva1) * parseFloat(ivg2.toFixed(2));
+        SubtotalFact = parseFloat(SubtotalFact) + parseFloat(Operacion.toFixed(2));
+        var BaseImpIva2 = parseFloat(SubtotalFact) - parseFloat(BaseImpIva1);
+        var desc = $('input#descuento').val() || 0;
+        var desc2 = desc / 100;
+        var Total = parseFloat(BaseImpIva1) + parseFloat(BaseImpIva2) + parseFloat(TotalIvaGeneral);
+        var TotalDescuentoGeneral = parseFloat(Total.toFixed(2)) * parseFloat(desc2.toFixed(2));
+        var TotalFactura = parseFloat(Total.toFixed(2)) - parseFloat(TotalDescuentoGeneral.toFixed(2));
+
+        var codigoEsc = escHtml(item.txtCodigo);
+        var descEsc = escHtml(item.descripcion);
+        var codigoJs = escJs(item.txtCodigo);
+        var descJs = escJs(item.descripcion);
+        var nuevaFila =
+            "<tr align='center' style='font-size:13px;' " +
+            "data-codigo='" + codigoEsc + "' " +
+            "data-descripcion='" + descEsc + "' " +
+            "data-existencia='" + escHtml(item.existencia) + "' " +
+            "data-precio='" + escHtml(item.precio) + "' " +
+            "data-precio2='" + escHtml(item.precio2) + "' " +
+            "data-precioconiva='" + escHtml(item.precioconiva) + "' " +
+            "data-ivaproducto='" + escHtml(item.ivaproducto) + "' " +
+            "data-tipo='" + escHtml(item.tipo) + "'>" +
+            "<td>" +
+            '<button class="btn btn-info btn-xs" style="cursor:pointer;" onclick="addItem(' +
+            "'" + codigoJs + "'," +
+            "'-1'," +
+            "'" + descJs + "'," +
+            "'" + item.existencia + "'," +
+            "'" + item.precio + "'," +
+            "'" + item.precio2 + "'," +
+            "'" + item.precioconiva + "'," +
+            "'" + item.ivaproducto + "'," +
+            "'" + item.tipo + "', " +
+            "'-'" +
+            ')"' +
+            " type='button'><span class='fa fa-minus'></span></button>" +
+            "<input type='text' class='cart-qty-input' data-codigo='" + codigoEsc + "' style='width:35px;height:22px;border:#FF0000;' value='" + item.cantidad + "'><input type='hidden' value='" + item.precio + "'>" +
+            '<button class="btn btn-info btn-xs" style="cursor:pointer;" onclick="addItem(' +
+            "'" + codigoJs + "'," +
+            "'+1'," +
+            "'" + descJs + "'," +
+            "'" + item.existencia + "'," +
+            "'" + item.precio + "'," +
+            "'" + item.precio2 + "'," +
+            "'" + item.precioconiva + "'," +
+            "'" + item.ivaproducto + "'," +
+            "'" + item.tipo + "', " +
+            "'+'" +
+            ')"' +
+            " type='button'><span class='fa fa-plus'></span></button></td>" +
+            "<td><input type='hidden' value='" + codigoEsc + "'><input type='hidden' value='" + item.existencia + "'>" + descEsc + "<input type='hidden' value='" + item.tipo + "'></td>" +
+            "<td>" + item.precio2 + "<input type='hidden' value='" + item.precioconiva + "'><input type='hidden' value='" + item.ivaproducto + "'><input type='hidden' value='" + OperacionCompra.toFixed(2) + "'><input type='hidden' value='" + Operacion.toFixed(2) + "'></td>" +
+            "<td>" +
+            '<button class="btn btn-info btn-xs" style="cursor:pointer;color:#fff;" onclick="addItem(' +
+            "'" + codigoJs + "'," +
+            "'0'," +
+            "'" + descJs + "'," +
+            "'" + item.existencia + "'," +
+            "'" + item.precio + "'," +
+            "'" + item.precio2 + "'," +
+            "'" + item.precioconiva + "'," +
+            "'" + item.ivaproducto + "'," +
+            "'" + item.tipo + "', " +
+            "'='" +
+            ')" type="button"><span class="fa fa-trash-o"></span></button>' +
+            "</td></tr>";
+        $(nuevaFila).appendTo("#carrito tbody");
+
+        $("#lblsubtotal").text(BaseImpIva1.toFixed(2));
+        $("#lblsubtotal2").text(BaseImpIva2.toFixed(2));
+        $("#lbliva").text(TotalIvaGeneral.toFixed(2));
+        $("#lbldescuento").text(TotalDescuentoGeneral.toFixed(2));
+        $("#lbltotal").text(TotalFactura.toFixed(2));
+        $("#txtsubtotal").val(BaseImpIva1.toFixed(2));
+        $("#txtsubtotal2").val(BaseImpIva2.toFixed(2));
+        $("#txtIva").val(TotalIvaGeneral.toFixed(2));
+        $("#txtDescuento").val(TotalDescuentoGeneral.toFixed(2));
+        $("#txtTotal").val(TotalFactura.toFixed(2));
+        $("#txtTotalCompra").val(TotalCompra.toFixed(2));
+    });
+}
+
 function DoAction(codproducto, producto, codcategoria, precioconiva, preciocompra, precioventa, ivaproducto, existencia) {
     addItem(codproducto, 1, producto, existencia, preciocompra, precioventa, precioconiva, ivaproducto, codcategoria, '+=');
 }
@@ -76,130 +269,14 @@ $(document).ready(function() {
                 CarritoV.Existencia = $('input#existencia').val();
                 CarritoV.opCantidad = '+=';
                 var DatosJson = JSON.stringify(CarritoV);
-                $.post('carritoventas.php', {
-                        MiCarritoV: DatosJson
-                    },
-                    function(data, textStatus) {
-                        $("#carrito tbody").html("");
-                        var SubtotalFact = 0;
-                        var BaseImpIva1 = 0;
-                        var contador = 0;
-                        var iva = 0;
-                        var total = 0;
-                        var TotalCompra = 0;
-
-                        $.each(data, function(i, item) {
-                            var cantsincero = item.cantidad;
-                            //cantsincero = parseInt(cantsincero);
-                            cantsincero = cantsincero;
-
-                            if(er_num.test(cantsincero)){
-                             //if (cantsincero != 0) {
-                                contador = contador + 1;
-
-var OperacionCompra = parseFloat(item.precio);
-TotalCompra = parseFloat(TotalCompra) + parseFloat(OperacionCompra);
-
-var Operacion = parseFloat(item.precio2) * parseFloat(item.cantidad);
-var Subtotal = Operacion.toFixed(2);
-
-//CALCULO DE BASE IMPONIBLE IVA CON PORCENTAJE
-var Operacion3 = parseFloat(item.precioconiva) * parseFloat(item.cantidad);
-var Subbaseimponiva = Operacion3.toFixed(2);
-
-//BASE IMPONIBLE IVA CON PORCENTAJE
-BaseImpIva1 = parseFloat(BaseImpIva1) + parseFloat(Subbaseimponiva);
-
-//CALCULO GENERAL DE IVA CON BASE IVA * IVA %
-var ivg = $('input#iva').val();
-ivg2 = ivg / 100;
-TotalIvaGeneral = parseFloat(BaseImpIva1) * parseFloat(ivg2.toFixed(2));
-
-//SUBTOTAL GENERAL DE FACTURA
-SubtotalFact = parseFloat(SubtotalFact) + parseFloat(Subtotal);
-//BASE IMPONIBLE IVA SIN PORCENTAJE
-BaseImpIva2 = parseFloat(SubtotalFact) - parseFloat(BaseImpIva1);
-
-//CALCULAMOS DESCUENTO POR PRODUCTO
-var desc = $('input#descuento').val();
-desc2 = desc / 100;
-
-//CALCULO DEL TOTAL DE FACTURA
-Total = parseFloat(BaseImpIva1) + parseFloat(BaseImpIva2) + parseFloat(TotalIvaGeneral);
-TotalDescuentoGeneral = parseFloat(Total.toFixed(2)) * parseFloat(desc2.toFixed(2));
-TotalFactura = parseFloat(Total.toFixed(2)) - parseFloat(TotalDescuentoGeneral.toFixed(2));
-
-        var nuevaFila =
-                        "<tr align='center' style='font-size:13px;'>" +
-                        "<td>" +
-                        '<button class="btn btn-info btn-xs" style="cursor:pointer;" onclick="addItem(' +
-                        "'" + item.txtCodigo + "'," +
-                        "'-1'," +
-                        "'" + item.descripcion + "'," +
-                        "'" + item.existencia + "'," +
-                        "'" + item.precio + "'," +
-                        "'" + item.precio2 + "'," +
-                        "'" + item.precioconiva + "'," +
-                        "'" + item.ivaproducto + "'," +
-                        "'" + item.tipo + "', " +
-                        "'-'" +
-                        ')"' +
-                        " type='button'><span class='fa fa-minus'></span></button>" +
-                        "<input type='text' id='"+item.cantidad+"' style='width:35px;height:22px;border:#FF0000;' value='" + item.cantidad + "'><input type='hidden' value='" + item.precio + "'>" +
-                        '<button class="btn btn-info btn-xs" style="cursor:pointer;" onclick="addItem(' +
-                        "'" + item.txtCodigo + "'," +
-                        "'+1'," +
-                        "'" + item.descripcion + "'," +
-                        "'" + item.existencia + "'," +
-                        "'" + item.precio + "'," +
-                        "'" + item.precio2 + "'," +
-                        "'" + item.precioconiva + "'," +
-                        "'" + item.ivaproducto + "'," +
-                        "'" + item.tipo + "', " +
-                        "'+'" +
-                        ')"' +
-                        " type='button'><span class='fa fa-plus'></span></button></td>" +
-                        "<td><input type='hidden' value='" + item.txtCodigo + "'><input type='hidden' value='" + item.existencia + "'>" + item.descripcion + "<input type='hidden' value='" + item.tipo + "'></td>" +
-                        "<td>" + item.precio2 + "<input type='hidden' value='" + item.precioconiva + "'><input type='hidden' value='" + item.ivaproducto + "'><input type='hidden' value='" + OperacionCompra.toFixed(2) + "'><input type='hidden' value='" + Operacion.toFixed(2) + "'></td>" +
-                        "<td>" +
-                        '<button class="btn btn-info btn-xs" style="cursor:pointer;color:#fff;" ' +
-                        'onclick="addItem(' +
-                        "'" + item.txtCodigo + "'," +
-                        "'0'," +
-                        "'" + item.descripcion + "'," +
-                        "'" + item.existencia + "'," +
-                        "'" + item.precio + "'," +
-                        "'" + item.precio2 + "'," +
-                        "'" + item.precioconiva + "'," +
-                        "'" + item.ivaproducto + "'," +
-                        "'" + item.tipo + "', " +
-                        "'='" +
-                        ')"' +
-                        ' type="button"><span class="fa fa-trash-o"></span></button>' +
-                                    "</td>" +
-                                    "</tr>";
-                                $(nuevaFila).appendTo("#carrito tbody");
-
-                                $("#lblsubtotal").text(BaseImpIva1.toFixed(2));
-                                $("#lblsubtotal2").text(BaseImpIva2.toFixed(2));
-                                $("#lbliva").text(TotalIvaGeneral.toFixed(2));
-                                $("#lbldescuento").text(TotalDescuentoGeneral.toFixed(2));
-                                $("#lbltotal").text(TotalFactura.toFixed(2));
-
-                                $("#txtsubtotal").val(BaseImpIva1.toFixed(2));
-                                $("#txtsubtotal2").val(BaseImpIva2.toFixed(2));
-                                $("#txtIva").val(TotalIvaGeneral.toFixed(2));
-                                $("#txtDescuento").val(TotalDescuentoGeneral.toFixed(2));
-                                $("#txtTotal").val(TotalFactura.toFixed(2));
-                                $("#txtTotalCompra").val(TotalCompra.toFixed(2));
-                            }
-
-                        });
-                        $("#busquedaproducto").focus();
-                        LimpiarTexto();
-                    },
-                    "json"
-                );
+                postCarrito({ MiCarritoV: DatosJson }, function(data) {
+                    pintarCarritoDesdeServidor(data);
+                    var busqueda = document.getElementById('busquedaproducto');
+                    if (busqueda) {
+                        busqueda.focus({ preventScroll: true });
+                    }
+                    LimpiarTexto();
+                });
                 return false;
             }
         }
@@ -218,46 +295,17 @@ TotalFactura = parseFloat(Total.toFixed(2)) - parseFloat(TotalDescuentoGeneral.t
         CarritoV.Precioconiva = "0";
         CarritoV.Ivaproducto = "vaciar";
         var DatosJson = JSON.stringify(CarritoV);
-        $.post('carritoventas.php', {
-                MiCarritoV: DatosJson
-            },
-            function(data, textStatus) {
-                $("#carrito tbody").html("");
-                var nuevaFila =
-"<tr>"+"<td colspan=4><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td>"+"</tr>";
-
-                $(nuevaFila).appendTo("#carrito tbody");
-                LimpiarTexto();
-            },
-            "json"
-        );
+        postCarrito({ MiCarritoV: DatosJson }, function(data) {
+            pintarCarritoDesdeServidor(data);
+            LimpiarTexto();
+        });
         return false;
     });
 
 
 $(document).ready(function() {
     $('#vaciarv').click(function() {
-    $("#ventas")[0].reset();
-    $("#cliente").val("");
-    //$('label[id*="cedcliente"]').text('SIN ASIGNAR');
-    //$('label[id*="nomcliente"]').text('SIN ASIGNAR');
-    //$('label[id*="direccliente"]').text('SIN ASIGNAR');
-    $("#carrito tbody").html("");
-    var nuevaFila =
-"<tr>"+"<td colspan=4><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td>"+"</tr>";    
-$(nuevaFila).appendTo("#carrito tbody");
     $("#busquedaproducto").val("");
-    $("#lblsubtotal").text("0.00");
-    $("#lblsubtotal2").text("0.00");
-    $("#lbliva").text("0.00");
-    $("#lbldescuento").text("0.00");
-    $("#lbltotal").text("0.00");
-    $("#txtsubtotal").val("0.00");
-    $("#txtsubtotal2").val("0.00");
-    $("#txtIva").val("0.00");
-    $("#txtDescuento").val("0.00");
-    $("#txtTotal").val("0.00");
-    $("#txtTotalCompra").val("0.00");
    });
 });
 
@@ -267,38 +315,20 @@ $('document').ready(function(){
   $('#mostrar-mesa').click(function(){
 
   $("#error").html("");
-  $("#panel-carrito-orden").hide();
+  window.codmesaActiva = '';
+  window.carritoQueue = [];
+  window.carritoProcessing = false;
+  window.carritoRequestSeq++;
+  if (typeof mostrarVistaMesas === 'function') {
+      mostrarVistaMesas();
+  }
   $("#salas-mesas").load("funciones.php?MesasPanel=si", function() {
       if (typeof actualizarTimersMesas === 'function') {
           actualizarTimersMesas();
       }
   });
   $("#recibemesa").html("");
-
-    var CarritoV = new Object();
-        CarritoV.Codigo = "vaciar";
-        CarritoV.Tipo = "vaciar";
-        CarritoV.Cantidad = "0";
-        CarritoV.Descripcion = "vaciar";
-        CarritoV.Existencia = "0";
-        CarritoV.Precio = "0";
-        CarritoV.Precio2 = "0";
-        CarritoV.Precioconiva = "0";
-        CarritoV.Ivaproducto = "vaciar";
-        var DatosJson = JSON.stringify(CarritoV);
-        $.post('carritoventas.php', {
-                MiCarritoV: DatosJson
-            },
-            function(data, textStatus) {
-                $("#carrito tbody").html("");
-                var nuevaFila =
-"<tr>"+"<td colspan=4><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td>"+"</tr>";
-
-                $(nuevaFila).appendTo("#carrito tbody");
-                LimpiarTexto();
-            },
-            "json"
-        );
+  pintarCarritoDesdeServidor([]);
         return false;
 
     });
@@ -329,13 +359,10 @@ $(document).ready(function (){
  });
 
 
-    $("#carrito tbody").on('keydown', 'input', function(e) {
+    $("#carrito tbody").on('keydown', '.cart-qty-input', function(e) {
         var element = $(this);
-        var pvalue = element.val();
         var code = e.charCode || e.keyCode;
         var avalue = String.fromCharCode(code);
-        var action = element.siblings('button').first().attr('onclick');
-        var params;
         if (code !== 8 && /[^\d]/ig.test(avalue)) {
             e.preventDefault();
             return;
@@ -344,23 +371,22 @@ $(document).ready(function (){
             return true;
         }
         element.attr('data-proc', '1');
-        params = action.match(/\'([^\']+)\'/g).map(function(v) {
-            return v.replace(/\'/g, '');
-        });
+        var row = element.closest('tr');
         setTimeout(function() {
             if (element.attr('data-proc') == '1') {
                 var value = element.val() || 0;
                 addItem(
-                    params[0],
+                    row.attr('data-codigo'),
                     value,
-                    params[2],
-                    params[3],
-                    params[4],
-                    params[5],
-                    params[6],
-                    params[7],
-                    params[8],
-                    '='
+                    row.attr('data-descripcion'),
+                    row.attr('data-existencia'),
+                    row.attr('data-precio'),
+                    row.attr('data-precio2'),
+                    row.attr('data-precioconiva'),
+                    row.attr('data-ivaproducto'),
+                    row.attr('data-tipo'),
+                    '=',
+                    false
                 );
                 element.attr('data-proc', '0');
             }
@@ -379,6 +405,7 @@ function LimpiarTexto() {
     $("#ivaproducto").val("");
     $("#codcategoria").val("");
     $("#existencia").val("");
+    $("#cantidad").val("1");
 }
 
 /*function AgregaCliente(codigocliente,cedcliente,nomcliente,direccliente) 
@@ -394,7 +421,10 @@ function LimpiarTexto() {
             }, 100);
 }*/
 
-function addItem(codigo, cantidad, descripcion, existencia, precio, precio2, precioconiva, ivaproducto, tipo, opCantidad) {
+function addItem(codigo, cantidad, descripcion, existencia, precio, precio2, precioconiva, ivaproducto, tipo, opCantidad, limpiarBusqueda) {
+    if (limpiarBusqueda === undefined) {
+        limpiarBusqueda = (opCantidad === '+=');
+    }
     var CarritoV = new Object();
     CarritoV.Codigo = codigo;
     CarritoV.Precio = precio;
@@ -407,152 +437,11 @@ function addItem(codigo, cantidad, descripcion, existencia, precio, precio2, pre
     CarritoV.Existencia = existencia;
     CarritoV.opCantidad = opCantidad;
     var DatosJson = JSON.stringify(CarritoV);
-    $.post('carritoventas.php', {
-            MiCarritoV: DatosJson
-        },
-        function(data, textStatus) {
-            $("#carrito tbody").html("");
-            var SubtotalFact = 0;
-            var BaseImpIva1 = 0;
-            var contador = 0;
-            var iva = 0;
-            var total = 0;
-            var TotalCompra = 0;
-
-            $.each(data, function(i, item) {
-                var cantsincero = item.cantidad;
-                   //cantsincero = parseInt(cantsincero);
-                   cantsincero = cantsincero;
-
-                if (cantsincero != 0) {
-                    contador = contador + 1;
-
-var OperacionCompra = parseFloat(item.precio);
-TotalCompra = parseFloat(TotalCompra) + parseFloat(OperacionCompra);
-
-var Operacion = parseFloat(item.precio2) * parseFloat(item.cantidad);
-var Subtotal = Operacion.toFixed(2);
-
-//CALCULO DE BASE IMPONIBLE IVA CON PORCENTAJE
-var Operacion3 = parseFloat(item.precioconiva) * parseFloat(item.cantidad);
-var Subbaseimponiva = Operacion3.toFixed(2);
-
-//BASE IMPONIBLE IVA CON PORCENTAJE
-BaseImpIva1 = parseFloat(BaseImpIva1) + parseFloat(Subbaseimponiva);
-
-//CALCULO GENERAL DE IVA CON BASE IVA * IVA %
-var ivg = $('input#iva').val();
-ivg2 = ivg / 100;
-TotalIvaGeneral = parseFloat(BaseImpIva1) * parseFloat(ivg2.toFixed(2));
-
-//SUBTOTAL GENERAL DE FACTURA
-SubtotalFact = parseFloat(SubtotalFact) + parseFloat(Subtotal);
-//BASE IMPONIBLE IVA SIN PORCENTAJE
-BaseImpIva2 = parseFloat(SubtotalFact) - parseFloat(BaseImpIva1);
-
-//CALCULAMOS DESCUENTO POR PRODUCTO
-var desc = $('input#descuento').val();
-desc2 = desc / 100;
-
-//CALCULO DEL TOTAL DE FACTURA
-Total = parseFloat(BaseImpIva1) + parseFloat(BaseImpIva2) + parseFloat(TotalIvaGeneral);
-TotalDescuentoGeneral = parseFloat(Total.toFixed(2)) * parseFloat(desc2.toFixed(2));
-TotalFactura = parseFloat(Total.toFixed(2)) - parseFloat(TotalDescuentoGeneral.toFixed(2));
-
-                    var nuevaFila =
-                        "<tr align='center' style='font-size:13px;'>" +
-                        "<td>" +
-                        '<button class="btn btn-info btn-xs" style="cursor:pointer;" onclick="addItem(' +
-                        "'" + item.txtCodigo + "'," +
-                        "'-1'," +
-                        "'" + item.descripcion + "'," +
-                        "'" + item.existencia + "'," +
-                        "'" + item.precio + "'," +
-                        "'" + item.precio2 + "'," +
-                        "'" + item.precioconiva + "'," +
-                        "'" + item.ivaproducto + "'," +
-                        "'" + item.tipo + "', " +
-                        "'-'" +
-                        ')"' +
-                        " type='button'><span class='fa fa-minus'></span></button>" +
-                        "<input type='text' id='" + item.cantidad + "' style='width:35px;height:22px;border:#FF0000;' value='" + item.cantidad + "'><input type='hidden' value='" + item.precio + "'>" +
-                        '<button class="btn btn-info btn-xs" style="cursor:pointer;" onclick="addItem(' +
-                        "'" + item.txtCodigo + "'," +
-                        "'+1'," +
-                        "'" + item.descripcion + "'," +
-                        "'" + item.existencia + "'," +
-                        "'" + item.precio + "'," +
-                        "'" + item.precio2 + "'," +
-                        "'" + item.precioconiva + "'," +
-                        "'" + item.ivaproducto + "'," +
-                        "'" + item.tipo + "', " +
-                        "'+'" +
-                        ')"' +
-                        " type='button'><span class='fa fa-plus'></span></button></td>" +
-                        "<td><input type='hidden' value='" + item.txtCodigo + "'><input type='hidden' value='" + item.existencia + "'>" + item.descripcion + "<input type='hidden' value='" + item.tipo + "'></td>" +
-                        "<td>" + Operacion.toFixed(2) + "<input type='hidden' value='" + item.precioconiva + "'><input type='hidden' value='" + item.ivaproducto + "'><input type='hidden' value='" + OperacionCompra.toFixed(2) + "'><input type='hidden' value='" + item.precio2 + "'></td>" +
-                        "<td>" +
-                        '<button class="btn btn-info btn-xs" style="cursor:pointer;color:#fff;" ' +
-                        'onclick="addItem(' +
-                        "'" + item.txtCodigo + "'," +
-                        "'0'," +
-                        "'" + item.descripcion + "'," +
-                        "'" + item.existencia + "'," +
-                        "'" + item.precio + "'," +
-                        "'" + item.precio2 + "'," +
-                        "'" + item.precioconiva + "'," +
-                        "'" + item.ivaproducto + "'," +
-                        "'" + item.tipo + "', " +
-                        "'='" +
-                        ')"' +
-                        ' type="button"><span class="fa fa-trash-o"></span></button>' +
-                        "</td>" +
-                        "</tr>";
-
-                    $(nuevaFila).appendTo("#carrito tbody");
-
-                    $("#lblsubtotal").text(BaseImpIva1.toFixed(2));
-                    $("#lblsubtotal2").text(BaseImpIva2.toFixed(2));
-                    $("#lbliva").text(TotalIvaGeneral.toFixed(2));
-                    $("#lbldescuento").text(TotalDescuentoGeneral.toFixed(2));
-                    $("#lbltotal").text(TotalFactura.toFixed(2));
-
-                    $("#txtsubtotal").val(BaseImpIva1.toFixed(2));
-                    $("#txtsubtotal2").val(BaseImpIva2.toFixed(2));
-                    $("#txtIva").val(TotalIvaGeneral.toFixed(2));
-                    $("#txtDescuento").val(TotalDescuentoGeneral.toFixed(2));
-                    $("#txtTotal").val(TotalFactura.toFixed(2));
-                    $("#txtTotalCompra").val(TotalCompra.toFixed(2));
-                }
-
-            });
-            if (contador == 0) {
-
-                $("#carrito tbody").html("");
-
-                var nuevaFila =
-"<tr>"+"<td colspan=4><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td>"+"</tr>";
-
-                $(nuevaFila).appendTo("#carrito tbody");
-                //alert("ELIMINAMOS TODOS LOS SUBTOTAL Y TOTALES");
-                $("#ventas")[0].reset();
-                $("#lblsubtotal").text("0.00");
-                $("#lblsubtotal2").text("0.00");
-                $("#lbliva").text("0.00");
-                $("#lbldescuento").text("0.00");
-                $("#lbltotal").text("0.00");
-
-                $("#txtsubtotal").val("0.00");
-                $("#txtsubtotal2").val("0.00");
-                $("#txtIva").val("0.00");
-                $("#txtDescuento").val("0.00");
-                $("#txtTotal").val("0.00");
-                $("#txtTotalCompra").val("0.00");
-            }
-            $("#busquedaproducto").focus();
+    postCarrito({ MiCarritoV: DatosJson }, function(data) {
+        pintarCarritoDesdeServidor(data);
+        if (limpiarBusqueda) {
             LimpiarTexto();
-        },
-        "json"
-    );
+        }
+    });
     return false;
 }

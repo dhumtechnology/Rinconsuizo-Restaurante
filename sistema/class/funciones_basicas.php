@@ -7,7 +7,7 @@ $tags = htmlentities($tags);
 return $tags;
 }
 
-#####CONTRASEùA DE-ENCRIPTAR
+#####CONTRASEÔøΩA DE-ENCRIPTAR
 
 function encrypt($string, $key) {
 		$result = ''; $key=$key.'2013';
@@ -41,10 +41,10 @@ function limpiarEntrada($texto) {
 	'@<script[^>]*?>.*?</script>@si',   // quitar javascript
 	'@<[\/\!]*?[^<>]*?>@si',            // quitar tags de HTML
 	'@<style[^>]*?>.*?</style>@siU',    // quitar estilos
-	'@<![\s\S]*?--[ \t\n\r]*>@'         // quitar comentarios multilùnea
+	'@<![\s\S]*?--[ \t\n\r]*>@'         // quitar comentarios multilÔøΩnea
 	);
  
- 	//utilizamos la funciùn preg_replace que busca en una cadena patrones para sustituir
+ 	//utilizamos la funciÔøΩn preg_replace que busca en una cadena patrones para sustituir
     $salida = preg_replace($busqueda, '', $texto);
     //devolvemos la cadena sin los patrones encontrados
     return $salida;
@@ -131,7 +131,7 @@ function generar_clave($longitud){
            0, $longitud); 
     }
 
-//Mùtodo con rand()
+//MÔøΩtodo con rand()
 function GenerateRandomString($length = 10) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
@@ -142,7 +142,7 @@ function GenerateRandomString($length = 10) {
     return $randomString;
 } 
 
-//Mùtodo con str_shuffle() 
+//MÔøΩtodo con str_shuffle() 
 function generateRandomString2($length = 10) { 
     return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length); 
 } 
@@ -273,39 +273,39 @@ function numtoletras($xcifra)
     for ($xz = 0; $xz < 3; $xz++) {
         $xaux = substr($XAUX, $xz * 6, 6);
         $xi = 0;
-        $xlimite = 6; // inicializo el contador de centenas xi y establezco el lùmite a 6 dùgitos en la parte entera
+        $xlimite = 6; // inicializo el contador de centenas xi y establezco el lÔøΩmite a 6 dÔøΩgitos en la parte entera
         $xexit = true; // bandera para controlar el ciclo del While
         while ($xexit) {
-            if ($xi == $xlimite) { // si ya llegù al lùmite mùximo de enteros
+            if ($xi == $xlimite) { // si ya llegÔøΩ al lÔøΩmite mÔøΩximo de enteros
                 break; // termina el ciclo
             }
 
             $x3digitos = ($xlimite - $xi) * -1; // comienzo con los tres primeros digitos de la cifra, comenzando por la izquierda
-            $xaux = substr($xaux, $x3digitos, abs($x3digitos)); // obtengo la centena (los tres dùgitos)
+            $xaux = substr($xaux, $x3digitos, abs($x3digitos)); // obtengo la centena (los tres dÔøΩgitos)
             for ($xy = 1; $xy < 4; $xy++) { // ciclo para revisar centenas, decenas y unidades, en ese orden
                 switch ($xy) {
                     case 1: // checa las centenas
-                        if (substr($xaux, 0, 3) < 100) { // si el grupo de tres dùgitos es menor a una centena ( < 99) no hace nada y pasa a revisar las decenas
+                        if (substr($xaux, 0, 3) < 100) { // si el grupo de tres dÔøΩgitos es menor a una centena ( < 99) no hace nada y pasa a revisar las decenas
                             
                         } else {
                             $key = (int) substr($xaux, 0, 3);
-                            if (TRUE === array_key_exists($key, $xarray)){  // busco si la centena es nùmero redondo (100, 200, 300, 400, etc..)
+                            if (TRUE === array_key_exists($key, $xarray)){  // busco si la centena es nÔøΩmero redondo (100, 200, 300, 400, etc..)
                                 $xseek = $xarray[$key];
-                                $xsub = subfijo($xaux); // devuelve el subfijo correspondiente (Millùn, Millones, Mil o nada)
+                                $xsub = subfijo($xaux); // devuelve el subfijo correspondiente (MillÔøΩn, Millones, Mil o nada)
                                 if (substr($xaux, 0, 3) == 100)
                                     $xcadena = " " . $xcadena . " CIEN " . $xsub;
                                 else
                                     $xcadena = " " . $xcadena . " " . $xseek . " " . $xsub;
                                 $xy = 3; // la centena fue redonda, entonces termino el ciclo del for y ya no reviso decenas ni unidades
                             }
-                            else { // entra aquù si la centena no fue numero redondo (101, 253, 120, 980, etc.)
+                            else { // entra aquÔøΩ si la centena no fue numero redondo (101, 253, 120, 980, etc.)
                                 $key = (int) substr($xaux, 0, 1) * 100;
                                 $xseek = $xarray[$key]; // toma el primer caracter de la centena y lo multiplica por cien y lo busca en el arreglo (para que busque 100,200,300, etc)
                                 $xcadena = " " . $xcadena . " " . $xseek;
                             } // ENDIF ($xseek)
                         } // ENDIF (substr($xaux, 0, 3) < 100)
                         break;
-                    case 2: // checa las decenas (con la misma lùgica que las centenas)
+                    case 2: // checa las decenas (con la misma lÔøΩgica que las centenas)
                         if (substr($xaux, 1, 2) < 10) {
                             
                         } else {
@@ -350,7 +350,7 @@ function numtoletras($xcifra)
         if (substr(trim($xcadena), -7, 7) == "ILLONES") // si la cadena obtenida en MILLONES o BILLONES, entoncea le agrega al final la conjuncion DE
             $xcadena.= " DE";
 
-        // ----------- esta lùnea la puedes cambiar de acuerdo a tus necesidades o a tu paùs -------
+        // ----------- esta lÔøΩnea la puedes cambiar de acuerdo a tus necesidades o a tu paÔøΩs -------
         if (trim($xaux) != "") {
             switch ($xz) {
                 case 0:
@@ -378,7 +378,7 @@ function numtoletras($xcifra)
                     break;
             } // endswitch ($xz)
         } // ENDIF (trim($xaux) != "")
-        // ------------------      en este caso, para Mùxico se usa esta leyenda     ----------------
+        // ------------------      en este caso, para MÔøΩxico se usa esta leyenda     ----------------
         $xcadena = str_replace("VEINTI ", "VEINTI", $xcadena); // quito el espacio para el VEINTI, para que quede: VEINTICUATRO, VEINTIUN, VEINTIDOS, etc
         $xcadena = str_replace("  ", " ", $xcadena); // quito espacios dobles
         $xcadena = str_replace("UN UN", "UN", $xcadena); // quito la duplicidad
@@ -393,7 +393,7 @@ function numtoletras($xcifra)
 // END FUNCTION
 
 function subfijo($xx)
-{ // esta funciùn regresa un subfijo para la cifra
+{ // esta funciÔøΩn regresa un subfijo para la cifra
     $xx = trim($xx);
     $xstrlen = strlen($xx);
     if ($xstrlen == 1 || $xstrlen == 2 || $xstrlen == 3)
@@ -431,18 +431,62 @@ function renderEsperaBadge($fechapedido)
     return '<span class="mesa-espera" data-inicio-ts="' . (int) $inicioTs . '" style="display:inline-block;margin-top:3px;font-size:10px;background:#333;color:#fff;padding:2px 7px;border-radius:12px;line-height:1.4;"><i class="fa fa-clock-o"></i> <span class="mesa-espera-text">00:00</span></span>';
 }
 
+function getMesaEstadoMesero($mesa)
+{
+    if ($mesa['statusmesa'] == '0') {
+        return array(
+            'color' => '#5cb85c',
+            'listo' => false,
+            'timer' => false,
+            'fechapedido' => ''
+        );
+    }
+
+    $pendientesCocina = isset($mesa['pedidos_cocina']) ? (int) $mesa['pedidos_cocina'] : 0;
+    $pedidosActivos = isset($mesa['pedidos_activos']) ? (int) $mesa['pedidos_activos'] : 0;
+
+    if ($pendientesCocina > 0) {
+        return array(
+            'color' => 'red',
+            'listo' => false,
+            'timer' => true,
+            'fechapedido' => isset($mesa['fechapedido']) ? $mesa['fechapedido'] : ''
+        );
+    }
+
+    if ($pedidosActivos > 0) {
+        return array(
+            'color' => '#f0ad4e',
+            'listo' => true,
+            'timer' => false,
+            'fechapedido' => ''
+        );
+    }
+
+    return array(
+        'color' => 'red',
+        'listo' => false,
+        'timer' => true,
+        'fechapedido' => isset($mesa['fechapedido']) ? $mesa['fechapedido'] : ''
+    );
+}
+
 function renderMesaListItem($mesa, $imgStyle = 'display:inline;margin:18px;float:left;width:78px;height:65px;')
 {
     $codmesaEnc = base64_encode($mesa['codmesa']);
     $nombre = htmlspecialchars($mesa['nombremesa'], ENT_QUOTES, 'UTF-8');
-    $bg = ($mesa['statusmesa'] == '0') ? '#5cb85c' : 'red';
-    $timer = ($mesa['statusmesa'] == '1') ? renderEsperaBadge(isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '') : '';
+    $estado = getMesaEstadoMesero($mesa);
+    $bg = $estado['color'];
+    $timer = $estado['timer'] ? renderEsperaBadge($estado['fechapedido']) : '';
+    $badgeListo = $estado['listo']
+        ? '<span class="label label-warning" style="display:inline-block;margin-top:3px;font-size:10px;"><i class="fa fa-check"></i> LISTO</span>'
+        : '';
     ob_start();
     ?>
             <li style="display:inline;float: left; margin-right: 4px;">
 <div class="users-list-name codMesa" title="<?php echo $nombre; ?>" style="cursor:pointer;" onclick="RecibeMesa('<?php echo $codmesaEnc; ?>')">
                     <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:<?php echo $bg; ?>" class="miMesa"><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
-                    <center><strong><?php echo $nombre; ?></strong><br><?php echo $timer; ?></center>
+                    <center><strong><?php echo $nombre; ?></strong><br><?php echo $timer . $badgeListo; ?></center>
                 </div>
             </li>
     <?php
@@ -626,8 +670,85 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
     return ob_get_clean();
 }
 
-function renderCarritoMesaTabla()
+function carritoMesaDecode($codmesaRef)
 {
+    if ($codmesaRef === '' || $codmesaRef === null) {
+        return '';
+    }
+    $decoded = base64_decode($codmesaRef, true);
+    if ($decoded !== false && $decoded !== '') {
+        return (string) $decoded;
+    }
+    return (string) $codmesaRef;
+}
+
+function activarCarritoMesa($codmesaRef)
+{
+    $codmesa = carritoMesaDecode($codmesaRef);
+    $_SESSION['CarritoMesaActiva'] = $codmesa;
+    if (!isset($_SESSION['CarritoVentasPorMesa']) || !is_array($_SESSION['CarritoVentasPorMesa'])) {
+        $_SESSION['CarritoVentasPorMesa'] = array();
+    }
+    if (!isset($_SESSION['CarritoVentasPorMesa'][$codmesa])) {
+        $_SESSION['CarritoVentasPorMesa'][$codmesa] = array();
+    }
+    sincronizarCarritoVentasActivo($codmesa);
+    return $codmesa;
+}
+
+function sincronizarCarritoVentasActivo($codmesa = null)
+{
+    if ($codmesa === null) {
+        $codmesa = isset($_SESSION['CarritoMesaActiva']) ? $_SESSION['CarritoMesaActiva'] : '';
+    }
+    $codmesa = (string) $codmesa;
+    if (!isset($_SESSION['CarritoVentasPorMesa'][$codmesa])) {
+        $_SESSION['CarritoVentasPorMesa'][$codmesa] = array();
+    }
+    $_SESSION['CarritoVentas'] = $_SESSION['CarritoVentasPorMesa'][$codmesa];
+}
+
+function getCarritoVentas($codmesa = null)
+{
+    if ($codmesa === null) {
+        $codmesa = isset($_SESSION['CarritoMesaActiva']) ? $_SESSION['CarritoMesaActiva'] : '';
+    }
+    $codmesa = carritoMesaDecode($codmesa);
+    if (!isset($_SESSION['CarritoVentasPorMesa']) || !is_array($_SESSION['CarritoVentasPorMesa'])) {
+        return array();
+    }
+    return isset($_SESSION['CarritoVentasPorMesa'][$codmesa]) ? $_SESSION['CarritoVentasPorMesa'][$codmesa] : array();
+}
+
+function setCarritoVentas($items, $codmesa = null)
+{
+    if ($codmesa === null) {
+        $codmesa = isset($_SESSION['CarritoMesaActiva']) ? $_SESSION['CarritoMesaActiva'] : '';
+    }
+    $codmesa = carritoMesaDecode($codmesa);
+    if (!isset($_SESSION['CarritoVentasPorMesa']) || !is_array($_SESSION['CarritoVentasPorMesa'])) {
+        $_SESSION['CarritoVentasPorMesa'] = array();
+    }
+    $_SESSION['CarritoVentasPorMesa'][$codmesa] = $items;
+    sincronizarCarritoVentasActivo($codmesa);
+}
+
+function unsetCarritoVentas($codmesa = null)
+{
+    if ($codmesa === null) {
+        $codmesa = isset($_SESSION['CarritoMesaActiva']) ? $_SESSION['CarritoMesaActiva'] : '';
+    }
+    $codmesa = carritoMesaDecode($codmesa);
+    if (isset($_SESSION['CarritoVentasPorMesa'][$codmesa])) {
+        unset($_SESSION['CarritoVentasPorMesa'][$codmesa]);
+    }
+    sincronizarCarritoVentasActivo($codmesa);
+}
+
+function renderCarritoMesaPanel($config)
+{
+    $simbolo = isset($config[0]['simbolo']) ? $config[0]['simbolo'] : '';
+    $ivav = isset($config[0]['ivav']) ? $config[0]['ivav'] : '0.00';
     ob_start();
     ?>
 <div class="panel panel-info mesa-carrito-panel" style="margin-bottom:0;">
@@ -652,10 +773,52 @@ function renderCarritoMesaTabla()
                 </tbody>
             </table>
         </div>
+        <table width="100%" id="carritototal" style="margin-top:10px;">
+            <tr>
+                <td colspan="3"><span class="Estilo9"><label>Total a Confirmar:</label></span></td>
+                <td><div align="right" class="Estilo9"><?php echo "<strong>" . htmlspecialchars($simbolo) . "</strong>"; ?><label id="lbltotal" name="lbltotal">0.00</label>
+                <input type="hidden" name="txtsubtotal" id="txtsubtotal" value="0.00"/>
+                <input type="hidden" name="txtsubtotal2" id="txtsubtotal2" value="0.00"/>
+                <input type="hidden" name="iva" id="iva" value="<?php echo htmlspecialchars($ivav); ?>"/>
+                <input type="hidden" name="txtIva" id="txtIva" value="0.00"/>
+                <input type="hidden" name="txtDescuento" id="txtDescuento" value="0.00"/>
+                <input type="hidden" name="txtTotal" id="txtTotal" value="0.00"/>
+                <input type="hidden" name="txtTotalCompra" id="txtTotalCompra" value="0.00"/></div></td>
+            </tr>
+        </table>
+        <div style="display:none;">
+            <label id="lblsubtotal" name="lblsubtotal">0.00</label>
+            <label id="lblsubtotal2" name="lblsubtotal2">0.00</label>
+            <label id="lbliva" name="lbliva">0.00</label>
+            <label id="lbldescuento" name="lbldescuento">0.00</label>
+        </div>
+        <div class="row" style="margin-top:10px;">
+            <div class="col-md-12">
+                <label id="boton-observaciones" onClick="mostrar();" style="cursor:pointer;">Agregar Observaciones:</label>
+                <div id="panel-observaciones" style="display:none;">
+                    <div class="form-group has-feedback">
+                        <textarea name="observaciones" class="form-control" id="observaciones-pedido" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Observaciones"></textarea>
+                        <i class="fa fa-comments form-control-feedback"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mesa-carrito-acciones" style="margin-top:12px;">
+            <button type="submit" name="btn-venta" id="btn-venta" class="btn btn-primary btn-block"><span class="fa fa-save"></span> Confirmar Pedido</button>
+            <button type="submit" name="btn-agregapedidos" id="btn-agregapedidos" class="btn btn-primary btn-block" style="display:none;"><span class="fa fa-save"></span> Confirmar Pedido</button>
+            <button type="button" id="vaciarv" class="btn btn-danger btn-block" title="Vaciar Carrito"><span class="fa fa-trash-o"></span> Limpiar</button>
+        </div>
     </div>
 </div>
     <?php
     return ob_get_clean();
+}
+
+function renderCarritoMesaTabla()
+{
+    $config = new Login();
+    $config = $config->ConfiguracionPorId();
+    return renderCarritoMesaPanel($config);
 }
 
 ?>

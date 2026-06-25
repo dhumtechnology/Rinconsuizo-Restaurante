@@ -525,38 +525,51 @@ for($i=0;$i<sizeof($reg);$i++){
      <form class="form" method="post" action="#" name="ventas" id="ventas">
 
                             <div class="col-sm-12">
-                                <div class="panel panel-primary">
+                                <div id="error"></div>
+
+                                <div class="panel panel-primary" id="panel-control-mesas">
                                     <div class="panel-heading">
-            <h3 class="panel-title"><i class="fa fa-edit"></i> Control de Mesas/Productos</h3>
+            <h3 class="panel-title"><i class="fa fa-cutlery"></i> Control de Mesas</h3>
                                     </div>
                                     <div class="panel-body">
-                                        <div id="error">
-                                            <!-- error will be shown here ! -->
-                                        </div>
-
-        <div class="row" id="ventas-layout-row">
-            <div class="col-sm-8 col-xs-12" id="salas-mesas-col">
         <?php
         $tra = new Login();
         $caja = $tra->VerificaArqueo();
         ?>
-            </div>
-            <div class="col-sm-4 col-xs-12" id="panel-carrito-orden" style="display:none;">
-                <?php echo renderCarritoMesaTabla(); ?>
-            </div>
-        </div>
+                                    </div>
+                                </div>
 
+                                <div class="panel panel-primary" id="panel-control-productos" style="display:none;">
+                                    <div class="panel-heading">
+            <h3 class="panel-title"><i class="fa fa-shopping-basket"></i> Control de Productos</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <div class="col-sm-8 col-xs-12" id="productos-categorias"></div>
+                                            <div class="col-sm-4 col-xs-12" id="panel-carrito-orden">
+                                                <?php echo renderCarritoMesaPanel($config); ?>
+                                                <div id="recibemesa"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-
-                                               
-                     <div id="recibemesa"></div>
 
 
                         </form>
                     </div>
 </div>
+
+<script type="text/javascript">
+    $('document').ready(function() {
+        setTimeout(function run() {
+            if ($('#salas-mesas').length && typeof recargarMesasPanel === 'function' && $('#panel-control-mesas').is(':visible')) {
+                recargarMesasPanel();
+            }
+            setTimeout(run, 3000);
+        }, 3000);
+    });
+</script>
 
          <?php } ?>
 

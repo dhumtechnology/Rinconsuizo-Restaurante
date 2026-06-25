@@ -1822,120 +1822,22 @@ $cajero = $cajero->CajerosSessionPorId();
 
 ?>
 
-<div class="col-sm-8">
-                                <div class="panel panel-primary">
-                                    <div class="panel-heading">
-            <h3 class="panel-title"><i class="fa fa-cutlery"></i> Detalles de Productos</h3>
-                                    </div>
-                                    <div class="panel-body">
-                                        <div class="row">
-                                            <div class="col-sm-12 col-xs-12">
-                                                <div class="box-body">
+<div class="mesa-detalle-reserva" style="margin-top:12px;">
 
-
-<div id="favoritos"><?php
-            $favoritos = new Login();
-            $favoritos = $favoritos->ListarProductosFavoritos();
-            $x=1;
-
-echo $status = ( $favoritos[0]["codproducto"] == '' ? '' : '<label class="control-label"><h4>Productos Favoritos: </h4></label><br>');
-
-if($favoritos==""){
-
-    echo "";      
-
-} else {
-
-            for($i=0;$i<sizeof($favoritos);$i++){  
-                ?>
-
-<button type="button" class="button ng-scope" 
-style="font-size:8px;border-radius:5px;width:69px; height:50px;cursor:pointer;"
-
-ert-add-pending-addition="" ng-click="afterClick()" ng-repeat="product in ::getFavouriteProducts()" OnClick="DoAction('<?php echo $favoritos[$i]['codproducto']; ?>','<?php echo $favoritos[$i]['producto']; ?>','<?php echo $favoritos[$i]['codcategoria']; ?>','<?php echo $precioconiva = ( $favoritos[$i]['ivaproducto'] == 'SI' ? $favoritos[$i]['preciocompra'] : "0.00"); ?>','<?php echo $favoritos[$i]['preciocompra']; ?>','<?php echo $favoritos[$i]['precioventa']; ?>','<?php echo $favoritos[$i]['ivaproducto']; ?>','<?php echo $favoritos[$i]['existencia']; ?>');" title="<?php echo $favoritos[$i]['producto'];?>">
-
-<?php if (file_exists("./fotos/".$favoritos[$i]["codproducto"].".jpg")){
-
-echo "<img src='./fotos/".$favoritos[$i]['codproducto'].".jpg?' alt='x' style='border-radius:4px;width:40px;height:35px;'>"; 
-}else{
-echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40px;height:35px;'>";  
-} ?>
-
-<span class="product-label ng-binding "><?php echo getSubString($favoritos[$i]['producto'], 8);?></span>
-</button>
-
-    <?php  if($x==8){ echo "<div class='clearfix'></div>"; $x=0; } $x++; } }
-
-    echo $status = ( $favoritos[0]["codproducto"] == '' ? '' : '<hr>');?></div>
-
-
-<div class="row"> 
-        <div class="col-md-12"> 
-          <div class="form-group has-feedback"> 
-<label class="control-label">B&uacute;squeda de Productos:<span class="symbol required"></span></label>
-<input class="form-control" type="text" name="busquedaproducto" id="busquedaproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Realice la B&uacute;squeda de Producto">
-          <i class="fa fa-search form-control-feedback"></i> 
-          </div> 
-        </div>
-      </div>
-
-
-<input type="hidden" name="codproducto" id="codproducto" placeholder="Codigo">
-<input type="hidden" name="codcategoria" id="codcategoria" placeholder="Categoria">
-<input type="hidden" name="precioconiva" id="precioconiva" placeholder="Precio con Iva">
-<input type="hidden" name="precio" id="precio" placeholder="Precio de Compra">
-<input type="hidden" name="precio2" id="precio2" placeholder="Precio de Venta">
-<input type="hidden" name="ivaproducto" id="ivaproducto" placeholder="Iva Producto">
-<input type="hidden" name="existencia" id="existencia" placeholder="Existencia">
-<input type="hidden" name="cantidad" id="cantidad" value="1" placeholder="Cantidad">
-
-              <table width="250" id="carritototal">
-                <tr>
-<td colspan=3><span class="Estilo9"><label>Total a Confirmar:</label></span></td>
-<td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label id="lbltotal" name="lbltotal">0.00</label>
-<input type="hidden" name="txtsubtotal" id="txtsubtotal" value="0.00"/>
-<input type="hidden" name="txtsubtotal2" id="txtsubtotal2" value="0.00"/>
-<input type="hidden" name="iva" id="iva" value="<?php echo $con[0]['ivav']; ?>"/>
-<input type="hidden" name="txtIva" id="txtIva" value="0.00"/>
-<input type="hidden" name="txtDescuento" id="txtDescuento" value="0.00"/>
-<input type="hidden" name="txtTotal" id="txtTotal" value="0.00"/>
-<input type="hidden" name="txtTotalCompra" id="txtTotalCompra" value="0.00"/></div></td>
-                        </tr>
-                    </table>
-
-<hr>
-
-<div class="row">
-                    <div class="col-md-12"> 
- <label id="boton" onClick="mostrar();" style="cursor: pointer;">Agregar Observaciones:</label>
-<div id="observaciones" style="display: none;">
-   <div class="form-group has-feedback"> 
-<textarea name="observaciones" class="form-control" id="observaciones" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Observaciones" required="" aria-required="true"></textarea>
-
-                        <i class="fa fa-comments form-control-feedback"></i>
-   </div>
-</div> 
-                    </div> 
-           </div><br>
-
-
-          <div class="modal-footer"> 
-<button type="submit" name="btn-agregapedidos" id="btn-agregapedidos" class="btn btn-primary"><span class="fa fa-save"></span> Confirmar Pedido</button> 
-<button type="button" id="vaciarv" class="btn btn-danger" title="Vaciar Carrito"><span class="fa fa-trash-o"></span> Limpiar</button>    
-          </div>
-    
 <div id="delete-detalle"></div>
-    
+
+<?php if($arqueo != "") { ?>
+<div class="panel panel-default">
+    <div class="panel-heading"><h3 class="panel-title"><i class="fa fa-check"></i> Pedido confirmado</h3></div>
+    <div class="panel-body" style="padding:8px;">
     <div id="cargadetallesproductos"><table class="table table-small-font table-striped">
         <thead>
     <tr>
-<th style="background:#01ba9a;color:#FFFFFF;" colspan=4><h3 class="panel-title"><div align="center">Productos Agregados</div></th>
+<th style="background:#01ba9a;color:#FFFFFF;" colspan=4><div align="center">Productos Agregados</div></th>
           </tr>
         </thead>
         <tbody>
  <?php 
-if($arqueo==""){ echo "";      
-} else {
 for($i=0;$i<sizeof($arqueo);$i++){
 ?>
           <tr>
@@ -1944,59 +1846,38 @@ for($i=0;$i<sizeof($arqueo);$i++){
             <td><?php echo "<strong>".$con[0]['simbolo']."</strong>".$arqueo[$i]['importe'] ?></td>
 <td><button type="button" class="btn btn-danger btn-xs" style="cursor:pointer;" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Detalle de Venta" onClick="EliminaDetalleProducto('<?php echo base64_encode($arqueo[$i]["codmesa"]) ?>','<?php echo base64_encode($arqueo[$i]["coddetalleventa"]) ?>','<?php echo base64_encode($arqueo[$i]["codventa"]) ?>','<?php echo base64_encode($arqueo[$i]["codproducto"]) ?>','<?php echo base64_encode($arqueo[$i]["cantventa"]) ?>','<?php echo base64_encode($arqueo[$i]["ivaproducto"]) ?>','<?php echo base64_encode("DETALLESVENTASPEDIDOS") ?>')"><i class="fa fa-trash-o"></i></button></td>
           </tr>
-      <?php } } ?>
+      <?php } ?>
         </tbody>
       </table>
 
 <?php echo $observaciones = ( $arqueo[0]['observaciones'] == '' ? "" : "<strong>OBSERVACIONES: </strong><span style='font-size:12px;'>".$arqueo[0]['observaciones']."</span><br><br>"); ?>
 
-      <table width="250">
-                        <tr>
-<td colspan=3><span class="Estilo9"><label>Subtotal Iva <?php echo $con[0]['ivav'] ?>%:</label></span></td>
-<td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label><?php echo $arqueo[0]['subtotalivasive'] ?></label><input type="hidden" name="txtsubtotall" id="txtsubtotall" value="<?php echo $arqueo[0]['subtotalivasive'] ?>"/></div></td>
-                        </tr>
-                        <tr>
-<td colspan=3><span class="Estilo9"><label>Subtotal Iva 0%:</label></span></td>
-<td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label><?php echo $arqueo[0]['subtotalivanove'] ?></label><input type="hidden" name="txtsubtotall2" id="txtsubtotall2" value="<?php echo $arqueo[0]['subtotalivanove'] ?>"/></div></td>
-                        </tr>
-                        <tr>
-<td colspan=3><span class="Estilo9"><label>Iva <?php echo $arqueo[0]['ivave'] ?>%<input name="iva" id="iva" type="hidden" value="<?php echo $arqueo[0]['ivave'] ?>"  /></label></span></td>
-<td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label><?php echo $arqueo[0]['totalivave'] ?></label><input type="hidden" name="txtIvaa" id="txtIvaa" value="<?php echo $arqueo[0]['totalivave'] ?>"/></div></td>
-                        </tr>
-                        <tr>
-<td colspan=3><span class="Estilo9"><label>Descuento:</label></span></td>
-<td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label id="lbldescuentoo" name="lbldescuentoo"><?php echo $arqueo[0]['totaldescuentove'] ?></label><input type="hidden" name="txtDescuentoo" id="txtDescuentoo" value="<?php echo $arqueo[0]['totaldescuentove'] ?>"/></div></td>
-                        </tr>
+      <table width="100%">
                         <tr>
 <td colspan=3><span class="Estilo9"><label>Total a Pagar:</label></span></td>
 <td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label id="lbltotall" name="lbltotall"><?php echo $arqueo[0]['totalpago'] ?></label>
+<input type="hidden" name="txtsubtotall" id="txtsubtotall" value="<?php echo $arqueo[0]['subtotalivasive'] ?>"/>
+<input type="hidden" name="txtsubtotall2" id="txtsubtotall2" value="<?php echo $arqueo[0]['subtotalivanove'] ?>"/>
+<input type="hidden" name="txtIvaa" id="txtIvaa" value="<?php echo $arqueo[0]['totalivave'] ?>"/>
+<input type="hidden" name="txtDescuentoo" id="txtDescuentoo" value="<?php echo $arqueo[0]['totaldescuentove'] ?>"/>
 <input type="hidden" name="txtTotall" id="txtTotall" value="<?php echo $arqueo[0]['totalpago'] ?>"/>
-<input type="hidden" name="txtTotalCompraa" id="txtTotalCompraa" value="<?php echo $arqueo[0]['totalpago2'] ?>"/></div></td>
+<input type="hidden" name="txtTotalCompraa" id="txtTotalCompraa" value="<?php echo $arqueo[0]['totalpago2'] ?>"/>
+<input type="hidden" name="iva" id="iva" value="<?php echo $arqueo[0]['ivave'] ?>"/>
+<input type="hidden" name="ivavemesa" id="ivavemesa" value="<?php echo $arqueo[0]['ivave'] ?>"/></div></td>
                         </tr>
                     </table></div>
-    </div>
-  </div>
-</div>
 
 <?php if($_SESSION["acceso"] == "administrador" || $_SESSION["acceso"] == "cajero") { ?>
-
-  <div class="modal-footer">
-<a href="reportepdf?codventa=<?php echo base64_encode($arqueo[0]['codventa']); ?>&tipo=<?php echo base64_encode("TICKETPRECUENTA") ?>" target="_black" class="btn btn-info" title="Precuenta" ><span class="fa fa-print"></span> Precuenta</a>
-
-<button type="submit" name="btn-cerrar" id="btn-cerrar" class="btn btn-success mostrar-mesa"><span class="fa fa-save"></span> Cerrar <?php echo $arqueo[0]['nombremesa'] ?></button>    
+  <div class="modal-footer" style="padding:8px 0 0;">
+<a href="reportepdf?codventa=<?php echo base64_encode($arqueo[0]['codventa']); ?>&tipo=<?php echo base64_encode("TICKETPRECUENTA") ?>" target="_black" class="btn btn-info btn-block" title="Precuenta" ><span class="fa fa-print"></span> Precuenta</a>
+<button type="submit" name="btn-cerrar" id="btn-cerrar" class="btn btn-success btn-block mostrar-mesa"><span class="fa fa-save"></span> Cerrar <?php echo $arqueo[0]['nombremesa'] ?></button>    
 </div><?php } ?>
 
-                                                    </div>
-                                                </div>
-                                          </div>
-                                     </div>
-                                </div>
-                            </div>
+    </div>
+</div>
+<?php } ?>
 
-
-
-                <div class="col-sm-4">
-                                <div class="panel panel-primary">
+                <div class="panel panel-primary">
                                     <div class="panel-heading">
                <h3 class="panel-title"><i class="fa fa-file-pdf-o"></i> Detalles de Factura</h3>
                                     </div>
@@ -2126,7 +2007,7 @@ for($i=0;$i<sizeof($arqueo);$i++){
 </div>
 
 <div class="modal-footer"> 
-<button type="button" id="mostrar-mesa" class="btn btn-warning"><span class="fa fa-cutlery"></span> Mostrar Mesas</button>   
+<button type="button" id="mostrar-mesa" class="btn btn-warning btn-block"><span class="fa fa-cutlery"></span> Mostrar Mesas</button>   
           </div>
 
 </div>
@@ -2136,7 +2017,8 @@ for($i=0;$i<sizeof($arqueo);$i++){
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+
+</div><!-- mesa-detalle-reserva -->
 
 <?php
 }

@@ -1131,7 +1131,9 @@ public function ListarMesas()
 	self::SetNames();
 	$this->p = array();
 	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
-		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS fechapedido
+		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS fechapedido,
+		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS pedidos_cocina,
+		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '0' AND v.statusventa = 'PENDIENTE') AS pedidos_activos
 		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala";
 	foreach ($this->dbh->query($sql) as $row)
 	{
@@ -6749,123 +6751,10 @@ $sql = " SELECT clientes.codcliente, clientes.cedcliente, clientes.nomcliente, c
 		if($num==0)
 		{
 			?>
-			
-
-<div class="col-sm-8">
+<div class="mesa-detalle-reserva" style="margin-top:12px;">
                                 <div class="panel panel-primary">
                                     <div class="panel-heading">
-            <h3 class="panel-title"><i class="fa fa-cutlery"></i> Detalles de Productos</h3>
-                                    </div>
-                                    <div class="panel-body">
-                                        <div class="row">
-                                            <div class="col-sm-12 col-xs-12">
-                                                <div class="box-body">
-
-
-<div id="favoritos"><?php
-            $favoritos = new Login();
-            $favoritos = $favoritos->ListarProductosFavoritos();
-            $x=1;
-
-echo $status = ( $favoritos[0]["codproducto"] == '' ? '' : '<label class="control-label"><h4>Productos Favoritos: </h4></label><br>');
-
-if($favoritos==""){
-
-    echo "";      
-
-} else {
-
-            for($i=0;$i<sizeof($favoritos);$i++){  
-                ?>
-
-<button type="button" class="button ng-scope" 
-style="font-size:8px;border-radius:5px;width:69px; height:50px;cursor:pointer;"
-
-ert-add-pending-addition="" ng-click="afterClick()" ng-repeat="product in ::getFavouriteProducts()" OnClick="DoAction('<?php echo $favoritos[$i]['codproducto']; ?>','<?php echo $favoritos[$i]['producto']; ?>','<?php echo $favoritos[$i]['codcategoria']; ?>','<?php echo $precioconiva = ( $favoritos[$i]['ivaproducto'] == 'SI' ? $favoritos[$i]['preciocompra'] : "0.00"); ?>','<?php echo $favoritos[$i]['preciocompra']; ?>','<?php echo $favoritos[$i]['precioventa']; ?>','<?php echo $favoritos[$i]['ivaproducto']; ?>','<?php echo $favoritos[$i]['existencia']; ?>');" title="<?php echo $favoritos[$i]['producto'];?>">
-
-<?php if (file_exists("./fotos/".$favoritos[$i]["codproducto"].".jpg")){
-
-echo "<img src='./fotos/".$favoritos[$i]['codproducto'].".jpg?' alt='x' style='border-radius:4px;width:40px;height:35px;'>"; 
-}else{
-echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40px;height:35px;'>";  
-} ?>
-
-<span class="product-label ng-binding "><?php echo getSubString($favoritos[$i]['producto'], 8);?></span>
-</button>
-
-    <?php  if($x==8){ echo "<div class='clearfix'></div>"; $x=0; } $x++; } }
-
-    echo $status = ( $favoritos[0]["codproducto"] == '' ? '' : '<hr>');?></div>
-
-
-<div class="row"> 
-				<div class="col-md-12"> 
-					<div class="form-group has-feedback"> 
-<label class="control-label">B&uacute;squeda de Productos:<span class="symbol required"></span></label>
-<input class="form-control" type="text" name="busquedaproducto" id="busquedaproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Realice la B&uacute;squeda de Producto">
-					<i class="fa fa-search form-control-feedback"></i> 
-					</div> 
-				</div>
-			</div>
-
-<input type="hidden" name="codproducto" id="codproducto" placeholder="Codigo">
-<input type="hidden" name="codcategoria" id="codcategoria" placeholder="Categoria">
-<input type="hidden" name="precioconiva" id="precioconiva" placeholder="Precio con Iva">
-<input type="hidden" name="precio" id="precio" placeholder="Precio de Compra">
-<input type="hidden" name="precio2" id="precio2" placeholder="Precio de Venta">
-<input type="hidden" name="ivaproducto" id="ivaproducto" placeholder="Iva Producto">
-<input type="hidden" name="existencia" id="existencia" placeholder="Existencia">
-<input type="hidden" name="cantidad" id="cantidad" value="1" placeholder="Cantidad">
-
-							<table width="250" id="carritototal">
-								<tr>
-<td colspan=3><span class="Estilo9"><label>Total a Confirmar:</label></span></td>
-<td><div align="right" class="Estilo9"><?php echo "<strong>".$simbolo."</strong>"; ?><label id="lbltotal" name="lbltotal">0.00</label>
-<input type="hidden" name="txtsubtotal" id="txtsubtotal" value="0.00"/>
-<input type="hidden" name="txtsubtotal2" id="txtsubtotal2" value="0.00"/>
-<input type="hidden" name="iva" id="iva" value="<?php echo $ivav ?>"/>
-<input type="hidden" name="txtIva" id="txtIva" value="0.00"/>
-<input type="hidden" name="txtDescuento" id="txtDescuento" value="0.00"/>
-<input type="hidden" name="txtTotal" id="txtTotal" value="0.00"/>
-<input type="hidden" name="txtTotall" id="txtTotall" value="0.00"/>
-<input type="hidden" name="txtTotalCompra" id="txtTotalCompra" value="0.00"/></div></td>
-									</tr>
-								</table>
-
-<hr>
-
-<div class="row">
-                    <div class="col-md-12"> 
- <label id="boton" onClick="mostrar();" style="cursor: pointer;">Agregar Observaciones: </label>
-<div id="observaciones" style="display: none;">
-   <div class="form-group has-feedback"> 
-<textarea name="observaciones" class="form-control" id="observaciones" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Observaciones" required="" aria-required="true"></textarea>
-
-                        <i class="fa fa-comments form-control-feedback"></i>
-   </div>
-</div> 
-                    </div> 
-           </div><br>
-
-					<div class="modal-footer"> 
-<button type="submit" name="btn-venta" id="btn-venta" class="btn btn-primary"><span class="fa fa-save"></span> Confirmar Pedido</button> 
-<button type="button" id="vaciarv" class="btn btn-danger" title="Vaciar Carrito"><span class="fa fa-trash-o"></span> Limpiar</button>    
-					</div>
-
-
-                                                    </div>
-                                                </div>
-                                          </div>
-                                     </div>
-                                </div>
-                            </div>
-
-
-
-                            <div class="col-sm-4">
-                                <div class="panel panel-primary">
-                                    <div class="panel-heading">
-               <h3 class="panel-title"><i class="fa fa-file-pdf-o"></i> Detalles de Factura</h3>
+               <h3 class="panel-title"><i class="fa fa-file-pdf-o"></i> Detalles de Mesa</h3>
                                     </div>
                                     <div class="panel-body">
                                         <div class="row">
@@ -6895,7 +6784,7 @@ $mesa = $mesa->MesasPorId();
 <div class="row"> 
 	<div class="col-md-12"> 
 		<div class="form-group has-feedback"> 
-<label for="field-6" class="control-label">B&uacute;squeda de Cliente: <span class="symbol required"></span></label>
+<label for="field-6" class="control-label">B&uacute;squeda de Cliente:</label>
 			<div class="input-group">
 	<input type="text" id="busquedacliente" name="busquedacliente" class="form-control" placeholder="B&uacute;squeda del Cliente">
     <span class="input-group-btn">
@@ -6908,7 +6797,7 @@ $mesa = $mesa->MesasPorId();
 <div class="row"> 
 	<div class="col-md-12"> 
 		<div class="form-group has-feedback"> 
-			<label class="control-label">Mesero: <span class="symbol required"></span></label><br>
+			<label class="control-label">Mesero:</label><br>
 			<?php echo $_SESSION["nombres"] ?> 
 		</div> 
 	</div>
@@ -6917,7 +6806,7 @@ $mesa = $mesa->MesasPorId();
 <input type="hidden" name="descuento" id="descuento" value="0.00">
 
      <div class="modal-footer"> 
-<button type="button" id="mostrar-mesa" class="btn btn-warning"><span class="fa fa-cutlery"></span> Mostrar Mesas</button>   
+<button type="button" id="mostrar-mesa" class="btn btn-warning btn-block"><span class="fa fa-cutlery"></span> Mostrar Mesas</button>   
 					</div>
 
 					                                           </div>
@@ -6946,6 +6835,7 @@ $mesa = $mesa->MesasPorId();
 public function RegistrarVentas()
 {
 	self::SetNames();
+	activarCarritoMesa(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
 	if(empty($_POST["txtTotal"]) or empty($_POST["txtTotalCompra"]))
 	{
 		echo "1";
@@ -6957,14 +6847,14 @@ public function RegistrarVentas()
 		echo "2";
 		exit;
 
-	} else if(empty($_SESSION["CarritoVentas"]))
+	} else if(empty(getCarritoVentas()))
 	{
 		echo "3";
 		exit;
 
 	} 
 
-	$ver = $_SESSION["CarritoVentas"];
+	$ver = getCarritoVentas();
 	for($i=0;$i<count($ver);$i++){ 
 
 		$sql = "select existencia from productos where codproducto = '".$ver[$i]['txtCodigo']."'";
@@ -7094,7 +6984,7 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 					$stmt->execute();
 #################### AQUI ACTUALIZAMOS EL STATUS DE MESA ####################
 
-					$venta = $_SESSION["CarritoVentas"];
+					$venta = getCarritoVentas();
 					for($i=0;$i<count($venta);$i++){
 
 		$sql = "select existencia from productos where codproducto = '".$venta[$i]['txtCodigo']."'";
@@ -7268,7 +7158,7 @@ if($num>0) {
          }
 
 ###### AQUI DESTRUIMOS TODAS LAS VARIABLES DE SESSION QUE RECIBIMOS EN CARRITO DE VENTAS ######
-					unset($_SESSION["CarritoVentas"]);
+					unsetCarritoVentas(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
 
 echo "<div class='alert alert-success'>";
 echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
@@ -7285,6 +7175,7 @@ echo "<script>if (typeof recargarMesasPanel === 'function') { recargarMesasPanel
 public function AgregaPedidos()
 {
 
+	activarCarritoMesa(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
 
 if(isset($_POST["codventa"]))
 			{
@@ -7315,14 +7206,14 @@ if(isset($_POST["codventa"]))
 				}
 			}
 			
-	if(empty($_SESSION["CarritoVentas"]))
+	if(empty(getCarritoVentas()))
 				{
 					echo "3";
 					exit;
 
 				} 
 
-	$ver = $_SESSION["CarritoVentas"];
+	$ver = getCarritoVentas();
 	for($i=0;$i<count($ver);$i++){ 
 
 		$sql = "select existencia from productos where codproducto = '".$ver[$i]['txtCodigo']."'";
@@ -7338,7 +7229,7 @@ if(isset($_POST["codventa"]))
 			exit;                           }
 		}
 
-	$ven = $_SESSION["CarritoVentas"];
+	$ven = getCarritoVentas();
 	for($i=0;$i<count($ven);$i++){
 
 	$sql = "select existencia from productos where codproducto = '".$ven[$i]['txtCodigo']."'";
@@ -7728,7 +7619,8 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 			." totaldescuentove = ?, "
 			." totalpago= ?, "
 			." totalpago2= ?, "
-			." observaciones= ? "
+			." observaciones= ?, "
+			." cocinero = ? "
 			." where "
 			." codventa = ?;
 			";
@@ -7740,7 +7632,8 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 			$stmt->bindParam(5, $total);
 			$stmt->bindParam(6, $total2);
 			$stmt->bindParam(7, $observaciones);
-			$stmt->bindParam(8, $codventa);
+			$stmt->bindParam(8, $cocinero);
+			$stmt->bindParam(9, $codventa);
 
 			$subtotalivasive= rount($importeiva,2);
 			$subtotalivanove= rount($importe,2);
@@ -7750,11 +7643,12 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 			$total= rount($tot-$totaldescuentove,2);
 			$total2= rount($preciocompra,2);
 if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_POST['observaciones']); } else { $observaciones =''; }
+			$cocinero = strip_tags('1');
 			$codventa = strip_tags($_POST["codventa"]);
 			$stmt->execute();
 
 ###### AQUI DESTRUIMOS TODAS LAS VARIABLES DE SESSION QUE RECIBIMOS EN CARRITO DE VENTAS ######
-			unset($_SESSION["CarritoVentas"]);
+			unsetCarritoVentas(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
 
 
 echo "<div class='alert alert-success'>";
@@ -7790,13 +7684,13 @@ public function CerrarMesa()
 		echo "6";
 		exit;
 	}
-	if (isset($_POST['fechavencecredito']) && $_POST['fechavencecredito'] !== '') {
+	if ($_POST["tipopagove"] == "CREDITO" && isset($_POST['fechavencecredito']) && $_POST['fechavencecredito'] !== '') {
 		$fechavencecredito = strip_tags(date("Y-m-d", strtotime($_POST['fechavencecredito'])));
 	} else {
-		$fechavencecredito = '';
+		$fechavencecredito = '0000-00-00';
 	}
 
-	if ($_POST["tipopagove"] == "CREDITO" && $fechavencecredito !== '') {
+	if ($_POST["tipopagove"] == "CREDITO" && $fechavencecredito !== '0000-00-00') {
 		$f1 = new DateTime($fechavencecredito);
 		$f2 = new DateTime("now");
 		if ($f2 > $f1) {
@@ -7861,7 +7755,7 @@ public function CerrarMesa()
 	}
 	$subtotalivasive = strip_tags($_POST["txtsubtotall"]);
 	$subtotalivanove = strip_tags($_POST["txtsubtotall2"]);
-	$ivave = strip_tags($_POST["iva"]);
+	$ivave = strip_tags(isset($_POST['iva']) ? $_POST['iva'] : (isset($_POST['ivavemesa']) ? $_POST['ivavemesa'] : '0'));
 	$totalivave = strip_tags($_POST["txtIvaa"]);
 	$descuentove = strip_tags($_POST['descuento']);
 	$totaldescuentove = strip_tags($_POST['txtDescuentoo']);
@@ -7875,7 +7769,6 @@ public function CerrarMesa()
 
 	if (strip_tags(isset($_POST['montopagado']))) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado =''; }
 	if (strip_tags(isset($_POST['montodevuelto']))) { $montodevuelto = strip_tags($_POST['montodevuelto']); } else { $montodevuelto =''; }
-	if (strip_tags(isset($_POST['fechavencecredito']))) { $fechavencecredito = strip_tags(date("Y-m-d",strtotime($_POST['fechavencecredito']))); } else { $fechavencecredito =''; }
 	if (strip_tags($_POST["tipopagove"]=="CONTADO")) { $statusventa = strip_tags("PAGADA"); } else { $statusventa = "PENDIENTE"; }
 	$statuspago = "0";
 	$codigo = strip_tags($_SESSION["codigo"]);
@@ -7960,7 +7853,7 @@ public function CerrarMesa()
 	$codclientee = strip_tags($_POST["cliente"]);
 	$stmt->execute();
 
-	unset($_SESSION["CarritoVentas"]);
+	unsetCarritoVentas(isset($_POST['codmesa']) ? $_POST['codmesa'] : '');
  
 echo "<div class='alert alert-success'>";
 echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
@@ -9449,7 +9342,7 @@ $sql5 = "select sum(importe) as importe, sum(importe2) as importe2, sum(precioco
 		$codventa = strip_tags(base64_decode($_GET["codventa"]));
 		$stmt->execute();
 
-						unset($_SESSION["CarritoVentas"]);
+						unsetCarritoVentas(isset($_GET['codmesa']) ? $_GET['codmesa'] : '');
 
 	?>
 		<script type='text/javascript' language='javascript'>

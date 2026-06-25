@@ -259,20 +259,22 @@ $.ajax({
 ////FUNCION MUESTRA CAMPO PARA NUEVOS PRODUCTOS
 function mostrar(){
 
-     var botonAccion =  document.getElementById('boton');
-     var div = document.getElementById('observaciones');
+     var botonAccion = document.getElementById('boton-observaciones') || document.getElementById('boton');
+     var div = document.getElementById('panel-observaciones') || document.getElementById('observaciones');
+
+     if (!div || !botonAccion) {
+         return;
+     }
 
      if(div.style.display==='block'){
 
-       //Actualizamos el nombre del botón
        div.style.display = "none";
-       $("#boton").text("Agregar Observaciones:");
+       botonAccion.textContent = "Agregar Observaciones:";
 
     } else {
 
-       //Actualizamos el nombre del botón
        div.style.display = "block";
-       $("#boton").text("Quitar Observaciones:");
+       botonAccion.textContent = "Quitar Observaciones:";
     }
 }
 
@@ -1012,13 +1014,18 @@ $.ajax({
 			url: "funciones.php",
             data: dataString,
             success: function(response) { 
-                $("#salas-mesas").load("salas-mesas.php?prod_categorias=si");           
+                if (typeof mostrarVistaProductos === 'function') {
+                    mostrarVistaProductos();
+                }
+                $("#productos-categorias").load("salas-mesas.php?prod_categorias=si", function() {
+                    if (typeof initTabsProductos === 'function') {
+                        initTabsProductos();
+                    }
+                });
                 $('#recibemesa').empty();
                 $('#recibemesa').append(''+response+'').fadeIn("slow");
-                $('#panel-carrito-orden').show();
-                if ($('#carrito tbody').length && $('#carrito tbody tr').length === 0) {
-                    $('#carrito tbody').html('<tr><td colspan="4"><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td></tr>');
-                }
+                toggleAccionesPedido();
+                cargarCarritoMesa(codmesa);
            }
       });
 }

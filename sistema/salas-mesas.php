@@ -1,7 +1,8 @@
 <?php
 require_once("class/class.php");
-?>
+if (isset($_GET['salas_mesas'])): ?>
 <script type="text/javascript" src="assets/script/script2.js"></script>
+<?php endif; ?>
 
 
 <?php if (isset($_GET['salas_mesas'])): ?>
@@ -78,6 +79,25 @@ require_once("class/class.php");
 
 <?php if (isset($_GET['prod_categorias'])): ?>
 
+<input type="hidden" name="codproducto" id="codproducto" placeholder="Codigo">
+<input type="hidden" name="codcategoria" id="codcategoria" placeholder="Categoria">
+<input type="hidden" name="precioconiva" id="precioconiva" placeholder="Precio con Iva">
+<input type="hidden" name="precio" id="precio" placeholder="Precio de Compra">
+<input type="hidden" name="precio2" id="precio2" placeholder="Precio de Venta">
+<input type="hidden" name="ivaproducto" id="ivaproducto" placeholder="Iva Producto">
+<input type="hidden" name="existencia" id="existencia" placeholder="Existencia">
+<input type="hidden" name="cantidad" id="cantidad" value="1" placeholder="Cantidad">
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-group has-feedback">
+            <label class="control-label">B&uacute;squeda de Productos:</label>
+            <input class="form-control" type="text" name="busquedaproducto" id="busquedaproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Realice la B&uacute;squeda de Producto">
+            <i class="fa fa-search form-control-feedback"></i>
+        </div>
+    </div>
+</div>
+
 <div class="tabs-vertical-env">
 
      <!--AQUI LISTO LAS CATEGORIAS -->
@@ -96,7 +116,7 @@ require_once("class/class.php");
                     <?php else: ?>
                     <li class="">
                     <?php endif; ?>
-<a href="#<?php echo $categoria[$i]['codcategoria'];?>" data-toggle="tab" title="<?php echo $categoria[$i]['nomcategoria'];?>" aria-expanded="false">
+<a href="#cat-<?php echo $categoria[$i]['codcategoria'];?>" data-toggle="tab" title="<?php echo $categoria[$i]['nomcategoria'];?>" aria-expanded="false">
 <span class="visible-xs"><i class="fa fa-building"></i></span>
 <span class="hidden-xs"><?php echo $categoria[$i]['nomcategoria'];?></span>
                         </a>
@@ -116,9 +136,9 @@ require_once("class/class.php");
                         for ($i = 0; $i < sizeof($categoria); $i++) {
                         ?>
                     <?php if ($i === 0): ?>
-                    <div class="tab-pane active" id="<?php echo $categoria[$i]['codcategoria'];?>">
+                    <div class="tab-pane active" id="cat-<?php echo $categoria[$i]['codcategoria'];?>">
                     <?php else: ?>
-                    <div class="tab-pane" id="<?php echo $categoria[$i]['codcategoria'];?>">
+                    <div class="tab-pane" id="cat-<?php echo $categoria[$i]['codcategoria'];?>">
                     <?php endif; ?>
             <?php $codigo_cate = $categoria[$i]['codcategoria']; ?>
                         <p>

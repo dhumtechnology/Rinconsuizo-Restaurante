@@ -42,12 +42,50 @@
         });
     };
 
+    window.mostrarVistaMesas = function() {
+        $('#panel-control-productos').hide();
+        $('#panel-control-mesas').show();
+    };
+
+    window.mostrarVistaProductos = function() {
+        $('#panel-control-mesas').hide();
+        $('#panel-control-productos').show();
+    };
+
+    window.initTabsProductos = function() {
+        var $panel = $('#productos-categorias');
+        if (!$panel.length) {
+            return;
+        }
+        $panel.find('a[data-toggle="tab"]').off('click.prodTabs').on('click.prodTabs', function(e) {
+            e.preventDefault();
+            var $link = $(this);
+            var target = $link.attr('href');
+            if (!target || target.charAt(0) !== '#') {
+                return;
+            }
+            $link.closest('ul').find('li').removeClass('active');
+            $link.parent('li').addClass('active');
+            $panel.find('.tab-pane').removeClass('active');
+            $panel.find(target).addClass('active');
+        });
+    };
+
     window.recargarMesasPanel = function() {
         if (!$('#salas-mesas').length) {
             return;
         }
+        var $panel = $('#salas-mesas');
+        var tabActiva = '';
+        var $activeLink = $panel.find('.nav-tabs li.active a');
+        if ($activeLink.length) {
+            tabActiva = $activeLink.attr('href');
+        }
         $.get('funciones.php?MesasPanel=si', function(html) {
-            $('#salas-mesas').html(html);
+            $panel.html(html);
+            if (tabActiva && $panel.find('.nav-tabs a[href="' + tabActiva + '"]').length) {
+                $panel.find('.nav-tabs a[href="' + tabActiva + '"]').tab('show');
+            }
             actualizarTimersMesas();
         });
     };
