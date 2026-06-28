@@ -11,7 +11,7 @@ function set_salas_mesas(element) {
 }
 
 jQuery.validator.addMethod("lettersonly", function(value, element) {
-    return this.optional(element) || /^[a-zA-Z,. ]+$/i.test(value);
+    return this.optional(element) || /^[a-zA-Z????????????,. ]+$/i.test(value);
 });
 
 /* FUNCION JQUERY PARA VALIDAR ACCESO DE USUARIOS*/
@@ -148,7 +148,7 @@ $('document').ready(function()
 
 
 
-/* FUNCION JQUERY PARA RECUPERAR CONTRASEA DE USUARIOS */	 
+/* FUNCION JQUERY PARA RECUPERAR CONTRASE?A DE USUARIOS */	 
 	 
 $('document').ready(function()
 { 
@@ -230,12 +230,12 @@ $('document').ready(function()
 	   
 });
 
-/*  FIN DE FUNCION PARA RECUPERAR CONTRASEA DE USUARIOS */
+/*  FIN DE FUNCION PARA RECUPERAR CONTRASE?A DE USUARIOS */
 
 
 
 
-/* FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE CONTRASEA */	 
+/* FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE CONTRASE?A */	 
 	 
 $('document').ready(function()
 { 
@@ -307,7 +307,7 @@ $('document').ready(function()
 	   /* form submit */
 });
 
- /* FIN DE  FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE CONTRASEA */
+ /* FIN DE  FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE CONTRASE?A */
  
  
  
@@ -4525,7 +4525,11 @@ $('document').ready(function()
 			montoabono: { required: true, },
 			montopagado: { required: true, },
 			montodevuelto: { required: true, },
-			observaciones: { required: true, },
+			observaciones: {
+				required: function() {
+					return window.ventasAccionSubmit !== 'btn-cerrar';
+				}
+			},
 	   },
        messages:
 	   {
@@ -4545,8 +4549,38 @@ $('document').ready(function()
 	   /* form submit */
 	  function submitForm()
 	   {		
-			  var data = $("#ventas").serialize();
+			  if (window.mesaCargando) {
+			      alert('Espere a que termine de cargar la mesa seleccionada.');
+			      return false;
+			  }
 			  var accion = window.ventasAccionSubmit || 'btn-venta';
+			  var esCerrarMesa = accion === 'btn-cerrar';
+			  var codmesaForm = $('#recibemesa input[name="codmesa"]').val() || $('#codmesa').val() || '';
+			  if (typeof normalizarCodmesaRef === 'function') {
+			      codmesaForm = normalizarCodmesaRef(codmesaForm);
+			  }
+			  if (window.codmesaActiva && codmesaForm !== '') {
+			      var mesaActiva = (typeof normalizarCodmesaRef === 'function')
+			          ? normalizarCodmesaRef(window.codmesaActiva)
+			          : String(window.codmesaActiva);
+			      if (String(codmesaForm) !== String(mesaActiva)) {
+			          alert('La mesa seleccionada no coincide con la orden en pantalla. Vuelva a abrir la mesa e intente de nuevo.');
+			          return false;
+			      }
+			  }
+			  var data = $("#ventas").serialize();
+			  if (codmesaForm !== '') {
+			      data = data.replace(/(^|&)codmesa=[^&]*/g, '').replace(/^&/, '');
+			      data += (data ? '&' : '') + 'codmesa=' + encodeURIComponent(codmesaForm);
+			  }
+			  if (!esCerrarMesa && typeof buildCarritoFromDom === 'function') {
+			      var carritoDom = buildCarritoFromDom();
+			      if (!carritoDom.length) {
+			          alert('NO HA AGREGADO PRODUCTOS PARA CONFIRMAR PEDIDO, VERIFIQUE POR FAVOR');
+			          return false;
+			      }
+			      data += '&carrito_json=' + encodeURIComponent(JSON.stringify(carritoDom));
+			  }
 			  if (data.indexOf(accion + '=') === -1) {
 			      data += (data ? '&' : '') + encodeURIComponent(accion) + '=1';
 			  }
@@ -4555,9 +4589,14 @@ $('document').ready(function()
 			  var total = $('#txtTotal').val();
 			  var totalin = $('#txtTotall').val();
 			  var cliente = $('#codcliente').val();
-			  var texto = (totalin == "0.00" || totalin === undefined || totalin === '') ? total : totalin;
+			  var texto = esCerrarMesa
+			      ? totalin
+			      : total;
 	
-	     if (texto==0.00 || texto === '0' || texto === '' || texto === undefined) {
+	     if (esCerrarMesa && (texto == 0.00 || texto === '0' || texto === '' || texto === undefined)) {
+				alert('NO HAY PEDIDO ACTIVO PARA CERRAR EN ESTA MESA, VERIFIQUE POR FAVOR');
+				return false;
+	     } else if (!esCerrarMesa && (texto==0.00 || texto === '0' || texto === '' || texto === undefined)) {
 	            
 				$("#producto").focus();
 				$('#producto').css('border-color','#01ba9a');
@@ -4575,15 +4614,19 @@ $('document').ready(function()
 				beforeSend: function()
 				{	
 					$("#error").fadeOut();
-					$("#btn-venta").html('<i class="fa fa-refresh"></i> Verificando...');
-					$("#btn-agregapedidos").html('<i class="fa fa-refresh"></i> Verificando...');
+					if (esCerrarMesa) {
+						$("#btn-cerrar").html('<i class="fa fa-refresh"></i> Verificando...');
+					} else {
+						$("#btn-venta").html('<i class="fa fa-refresh"></i> Verificando...');
+						$("#btn-agregapedidos").html('<i class="fa fa-refresh"></i> Verificando...');
+					}
 				},
 				success :  function(data)
 						   {
 								data = $.trim(data);
 								if (data.indexOf('<!DOCTYPE') !== -1 || data.indexOf('<html') !== -1) {
 									$("#error").fadeIn(1000, function() {
-										$("#error").html('<center><div class="alert alert-danger"><span class="fa fa-info-circle"></span> No se pudo confirmar el pedido. Recargue la pgina e intente de nuevo.</div></center>');
+										$("#error").html('<center><div class="alert alert-danger"><span class="fa fa-info-circle"></span> No se pudo confirmar el pedido. Recargue la p?gina e intente de nuevo.</div></center>');
 										$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
 										$("#btn-agregapedidos").html('<span class="fa fa-save"></span> Confirmar Pedido');
 									});
@@ -4647,6 +4690,14 @@ $('document').ready(function()
 					$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
 									});
 								}
+								else if(data=='9')
+								{
+					$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> EL PEDIDO NO CORRESPONDE A ESTA MESA. CIERRE Y VUELVA A SELECCIONAR LA MESA CORRECTA.</div></center>');
+					$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
+					$("#btn-agregapedidos").html('<span class="fa fa-save"></span> Confirmar Pedido');
+									});
+								}
 								
 								else if(data=='5')
 								{
@@ -4694,26 +4745,44 @@ $('document').ready(function()
 		if ($linkComanda.length) {
 		    window.open($linkComanda.attr('href'), '_blank');
 		}
-		var mesaRef = window.codmesaActiva || (codmesa ? btoa(String(codmesa)) : '');
-		if (typeof mostrarVistaMesas === 'function') {
+		var opSeq = ++window.mesaOperacionSeq;
+		var mesaRefAtConfirm = (typeof normalizarCodmesaRef === 'function')
+		    ? normalizarCodmesaRef(window.codmesaActiva)
+		    : String(window.codmesaActiva || '');
+		if (esCerrarMesa && typeof mostrarVistaMesas === 'function') {
 		    mostrarVistaMesas();
+		} else if (typeof mostrarVistaProductos === 'function') {
+		    mostrarVistaProductos();
 		}
 		if (typeof recargarMesasPanel === 'function') {
 		    recargarMesasPanel();
 		}
-		if (mesaRef) {
-		    $("#recibemesa").load("funciones.php?BuscaMesaReservas=si&codmesa="+mesaRef, function() {
+		if (mesaRefAtConfirm) {
+		    var mesaRefEncoded = (typeof codmesaRefParaApi === 'function')
+		        ? codmesaRefParaApi(mesaRefAtConfirm)
+		        : btoa(String(mesaRefAtConfirm));
+		    $("#recibemesa").load("funciones.php?BuscaMesaReservas=si&codmesa="+mesaRefEncoded, function() {
+		        if (window.mesaOperacionSeq !== opSeq) {
+		            return;
+		        }
+		        var mesaActual = (typeof normalizarCodmesaRef === 'function')
+		            ? normalizarCodmesaRef(window.codmesaActiva)
+		            : String(window.codmesaActiva || '');
+		        if (mesaActual !== mesaRefAtConfirm) {
+		            return;
+		        }
 		        if (typeof toggleAccionesPedido === 'function') {
 		            toggleAccionesPedido();
 		        }
 		        if (typeof cargarCarritoMesa === 'function') {
-		            cargarCarritoMesa(mesaRef);
+		            cargarCarritoMesa(mesaRefAtConfirm);
 		        }
 		    });
 		}
 		setTimeout(function() { $("#error").html(""); }, 15000);
 		$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
 		$("#btn-agregapedidos").html('<span class="fa fa-save"></span> Confirmar Pedido');
+		$("#btn-cerrar").html('<span class="fa fa-save"></span> Cerrar Mesa');
 						
 									});
 								}

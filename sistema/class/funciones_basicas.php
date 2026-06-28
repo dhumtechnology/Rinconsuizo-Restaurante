@@ -496,10 +496,10 @@ function getMesaEstadoMesero($mesa)
     }
 
     return array(
-        'color' => 'red',
+        'color' => '#5cb85c',
         'listo' => false,
-        'timer' => true,
-        'fechapedido' => isset($mesa['fechapedido']) ? $mesa['fechapedido'] : ''
+        'timer' => false,
+        'fechapedido' => ''
     );
 }
 
@@ -519,6 +519,11 @@ function renderMesaListItem($mesa, $imgStyle = 'display:inline;margin:18px;float
     $pedidoActivo = ((int) $mesa['statusmesa'] !== 0)
         || (isset($mesa['pedidos_activos']) && (int) $mesa['pedidos_activos'] > 0)
         || (isset($mesa['pedidos_cocina']) && (int) $mesa['pedidos_cocina'] > 0);
+    if ((int) $mesa['statusmesa'] !== 0
+        && (int) (isset($mesa['pedidos_activos']) ? $mesa['pedidos_activos'] : 0) === 0
+        && (int) (isset($mesa['pedidos_cocina']) ? $mesa['pedidos_cocina'] : 0) === 0) {
+        $pedidoActivo = false;
+    }
     $claseExtra = (esMeseroSesion() && !$pedidoActivo) ? ' mesa-unible' : '';
     $onclick = esMeseroSesion()
         ? "manejarClickMesa(this, '" . $codmesaEnc . "')"
@@ -608,11 +613,14 @@ function renderMesasPanel($imgStyle = 'display:inline;margin:18px;float:left;wid
 
 function renderMesaListItemCocinero($mesa, $imgStyle = 'display:inline;margin:18px;float:left;width:78px;height:65px;')
 {
+    $pendientes = isset($mesa['pedidos_cocina']) ? (int) $mesa['pedidos_cocina'] : 0;
+    if ($pendientes <= 0) {
+        return '';
+    }
     $codmesaEnc = base64_encode($mesa['codmesa']);
     $nombre = htmlspecialchars($mesa['nombremesa'], ENT_QUOTES, 'UTF-8');
-    $pendientes = isset($mesa['pedidos_cocina']) ? (int) $mesa['pedidos_cocina'] : 0;
-    $bg = ($pendientes > 0) ? 'red' : '#5cb85c';
-    $timer = ($pendientes > 0) ? renderEsperaBadge(isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '') : '';
+    $bg = 'red';
+    $timer = renderEsperaBadge(isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '');
     $badge = ($pendientes > 1) ? '<span class="label label-danger" style="position:absolute;top:0;right:0;border-radius:50%;padding:3px 6px;font-size:10px;">' . $pendientes . '</span>' : '';
     $badgeUnion = !empty($mesa['es_union'])
         ? '<span class="label label-info" style="display:inline-block;margin-top:3px;font-size:9px;"><i class="fa fa-link"></i></span>'
@@ -667,6 +675,9 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
         for ($ii = 0; $ii < sizeof($mesas); $ii++) {
             $codsala = (string) $mesas[$ii]['codsala'];
             $count = isset($mesas[$ii]['pedidos_cocina']) ? (int) $mesas[$ii]['pedidos_cocina'] : 0;
+            if ($count <= 0) {
+                continue;
+            }
             if (!isset($pendientesPorSala[$codsala])) {
                 $pendientesPorSala[$codsala] = 0;
                 $mesasPorSala[$codsala] = array();
@@ -744,11 +755,15 @@ function carritoMesaDecode($codmesaRef)
     if ($codmesaRef === '' || $codmesaRef === null) {
         return '';
     }
-    $decoded = base64_decode($codmesaRef, true);
-    if ($decoded !== false && $decoded !== '') {
-        return (string) $decoded;
+    $ref = trim((string) $codmesaRef);
+    if (preg_match('/^\d+$/', $ref)) {
+        return $ref;
     }
-    return (string) $codmesaRef;
+    $decoded = base64_decode($ref, true);
+    if ($decoded !== false && $decoded !== '' && preg_match('/^\d+$/', $decoded)) {
+        return $decoded;
+    }
+    return $ref;
 }
 
 function resolverClaveCarritoMesa($codmesaRef = null)
@@ -805,7 +820,59 @@ function getCarritoVentas($codmesa = null)
     if (!isset($_SESSION['CarritoVentasPorMesa']) || !is_array($_SESSION['CarritoVentasPorMesa'])) {
         return array();
     }
-    return isset($_SESSION['CarritoVentasPorMesa'][$codmesa]) ? $_SESSION['CarritoVentasPorMesa'][$codmesa] : array();
+    if (!isset($_SESSION['CarritoVentasPorMesa'][$codmesa])) {
+        return array();
+    }
+    return normalizarItemsCarritoPedido($_SESSION['CarritoVentasPorMesa'][$codmesa]);
+}
+
+function normalizarItemsCarritoPedido($items)
+{
+    if (!is_array($items)) {
+        return array();
+    }
+    $out = array();
+    foreach ($items as $row) {
+        if (!is_array($row) || !isset($row['txtCodigo']) || $row['txtCodigo'] === '') {
+            continue;
+        }
+        $cant = isset($row['cantidad']) ? (float) $row['cantidad'] : 0;
+        if ($cant <= 0) {
+            continue;
+        }
+        $out[] = array(
+            'txtCodigo' => (string) $row['txtCodigo'],
+            'ivaproducto' => isset($row['ivaproducto']) ? (string) $row['ivaproducto'] : 'NO',
+            'precioconiva' => isset($row['precioconiva']) ? $row['precioconiva'] : '0',
+            'precio' => isset($row['precio']) ? $row['precio'] : '0',
+            'precio2' => isset($row['precio2']) ? $row['precio2'] : '0',
+            'existencia' => isset($row['existencia']) ? $row['existencia'] : '0',
+            'tipo' => isset($row['tipo']) ? (string) $row['tipo'] : '0',
+            'cantidad' => $cant,
+            'descripcion' => isset($row['descripcion']) ? (string) $row['descripcion'] : '',
+        );
+    }
+    return $out;
+}
+
+function obtenerCarritoPedido($codmesaRef)
+{
+    $clave = resolverClaveCarritoMesa($codmesaRef);
+    if ($clave === '') {
+        return array();
+    }
+    if (!empty($_POST['carrito_json'])) {
+        $raw = json_decode($_POST['carrito_json'], true);
+        if (!is_array($raw)) {
+            $raw = json_decode(stripslashes($_POST['carrito_json']), true);
+        }
+        $items = normalizarItemsCarritoPedido($raw);
+        if (!empty($items)) {
+            setCarritoVentas($items, $clave);
+            return $items;
+        }
+    }
+    return getCarritoVentas($clave);
 }
 
 function setCarritoVentas($items, $codmesa = null)

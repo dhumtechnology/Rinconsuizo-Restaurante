@@ -1,14 +1,99 @@
 window.codmesaActiva = '';
+window.mesaCargando = false;
 window.carritoQueue = [];
 window.carritoProcessing = false;
 window.carritoRequestSeq = 0;
 window.ventasAccionSubmit = 'btn-venta';
+
+function normalizarCodmesaRef(codmesa) {
+    if (codmesa === null || codmesa === undefined || codmesa === '') {
+        return '';
+    }
+    var s = String(codmesa).trim();
+    if (/^\d+$/.test(s)) {
+        return s;
+    }
+    try {
+        var dec = atob(s);
+        if (/^\d+$/.test(dec)) {
+            return dec;
+        }
+    } catch (e) {}
+    return s;
+}
+
+function codmesaRefParaApi(codmesa) {
+    var n = normalizarCodmesaRef(codmesa);
+    if (n === '') {
+        return '';
+    }
+    try {
+        return btoa(n);
+    } catch (e) {
+        return n;
+    }
+}
+
+function obtenerCodmesaActiva() {
+    var mesa = normalizarCodmesaRef(window.codmesaActiva);
+    if (mesa) {
+        return mesa;
+    }
+    mesa = normalizarCodmesaRef($('#recibemesa input[name="codmesa"]').val());
+    if (!mesa) {
+        mesa = normalizarCodmesaRef($('#ventas input[name="codmesa"]').val());
+    }
+    if (mesa) {
+        window.codmesaActiva = mesa;
+    }
+    return mesa;
+}
+
+function sincronizarCodmesaDesdeDom() {
+    var mesa = normalizarCodmesaRef($('#recibemesa input[name="codmesa"]').val());
+    if (mesa) {
+        window.codmesaActiva = mesa;
+    }
+    return mesa;
+}
+
+function mesasCarritoCoinciden(a, b) {
+    return normalizarCodmesaRef(a) !== '' &&
+        normalizarCodmesaRef(b) !== '' &&
+        normalizarCodmesaRef(a) === normalizarCodmesaRef(b);
+}
+
+function buildCarritoFromDom() {
+    var items = [];
+    $('#carrito tbody tr[data-codigo]').each(function() {
+        var $tr = $(this);
+        var cant = parseFloat($tr.find('.cart-qty-input').val());
+        if (isNaN(cant) || cant <= 0) {
+            return;
+        }
+        items.push({
+            txtCodigo: String($tr.attr('data-codigo')),
+            ivaproducto: String($tr.attr('data-ivaproducto') || 'NO'),
+            precioconiva: String($tr.attr('data-precioconiva') || '0'),
+            precio: String($tr.attr('data-precio') || '0'),
+            precio2: String($tr.attr('data-precio2') || '0'),
+            existencia: String($tr.attr('data-existencia') || '0'),
+            tipo: String($tr.attr('data-tipo') || '0'),
+            cantidad: cant,
+            descripcion: String($tr.attr('data-descripcion') || '')
+        });
+    });
+    return items;
+}
 
 $(document).on('click', '#btn-venta', function() {
     window.ventasAccionSubmit = 'btn-venta';
 });
 $(document).on('click', '#btn-agregapedidos', function() {
     window.ventasAccionSubmit = 'btn-agregapedidos';
+});
+$(document).on('click', '#btn-cerrar', function() {
+    window.ventasAccionSubmit = 'btn-cerrar';
 });
 
 function processCarritoQueue() {
@@ -18,12 +103,17 @@ function processCarritoQueue() {
     window.carritoProcessing = true;
     var job = window.carritoQueue.shift();
     var payload = job.payload;
-    if (window.codmesaActiva) {
-        payload.codmesa = window.codmesaActiva;
+    if (job.codmesa) {
+        payload.codmesa = job.codmesa;
     }
-    var seq = ++window.carritoRequestSeq;
+    if (!payload.codmesa) {
+        window.carritoProcessing = false;
+        processCarritoQueue();
+        return;
+    }
+    var seq = job.seq;
     $.post('carritoventas.php', payload, function(data) {
-        if (seq === window.carritoRequestSeq) {
+        if (seq === window.carritoRequestSeq && mesasCarritoCoinciden(job.codmesa, obtenerCodmesaActiva())) {
             if (job.callback) {
                 job.callback(data);
             }
@@ -37,7 +127,21 @@ function processCarritoQueue() {
 }
 
 function postCarrito(payload, callback) {
-    window.carritoQueue.push({ payload: payload, callback: callback });
+    var mesa = normalizarCodmesaRef(payload.codmesa) || obtenerCodmesaActiva();
+    if (!mesa) {
+        if (callback) {
+            callback([]);
+        }
+        return;
+    }
+    payload.codmesa = mesa;
+    window.codmesaActiva = mesa;
+    window.carritoQueue.push({
+        payload: payload,
+        callback: callback,
+        codmesa: mesa,
+        seq: ++window.carritoRequestSeq
+    });
     processCarritoQueue();
 }
 
@@ -65,7 +169,10 @@ function toggleAccionesPedido() {
 }
 
 function cargarCarritoMesa(codmesa, callback) {
-    window.codmesaActiva = codmesa;
+    var mesa = normalizarCodmesaRef(codmesa) || obtenerCodmesaActiva();
+    if (mesa) {
+        window.codmesaActiva = mesa;
+    }
     window.carritoQueue = [];
     window.carritoProcessing = false;
     window.carritoRequestSeq++;
@@ -82,9 +189,16 @@ function cargarCarritoMesa(codmesa, callback) {
         }
     }
 
-    postCarrito({ cambiarMesa: codmesa }, function(data) {
+    if (!mesa) {
+        if (callback) {
+            callback([]);
+        }
+        return;
+    }
+
+    postCarrito({ cambiarMesa: mesa }, function(data) {
         if (tienePedidoActivo) {
-            postCarrito({ MiCarritoV: JSON.stringify({ Codigo: 'vaciar' }), codmesa: codmesa }, finalizarCarga);
+            postCarrito({ MiCarritoV: JSON.stringify({ Codigo: 'vaciar' }), codmesa: mesa }, finalizarCarga);
         } else {
             finalizarCarga(data);
         }
@@ -213,7 +327,14 @@ function pintarCarritoDesdeServidor(data) {
     });
 }
 
+window.mesaOperacionSeq = window.mesaOperacionSeq || 0;
+
 function DoAction(codproducto, producto, codcategoria, precioconiva, preciocompra, precioventa, ivaproducto, existencia) {
+    sincronizarCodmesaDesdeDom();
+    if (!obtenerCodmesaActiva()) {
+        alert('Seleccione una mesa antes de agregar productos.');
+        return false;
+    }
     addItem(codproducto, 1, producto, existencia, preciocompra, precioventa, precioconiva, ivaproducto, codcategoria, '+=');
 }
 
@@ -338,6 +459,7 @@ $('document').ready(function(){
 
   $("#error").html("");
   window.codmesaActiva = '';
+  window.mesaCargando = false;
   window.carritoQueue = [];
   window.carritoProcessing = false;
   window.carritoRequestSeq++;
@@ -447,6 +569,11 @@ function LimpiarTexto() {
 }*/
 
 function addItem(codigo, cantidad, descripcion, existencia, precio, precio2, precioconiva, ivaproducto, tipo, opCantidad, limpiarBusqueda) {
+    sincronizarCodmesaDesdeDom();
+    if (!obtenerCodmesaActiva()) {
+        alert('Seleccione una mesa antes de agregar productos.');
+        return false;
+    }
     if (limpiarBusqueda === undefined) {
         limpiarBusqueda = (opCantidad === '+=');
     }

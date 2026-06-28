@@ -5,7 +5,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 if (isset($_POST['cambiarMesa'])) {
     activarCarritoMesa($_POST['cambiarMesa']);
-    echo json_encode(getCarritoVentas());
+    echo json_encode(getCarritoVentas($_POST['cambiarMesa']));
     exit;
 }
 
@@ -14,10 +14,12 @@ if (!isset($_POST['MiCarritoV'])) {
     exit;
 }
 
-$codmesaRef = isset($_POST['codmesa']) ? $_POST['codmesa'] : '';
-if ($codmesaRef !== '') {
-    activarCarritoMesa($codmesaRef);
+$codmesaRef = isset($_POST['codmesa']) ? trim((string) $_POST['codmesa']) : '';
+if ($codmesaRef === '') {
+    echo json_encode(array());
+    exit;
 }
+activarCarritoMesa($codmesaRef);
 
 $ObjetoCarritoV = json_decode($_POST['MiCarritoV']);
 

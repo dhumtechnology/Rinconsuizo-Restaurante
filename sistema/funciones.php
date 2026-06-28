@@ -1724,22 +1724,24 @@ if($reg==""){
 } else {
 
 for($i=0;$i<sizeof($reg);$i++){  
+$numComanda = isset($reg[$i]['numerocomanda']) ? (int) $reg[$i]['numerocomanda'] : 0;
+$fechaEspera = isset($reg[$i]['fechapedido']) ? $reg[$i]['fechapedido'] : $reg[$i]['fechaventa'];
 ?>
                                                <tr role="row" class="odd">
                                     <td class="sorting_1" tabindex="0"><?php echo $a++; ?></td>
-<td><?php echo $sala = ( $reg[$i]['codmesa'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nombresala']."<br>".$reg[$i]['nombremesa']); ?></td>
+<td><?php echo $sala = ( $reg[$i]['codmesa'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nombresala']."<br>".$reg[$i]['nombremesa'].($numComanda > 0 ? "<br><span class='label label-primary'>Pedido #".$numComanda."</span>" : "")); ?></td>
 
 <td><?php echo $cliente = ( $reg[$i]['cliente'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nomcliente']); ?></td>
 
 <td><?php echo "<span style='font-size:12px;'><strong>".$reg[$i]['detalles']."</strong></span>"; ?></td>
 
-<td><?php echo renderEsperaBadge($reg[$i]['fechaventa']); ?></td>
+<td><?php echo renderEsperaBadge($fechaEspera); ?></td>
 
 <td><?php echo $observaciones = ( $reg[$i]['observaciones'] == '' ? " SIN OBSERVACIONES" : $reg[$i]['observaciones']); ?></td>
 
 <td><?php if($reg[$i]['cocinero']== '0') { echo "<span class='label label-success'><i class='fa fa-check'></i> ENTREGADA</span>"; } else { echo "<span class='label label-danger'><i class='fa fa-times'></i> PENDIENTE</span>"; } ?></td>
                                                <td>
-<a href="#" class="btn btn-success btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Realizar Entrega" onClick="EntregarPedidos('<?php echo base64_encode($reg[$i]["codventa"]) ?>','<?php echo base64_encode($reg[$i]['nombresala']); ?>','<?php echo base64_encode($reg[$i]['nombremesa']); ?>','<?php echo base64_encode("ENTREGASPEDIDOS") ?>')"><i class="fa fa-refresh"></i></a>
+<a href="#" class="btn btn-success btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Realizar Entrega" onClick="EntregarPedidos('<?php echo base64_encode($reg[$i]["codventa"]) ?>','<?php echo base64_encode($reg[$i]['nombresala']); ?>','<?php echo base64_encode($reg[$i]['nombremesa']); ?>','<?php echo base64_encode("ENTREGASPEDIDOS") ?>','<?php echo $numComanda; ?>')"><i class="fa fa-refresh"></i></a>
 </td>
                                                </tr>
                                                <?php } } ?>
@@ -1842,12 +1844,22 @@ $cajero = $cajero->CajerosSessionPorId();
     <div id="cargadetallesproductos"><table class="table table-small-font table-striped">
         <thead>
     <tr>
-<th style="background:#01ba9a;color:#FFFFFF;" colspan=4><div align="center">Productos Agregados</div></th>
+<th style="background:#01ba9a;color:#FFFFFF;" colspan=4><div align="center">Productos Agregados (cuenta de la mesa)</div></th>
           </tr>
         </thead>
         <tbody>
  <?php 
+$ultimoPedido = null;
 for($i=0;$i<sizeof($arqueo);$i++){
+    $numPedido = isset($arqueo[$i]['numerocomanda']) ? (int) $arqueo[$i]['numerocomanda'] : 0;
+    if ($numPedido > 0 && $numPedido !== $ultimoPedido) {
+        $ultimoPedido = $numPedido;
+?>
+          <tr>
+            <td colspan="4" style="background:#f5f5f5;"><strong>Pedido #<?php echo $numPedido; ?></strong></td>
+          </tr>
+<?php
+    }
 ?>
           <tr>
             <td><?php echo $arqueo[$i]['cantventa'] ?></td>

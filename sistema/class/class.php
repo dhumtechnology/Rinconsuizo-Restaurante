@@ -1130,6 +1130,8 @@ public function ListarMesas()
 {
 	self::SetNames();
 	$this->p = array();
+	$sqlSync = "UPDATE mesas m SET m.statusmesa = '0' WHERE m.statusmesa = '1' AND NOT EXISTS (SELECT 1 FROM ventas v WHERE v.codmesa = m.codmesa AND v.statusventa = 'PENDIENTE')";
+	$this->dbh->exec($sqlSync);
 	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
 		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS fechapedido,
 		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS pedidos_cocina,
@@ -1145,14 +1147,84 @@ public function ListarMesas()
 ############################ FUNCION PARA LISTAR MESAS ###########################
 
 ############################ FUNCION PARA LISTAR MESAS (COCINERO) ###########################
+
+public function TieneNumerocomanda()
+{
+	static $cache = null;
+	if ($cache !== null) {
+		return $cache;
+	}
+	try {
+		$stmt = $this->dbh->query("SHOW COLUMNS FROM detalleventas LIKE 'numerocomanda'");
+		$cache = ($stmt && $stmt->rowCount() > 0);
+	} catch (Exception $e) {
+		$cache = false;
+	}
+	return $cache;
+}
+
+public function ObtenerSiguienteNumeroComanda($codventa)
+{
+	if (!$this->TieneNumerocomanda()) {
+		return 1;
+	}
+	$stmt = $this->dbh->prepare("SELECT COALESCE(MAX(numerocomanda), 0) + 1 FROM detalleventas WHERE codventa = ?");
+	$stmt->execute(array($codventa));
+	$row = $stmt->fetch(PDO::FETCH_NUM);
+	return (int) $row[0];
+}
+
+public function GenerarSiguienteCodventa()
+{
+	self::SetNames();
+	$sql = "SELECT COALESCE(MAX(CAST(codventa AS UNSIGNED)), 0) + 1 AS next_num FROM ventas";
+	try {
+		$this->dbh->beginTransaction();
+		$stmt = $this->dbh->query($sql . " FOR UPDATE");
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		$this->dbh->commit();
+	} catch (Exception $e) {
+		if ($this->dbh->inTransaction()) {
+			$this->dbh->rollBack();
+		}
+		$row = $this->dbh->query($sql)->fetch(PDO::FETCH_ASSOC);
+	}
+	$num = max(1, (int) $row['next_num']);
+	return str_pad((string) $num, 8, '0', STR_PAD_LEFT);
+}
+
+public function SqlFiltroDetallePorVenta($aliasVenta = 'ventas', $aliasDetalle = 'detalleventas')
+{
+	return " AND (
+		(SELECT COUNT(*) FROM ventas vdup WHERE vdup.codventa = {$aliasVenta}.codventa) <= 1
+		OR (
+			{$aliasDetalle}.fechadetalleventa >= DATE_SUB({$aliasVenta}.fechaventa, INTERVAL 12 HOUR)
+			AND {$aliasDetalle}.fechadetalleventa < COALESCE(
+				(SELECT MIN(v2.fechaventa) FROM ventas v2 WHERE v2.codventa = {$aliasVenta}.codventa AND v2.idventa > {$aliasVenta}.idventa),
+				'2099-12-31 23:59:59'
+			)
+		)
+	)";
+}
+
 public function ListarMesasCocinero()
 {
 	self::SetNames();
 	$this->p = array();
 	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
-		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1') AS fechapedido,
-		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1') AS pedidos_cocina
-		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala";
+		(SELECT MIN(v.fechaventa) FROM ventas v
+			INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
+			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS fechapedido,
+		(SELECT COUNT(DISTINCT v.codventa) FROM ventas v
+			INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
+			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS pedidos_cocina
+		FROM mesas
+		LEFT JOIN salas ON mesas.codsala = salas.codsala
+		WHERE EXISTS (
+			SELECT 1 FROM ventas v
+			INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
+			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE'
+		)";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -1251,9 +1323,6 @@ public function OcuparMesasUnion($codmesa)
 
 public function LiberarMesasUnion($codmesa)
 {
-	if (!$this->TablaMesasUnidasExiste()) {
-		return;
-	}
 	$principal = $this->ResolverMesaPrincipal($codmesa);
 	$mesas = $this->ObtenerCodmesasGrupoActivo($principal);
 	self::SetNames();
@@ -1262,9 +1331,11 @@ public function LiberarMesasUnion($codmesa)
 	foreach ($mesas as $m) {
 		$stmt->execute(array($m));
 	}
-	$sqlDel = "DELETE FROM mesas_unidas WHERE codmesa_principal = ? AND activa = 1";
-	$stmtDel = $this->dbh->prepare($sqlDel);
-	$stmtDel->execute(array($principal));
+	if ($this->TablaMesasUnidasExiste()) {
+		$sqlDel = "DELETE FROM mesas_unidas WHERE codmesa_principal = ? AND activa = 1";
+		$stmtDel = $this->dbh->prepare($sqlDel);
+		$stmtDel->execute(array($principal));
+	}
 }
 
 public function NombreMesaConUnion($codmesa)
@@ -1427,7 +1498,10 @@ public function SepararMesasUnion()
 public function ContarDeliveryCocina()
 {
 	self::SetNames();
-	$sql = "SELECT COUNT(*) AS total, MIN(fechaventa) AS fechapedido FROM ventas WHERE codmesa = '0' AND cocinero = '1'";
+	$sql = "SELECT COUNT(DISTINCT v.codventa) AS total, MIN(v.fechaventa) AS fechapedido
+		FROM ventas v
+		INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
+		WHERE v.codmesa = '0' AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE'";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		return $row;
@@ -6542,24 +6616,7 @@ public function RegistrarDelivery()
 
 	}
 
-	$sql = " select codventa from ventas order by codventa desc limit 1";
-					foreach ($this->dbh->query($sql) as $row){
-
-	$codventa["codventa"]=$row["codventa"];
-
-		}
-		if(empty($codventa["codventa"])){
-
-			$codventa = '00000001';
-
-		} else {
-			$resto = substr($codventa["codventa"], 0, 0);
-			$coun = strlen($resto);
-			$num     = substr($codventa["codventa"] , $coun);
-			$dig     = $num + 1;
-			$cod = str_pad($dig, 7, "0", STR_PAD_LEFT);
-			$codventa = $cod;
-		}
+	$codventa = $this->GenerarSiguienteCodventa();
 
 		$query = " insert into ventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
@@ -6673,7 +6730,7 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 						$ivaproducto = strip_tags($venta[$i]['ivaproducto']);
 						$importe = strip_tags($venta[$i]['cantidad'] * $venta[$i]['precio2']);
 						$importe2 = strip_tags($venta[$i]['cantidad'] * $venta[$i]['precio']);
-						$fechadetalleventa = strip_tags(date("Y-m-d h:i:s"));
+						$fechadetalleventa = strip_tags(date("Y-m-d H:i:s"));
 						$statusdetalle = "0";
 						
 						$codigo = strip_tags($_SESSION['codigo']);
@@ -7004,7 +7061,9 @@ public function VerificaVentas()
 	$simbolo = $rowcon['simbolo'];
 
 $codmesaPrincipal = $this->ResolverMesaPrincipal(base64_decode($_GET["codmesa"]));
-$sql = " SELECT clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.tlfcliente, clientes.direccliente, clientes.emailcliente, ventas.codventa, ventas.codcaja, ventas.codcliente as cliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.totalpago2, ventas.codigo, ventas.observaciones, detalleventas.coddetalleventa, detalleventas.codproducto, detalleventas.producto, detalleventas.cantventa, detalleventas.ivaproducto, detalleventas.importe, salas.nombresala, mesas.codmesa, mesas.nombremesa, usuarios.nombres FROM mesas INNER JOIN ventas ON mesas.codmesa = ventas.codmesa INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente INNER JOIN salas ON salas.codsala = mesas.codsala LEFT JOIN usuarios ON ventas.codigo = usuarios.codigo WHERE mesas.codmesa = ? and mesas.statusmesa = '1' AND detalleventas.statusdetalle = '1'";
+$colNumComanda = $this->TieneNumerocomanda() ? ", detalleventas.numerocomanda" : "";
+$orderDetalle = $this->TieneNumerocomanda() ? " ORDER BY detalleventas.numerocomanda ASC, detalleventas.coddetalleventa ASC" : "";
+$sql = " SELECT clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.tlfcliente, clientes.direccliente, clientes.emailcliente, ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente as cliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.totalpago2, ventas.codigo, ventas.observaciones, detalleventas.coddetalleventa, detalleventas.codproducto, detalleventas.producto, detalleventas.cantventa, detalleventas.ivaproducto, detalleventas.importe, salas.nombresala, mesas.codmesa, mesas.nombremesa, usuarios.nombres".$colNumComanda." FROM mesas INNER JOIN ventas ON mesas.codmesa = ventas.codmesa INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa".$this->SqlFiltroDetallePorVenta()." LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente INNER JOIN salas ON salas.codsala = mesas.codsala LEFT JOIN usuarios ON ventas.codigo = usuarios.codigo WHERE mesas.codmesa = ? and mesas.statusmesa = '1' AND ventas.statusventa = 'PENDIENTE' AND detalleventas.statusdetalle = '1' AND ventas.idventa = (SELECT MAX(v3.idventa) FROM ventas v3 WHERE v3.codmesa = mesas.codmesa AND v3.statusventa = 'PENDIENTE')".$orderDetalle;
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($codmesaPrincipal) );
 		$num = $stmt->rowCount();
@@ -7104,6 +7163,7 @@ public function RegistrarVentas()
 	self::SetNames();
 	$codmesaPedido = isset($_POST['codmesa']) ? $_POST['codmesa'] : '';
 	activarCarritoMesa($codmesaPedido);
+	$codmesaPrincipal = $this->ResolverMesaPrincipal(strip_tags($codmesaPedido));
 	if(empty($_POST["txtTotal"]) or empty($_POST["txtTotalCompra"]))
 	{
 		echo "1";
@@ -7115,23 +7175,26 @@ public function RegistrarVentas()
 		echo "2";
 		exit;
 
-	} else if(empty(getCarritoVentas($codmesaPedido)))
+	} else if(!empty($_POST['codventa'])) {
+		echo "8";
+		exit;
+
+	} else if(empty(obtenerCarritoPedido($codmesaPedido)))
 	{
 		echo "3";
 		exit;
 
 	}
 
-	$codmesaVenta = $this->ResolverMesaPrincipal(strip_tags($_POST["codmesa"]));
 	$sqlVentaActiva = "SELECT codventa FROM ventas WHERE codmesa = ? AND statusventa = 'PENDIENTE' LIMIT 1";
 	$stmtVentaActiva = $this->dbh->prepare($sqlVentaActiva);
-	$stmtVentaActiva->execute(array($codmesaVenta));
+	$stmtVentaActiva->execute(array($codmesaPrincipal));
 	if ($stmtVentaActiva->rowCount() > 0) {
 		echo "8";
 		exit;
 	}
 
-	$ver = getCarritoVentas($codmesaPedido);
+	$ver = obtenerCarritoPedido($codmesaPedido);
 	for($i=0;$i<count($ver);$i++){ 
 
 		$sql = "select existencia from productos where codproducto = '".$ver[$i]['txtCodigo']."'";
@@ -7156,24 +7219,7 @@ public function RegistrarVentas()
 	}
 
 
-	$sql = " select codventa from ventas order by codventa desc limit 1";
-					foreach ($this->dbh->query($sql) as $row){
-
-	$codventa["codventa"]=$row["codventa"];
-
-		}
-		if(empty($codventa["codventa"])){
-
-			$codventa = '00000001';
-
-		} else {
-			$resto = substr($codventa["codventa"], 0, 0);
-			$coun = strlen($resto);
-			$num     = substr($codventa["codventa"] , $coun);
-			$dig     = $num + 1;
-			$cod = str_pad($dig, 8, "0", STR_PAD_LEFT);
-			$codventa = $cod;
-		}
+	$codventa = $this->GenerarSiguienteCodventa();
 
 		$query = " insert into ventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
@@ -7261,7 +7307,8 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 					$this->OcuparMesasUnion($codmesa);
 #################### AQUI ACTUALIZAMOS EL STATUS DE MESA ####################
 
-					$venta = getCarritoVentas($codmesaPedido);
+					$venta = obtenerCarritoPedido($codmesaPedido);
+					$numeroComandaLote = 1;
 					for($i=0;$i<count($venta);$i++){
 
 		$sql = "select existencia from productos where codproducto = '".$venta[$i]['txtCodigo']."'";
@@ -7271,7 +7318,9 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 		}
 		$existenciadb = $row['existencia'];
 
-		$query = " insert into detalleventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+		$query = $this->TieneNumerocomanda()
+			? "INSERT INTO detalleventas (codventa, codcliente, codproducto, producto, codcategoria, cantventa, preciocompra, precioventa, ivaproducto, importe, importe2, fechadetalleventa, statusdetalle, codigo, comanda, numerocomanda) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			: " insert into detalleventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 						$stmt = $this->dbh->prepare($query);
 						$stmt->bindParam(1, $codventa);
 						$stmt->bindParam(2, $codcliente);
@@ -7288,8 +7337,12 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 						$stmt->bindParam(13, $statusdetalle);
 						$stmt->bindParam(14, $codigo);
 						$stmt->bindParam(15, $comanda);
+						if ($this->TieneNumerocomanda()) {
+							$stmt->bindParam(16, $numerocomanda);
+						}
 
 						$comanda = "1";
+						$numerocomanda = $numeroComandaLote;
 						$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
 						if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
 						$codproducto = strip_tags($venta[$i]['txtCodigo']);
@@ -7301,7 +7354,7 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 						$ivaproducto = strip_tags($venta[$i]['ivaproducto']);
 						$importe = strip_tags($venta[$i]['cantidad'] * $venta[$i]['precio2']);
 						$importe2 = strip_tags($venta[$i]['cantidad'] * $venta[$i]['precio']);
-						$fechadetalleventa = strip_tags(date("Y-m-d h:i:s"));
+						$fechadetalleventa = strip_tags(date("Y-m-d H:i:s"));
 						$statusdetalle = "1";
 						$codigo = strip_tags($_SESSION['codigo']);
 						$stmt->execute();
@@ -7458,58 +7511,33 @@ public function AgregaPedidos()
 		echo "3";
 		exit;
 	}
-	$sqlValVenta = "SELECT codmesa FROM ventas WHERE codventa = ? AND statusventa = 'PENDIENTE' LIMIT 1";
+	$sqlValVenta = "SELECT codmesa, idventa FROM ventas WHERE codventa = ? AND codmesa = ? AND statusventa = 'PENDIENTE' ORDER BY idventa DESC LIMIT 1";
 	$stmtValVenta = $this->dbh->prepare($sqlValVenta);
-	$stmtValVenta->execute(array(strip_tags($_POST['codventa'])));
+	$stmtValVenta->execute(array(strip_tags($_POST['codventa']), $codmesaPrincipal));
 	if ($stmtValVenta->rowCount() == 0) {
 		echo "3";
 		exit;
 	}
 	$ventaMesa = $stmtValVenta->fetch(PDO::FETCH_ASSOC);
-	if ((string) $ventaMesa['codmesa'] !== (string) $codmesaPrincipal) {
-		echo "9";
-		exit;
+	$idventaPedido = (int) $ventaMesa['idventa'];
+
+	$codventaPedido = strip_tags($_POST['codventa']);
+	$numeroComandaLote = $this->ObtenerSiguienteNumeroComanda($codventaPedido);
+
+	if (!$this->TieneNumerocomanda()) {
+		$sql = "UPDATE detalleventas SET comanda = '0' WHERE codventa = ? AND comanda = '1'";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codventaPedido));
 	}
-
-if(isset($_POST["codventa"]))
-			{
-				$sql = "select * from detalleventas where codventa = ?";
-				$stmt = $this->dbh->prepare($sql);
-				$stmt->execute( array( $_POST["codventa"] ) );
-				$num = $stmt->rowCount();
-				if($num>0)
-				{
-
-					if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-					{
-						$pae[] = $row;
-					}
-
-					$comanda = $pae[0]['comanda'];
-
-					$sql = " update detalleventas set "
-					." comanda = ? "
-					." where "
-					." codventa = ? AND comanda = '1';
-					";
-					$stmt = $this->dbh->prepare($sql);
-					$stmt->bindParam(1, $comanda);
-					$stmt->bindParam(2, $codventaUpd);
-
-					$comanda = "0";
-					$codventaUpd = strip_tags($_POST["codventa"]);
-					$stmt->execute();
-				}
-			}
 			
-	if(empty(getCarritoVentas($codmesaPedido)))
+	if(empty(obtenerCarritoPedido($codmesaPedido)))
 				{
 					echo "3";
 					exit;
 
 				} 
 
-	$ver = getCarritoVentas($codmesaPedido);
+	$ver = obtenerCarritoPedido($codmesaPedido);
 	for($i=0;$i<count($ver);$i++){ 
 
 		$sql = "select existencia from productos where codproducto = '".$ver[$i]['txtCodigo']."'";
@@ -7525,7 +7553,7 @@ if(isset($_POST["codventa"]))
 			exit;                           }
 		}
 
-	$ven = getCarritoVentas($codmesaPedido);
+	$ven = obtenerCarritoPedido($codmesaPedido);
 	for($i=0;$i<count($ven);$i++){
 
 	$sql = "select existencia from productos where codproducto = '".$ven[$i]['txtCodigo']."'";
@@ -7703,7 +7731,9 @@ if($num>0) {
 			
 
 
-			$query = " insert into detalleventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+			$query = $this->TieneNumerocomanda()
+				? "INSERT INTO detalleventas (codventa, codcliente, codproducto, producto, codcategoria, cantventa, preciocompra, precioventa, ivaproducto, importe, importe2, fechadetalleventa, statusdetalle, codigo, comanda, numerocomanda) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+				: " insert into detalleventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 			$stmt = $this->dbh->prepare($query);
 			$stmt->bindParam(1, $codventa);
 			$stmt->bindParam(2, $codcliente);
@@ -7720,8 +7750,12 @@ if($num>0) {
 			$stmt->bindParam(13, $statusdetalle);
 			$stmt->bindParam(14, $codigo);
 			$stmt->bindParam(15, $comanda);
+			if ($this->TieneNumerocomanda()) {
+				$stmt->bindParam(16, $numerocomanda);
+			}
 
 			$comanda = "1";
+			$numerocomanda = $numeroComandaLote;
 			$codventa = strip_tags($_POST["codventa"]);
 			$codcliente = strip_tags($_POST["cliente"]);
 			$codproducto = strip_tags($ven[$i]['txtCodigo']);
@@ -7733,7 +7767,7 @@ if($num>0) {
 			$ivaproducto = strip_tags($ven[$i]['ivaproducto']);
 			$importe = strip_tags($ven[$i]['cantidad'] * $ven[$i]['precio2']);
 			$importe2 = strip_tags($ven[$i]['cantidad'] * $ven[$i]['precio']);
-			$fechadetalleventa = strip_tags(date("Y-m-d h:i:s"));
+			$fechadetalleventa = strip_tags(date("Y-m-d H:i:s"));
 			$statusdetalle = "1";
 			$codigo = strip_tags($_SESSION['codigo']);
 			$stmt->execute();
@@ -7865,9 +7899,9 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 		}
 	}
 
-	$sql4 = "select * from ventas where codventa = ? ";
+	$sql4 = "select * from ventas where codventa = ? and codmesa = ? order by idventa desc limit 1";
 	$stmt = $this->dbh->prepare($sql4);
-	$stmt->execute( array($_POST["codventa"]) );
+	$stmt->execute( array($_POST["codventa"], $codmesaPrincipal) );
 	$num = $stmt->rowCount();
 
 	if($row = $stmt->fetch(PDO::FETCH_ASSOC))
@@ -7882,9 +7916,9 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 		$totaldescuentove = $paea[0]["totaldescuentove"];
 
 
-		$sql3 = "select sum(importe) as importe, sum(importe2) as importe2, sum(preciocompra) as preciocompra from detalleventas where codventa = ? and ivaproducto = 'SI'";
+		$sql3 = "select sum(d.importe) as importe, sum(d.importe2) as importe2, sum(d.preciocompra) as preciocompra from detalleventas d inner join ventas v on v.codventa = d.codventa".$this->SqlFiltroDetallePorVenta('v', 'd')." where v.idventa = ? and d.ivaproducto = 'SI'";
 		$stmt = $this->dbh->prepare($sql3);
-		$stmt->execute( array($_POST["codventa"]));
+		$stmt->execute( array($idventaPedido));
 		$num = $stmt->rowCount();
 
 		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
@@ -7895,9 +7929,9 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 		$importeiva = $p[0]["importe"];
 		$importe2iva = $p[0]["importe2"];
 
-		$sql5 = "select sum(importe) as importe, sum(importe2) as importe2, sum(preciocompra) as preciocompra from detalleventas where codventa = ?  and ivaproducto = 'NO'";
+		$sql5 = "select sum(d.importe) as importe, sum(d.importe2) as importe2, sum(d.preciocompra) as preciocompra from detalleventas d inner join ventas v on v.codventa = d.codventa".$this->SqlFiltroDetallePorVenta('v', 'd')." where v.idventa = ? and d.ivaproducto = 'NO'";
 		$stmt = $this->dbh->prepare($sql5);
-		$stmt->execute( array($_POST["codventa"]));
+		$stmt->execute( array($idventaPedido));
 		$num = $stmt->rowCount();
 
 		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
@@ -7918,7 +7952,7 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 			." observaciones= ?, "
 			." cocinero = ? "
 			." where "
-			." codventa = ?;
+			." idventa = ?;
 			";
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->bindParam(1, $subtotalivasive);
@@ -7929,7 +7963,7 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 			$stmt->bindParam(6, $total2);
 			$stmt->bindParam(7, $observaciones);
 			$stmt->bindParam(8, $cocinero);
-			$stmt->bindParam(9, $codventa);
+			$stmt->bindParam(9, $idventaPedido);
 
 			$subtotalivasive= rount($importeiva,2);
 			$subtotalivanove= rount($importe,2);
@@ -7949,7 +7983,7 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 
 echo "<div class='alert alert-success'>";
 echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-echo "<span class='fa fa-check-square-o'></span> LOS DETALLES FUERON AGREGADOS A LA ".$_POST["nombremesa"].", EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."' class='on-default' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda' target='_black'><strong>IMPRIMIR COMANDA</strong></a>";
+echo "<span class='fa fa-check-square-o'></span> LOS DETALLES FUERON AGREGADOS A LA ".$_POST["nombremesa"].", EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."&numerocomanda=".$numeroComandaLote."' class='on-default' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda' target='_black'><strong>IMPRIMIR COMANDA</strong></a>";
 echo "<span id='venta-comanda-cod' data-codventa='".base64_encode($codventa)."' style='display:none;'></span>";
 echo "</div>";
 exit;
@@ -8322,7 +8356,13 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 	public function ListarMostrador()
 	{
 		self::SetNames();
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' | ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa AND detalleventas.comanda = '1' AND detalleventas.statusdetalle = '1' LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' AND ventas.statusventa = 'PENDIENTE' GROUP BY ventas.codventa HAVING detalles IS NOT NULL AND detalles != ''";
+		$groupBy = $this->TieneNumerocomanda()
+			? "ventas.codventa, detalleventas.numerocomanda"
+			: "ventas.codventa";
+		$selectNum = $this->TieneNumerocomanda()
+			? "detalleventas.numerocomanda, MIN(detalleventas.fechadetalleventa) AS fechapedido,"
+			: "";
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, ".$selectNum." clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' | ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa AND detalleventas.comanda = '1' AND detalleventas.statusdetalle = '1'".$this->SqlFiltroDetallePorVenta()." LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' AND ventas.statusventa = 'PENDIENTE' GROUP BY ventas.idventa, ".$groupBy." HAVING detalles IS NOT NULL AND detalles != ''";
         foreach ($this->dbh->query($sql) as $row)
 		{
 			if (!empty($row['codmesa'])) {
@@ -8339,31 +8379,48 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 	public function EntregarPedidos()
 	{
 		self::SetNames();
-		
-		$sql = " update ventas set "
-			  ." cocinero = ? "
-			  ." where "
-			  ." codventa = ?;
-			   ";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->bindParam(1, $cocinero);
-		$stmt->bindParam(2, $codventa);
-		
-		$cocinero = strip_tags("0");
+
 		$codventa = strip_tags(base64_decode($_GET["codventa"]));
 		$sala = strip_tags(base64_decode($_GET["nombresala"]));
 		$mesa = strip_tags(base64_decode($_GET["nombremesa"]));
-		$stmt->execute();
+		$numerocomanda = isset($_GET['numerocomanda']) ? (int) $_GET['numerocomanda'] : 0;
 
-		$sqlComanda = "UPDATE detalleventas SET comanda = '0' WHERE codventa = ?";
-		$stmtComanda = $this->dbh->prepare($sqlComanda);
-		$stmtComanda->execute(array($codventa));
+		if ($this->TieneNumerocomanda()) {
+			if ($numerocomanda <= 0) {
+				$sqlMin = "SELECT MIN(numerocomanda) FROM detalleventas WHERE codventa = ? AND comanda = '1' AND statusdetalle = '1'";
+				$stmtMin = $this->dbh->prepare($sqlMin);
+				$stmtMin->execute(array($codventa));
+				$rowMin = $stmtMin->fetch(PDO::FETCH_NUM);
+				$numerocomanda = $rowMin ? (int) $rowMin[0] : 0;
+			}
+			if ($numerocomanda > 0) {
+				$sqlComanda = "UPDATE detalleventas SET comanda = '0' WHERE codventa = ? AND numerocomanda = ? AND comanda = '1'";
+				$stmtComanda = $this->dbh->prepare($sqlComanda);
+				$stmtComanda->execute(array($codventa, $numerocomanda));
+			}
+		} else {
+			$sqlComanda = "UPDATE detalleventas SET comanda = '0' WHERE codventa = ?";
+			$stmtComanda = $this->dbh->prepare($sqlComanda);
+			$stmtComanda->execute(array($codventa));
+		}
+
+		$sqlPend = "SELECT COUNT(*) FROM detalleventas WHERE codventa = ? AND comanda = '1' AND statusdetalle = '1'";
+		$stmtPend = $this->dbh->prepare($sqlPend);
+		$stmtPend->execute(array($codventa));
+		$pendientes = (int) $stmtPend->fetchColumn();
+
+		$cocinero = ($pendientes > 0) ? '1' : '0';
+		$sql = " update ventas set cocinero = ? where codventa = ?; ";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->bindParam(1, $cocinero);
+		$stmt->bindParam(2, $codventa);
+		$stmt->execute();
 		
         echo "<div class='alert alert-info'>";
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
 		echo "<center><span class='fa fa-check-square-o'></span> EL PEDIDO DE LA ".$sala." Y ".$mesa." FUE ENTREGADO EXITOSAMENTE </center>";
 		echo "</div>";
-		echo "<script>if (typeof recargarMesasPanelCocinero === 'function') { recargarMesasPanelCocinero(); }</script>";
+		echo "<script>if (typeof recargarMesasPanelCocinero === 'function') { recargarMesasPanelCocinero(function(){ if (typeof CocineroMostrarMesas === 'function') CocineroMostrarMesas(); }); }</script>";
 		exit;
 	
   }
@@ -8392,7 +8449,15 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 			$nombremesa = $this->NombreMesaConUnion($codmesa);
 		}
 
+		$groupBy = $this->TieneNumerocomanda()
+			? "ventas.codventa, detalleventas.numerocomanda"
+			: "ventas.codventa";
+		$selectNum = $this->TieneNumerocomanda()
+			? "detalleventas.numerocomanda, MIN(detalleventas.fechadetalleventa) AS fechapedido,"
+			: "ventas.fechaventa AS fechapedido,";
+
 		$sql = "SELECT ventas.codventa, ventas.fechaventa, ventas.observaciones, ventas.cocinero, ventas.totalpago,
+			".$selectNum."
 			clientes.nomcliente, clientes.cedcliente,
 			salas.nombresala, mesas.nombremesa,
 			GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' x ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles
@@ -8400,13 +8465,14 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 			INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa
 				AND detalleventas.comanda = '1'
 				AND detalleventas.statusdetalle = '1'
+				".$this->SqlFiltroDetallePorVenta()."
 			LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente
 			LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa
 			LEFT JOIN salas ON mesas.codsala = salas.codsala
 			WHERE ventas.codmesa = ? AND ventas.cocinero = '1' AND ventas.statusventa = 'PENDIENTE'
-			GROUP BY ventas.codventa
+			GROUP BY ventas.idventa, ".$groupBy."
 			HAVING detalles IS NOT NULL AND detalles != ''
-			ORDER BY ventas.fechaventa ASC";
+			ORDER BY fechapedido ASC";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute(array($codmesa));
 		$pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -8425,6 +8491,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 					<thead>
 						<tr>
 							<th>N&deg;</th>
+							<?php if ($this->TieneNumerocomanda()) { ?><th>Pedido</th><?php } ?>
 							<th>Cliente</th>
 							<th>Platillos</th>
 							<th>Espera</th>
@@ -8439,17 +8506,20 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 						$mesaPed = ($pedido['nombremesa'] != '' ? $pedido['nombremesa'] : $nombremesa);
 						$cliente = ($pedido['nomcliente'] == '' ? "<span class='label label-warning'>SIN ASIGNAR</span>" : htmlspecialchars($pedido['nomcliente']));
 						$obs = ($pedido['observaciones'] == '' ? 'SIN OBSERVACIONES' : htmlspecialchars($pedido['observaciones']));
+						$numComanda = isset($pedido['numerocomanda']) ? (int) $pedido['numerocomanda'] : 0;
+						$fechaEspera = isset($pedido['fechapedido']) ? $pedido['fechapedido'] : $pedido['fechaventa'];
 					?>
 						<tr>
 							<td><?php echo $n++; ?></td>
+							<?php if ($this->TieneNumerocomanda()) { ?><td><span class="label label-primary">#<?php echo $numComanda; ?></span></td><?php } ?>
 							<td><?php echo $cliente; ?></td>
 							<td><span style="font-size:12px;"><strong><?php echo $pedido['detalles']; ?></strong></span></td>
-							<td><?php echo renderEsperaBadge($pedido['fechaventa']); ?></td>
+							<td><?php echo renderEsperaBadge($fechaEspera); ?></td>
 							<td><?php echo $obs; ?></td>
 							<td><span class="label label-danger"><i class="fa fa-times"></i> PENDIENTE</span></td>
 							<td>
-								<a href="#" class="btn btn-success btn-xs" data-toggle="tooltip" data-placement="left" title="Realizar Entrega" onClick="EntregarPedidos('<?php echo base64_encode($pedido['codventa']); ?>','<?php echo base64_encode($salaPed); ?>','<?php echo base64_encode($mesaPed); ?>','<?php echo base64_encode('ENTREGASPEDIDOS'); ?>')"><i class="fa fa-refresh"></i> Procesar</a>
-								<a href="reportepdf?codventa=<?php echo base64_encode($pedido['codventa']); ?>&tipo=<?php echo base64_encode('TICKETCOMANDA'); ?>" class="btn btn-info btn-xs" target="_blank" title="Imprimir Comanda"><i class="fa fa-print"></i></a>
+								<a href="#" class="btn btn-success btn-xs" data-toggle="tooltip" data-placement="left" title="Realizar Entrega" onClick="EntregarPedidos('<?php echo base64_encode($pedido['codventa']); ?>','<?php echo base64_encode($salaPed); ?>','<?php echo base64_encode($mesaPed); ?>','<?php echo base64_encode('ENTREGASPEDIDOS'); ?>','<?php echo $numComanda; ?>')"><i class="fa fa-refresh"></i> Procesar</a>
+								<a href="reportepdf?codventa=<?php echo base64_encode($pedido['codventa']); ?>&tipo=<?php echo base64_encode('TICKETCOMANDA'); ?><?php echo $numComanda > 0 ? '&numerocomanda='.$numComanda : ''; ?>" class="btn btn-info btn-xs" target="_blank" title="Imprimir Comanda"><i class="fa fa-print"></i></a>
 							</td>
 						</tr>
 					<?php } ?>
@@ -8691,10 +8761,19 @@ $sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente, ventas.codmes
 public function VerDetallesVentas()
 {
 	self::SetNames();
-	$sql = " SELECT * FROM detalleventas LEFT JOIN categorias ON detalleventas.codcategoria = categorias.codcategoria WHERE detalleventas.codventa = ? and detalleventas.comanda=1";	
+	$codventa = trim(base64_decode($_GET["codventa"]));
+	$numerocomanda = isset($_GET['numerocomanda']) ? (int) $_GET['numerocomanda'] : 0;
+	$sql = " SELECT * FROM detalleventas LEFT JOIN categorias ON detalleventas.codcategoria = categorias.codcategoria WHERE detalleventas.codventa = ? and detalleventas.comanda=1";
+	$params = array($codventa);
+	if ($this->TieneNumerocomanda() && $numerocomanda > 0) {
+		$sql .= " AND detalleventas.numerocomanda = ?";
+		$params[] = $numerocomanda;
+	} elseif ($this->TieneNumerocomanda()) {
+		$sql .= " AND detalleventas.numerocomanda = (SELECT MAX(d2.numerocomanda) FROM detalleventas d2 WHERE d2.codventa = ? AND d2.comanda = 1)";
+		$params[] = $codventa;
+	}
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->bindValue(1, trim(base64_decode($_GET["codventa"])));
-	$stmt->execute();
+	$stmt->execute($params);
 	$num = $stmt->rowCount();
 
 	while($row = $stmt->fetch(PDO::FETCH_ASSOC))

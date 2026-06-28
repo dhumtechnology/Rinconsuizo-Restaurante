@@ -741,15 +741,18 @@ $.ajax({
 
 
 // FUNCION PARA ENTREGAR PEDIDOS DE PRODUCTOS EN COCINA
-function EntregarPedidos(codventa,nombresala,nombremesa,tipo){
+function EntregarPedidos(codventa,nombresala,nombremesa,tipo,numerocomanda){
 
 var entrega = confirm("ESTA SEGURO DE REALIZAR LA ENTREGA DE ESTE PEDIDO?")
 
 if ( entrega ) {
 
 $('#entrega').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
-                
+
 var dataString = 'codventa='+codventa+'&nombresala='+nombresala+'&nombremesa='+nombremesa+'&tipo='+tipo;
+if (typeof numerocomanda !== 'undefined' && numerocomanda !== null && numerocomanda !== '') {
+    dataString += '&numerocomanda='+numerocomanda;
+}
 
 $.ajax({
             type: "GET",
@@ -763,8 +766,8 @@ $.ajax({
         }
         if (typeof recargarMesasPanelCocinero === 'function') {
             recargarMesasPanelCocinero(function() {
-                if (typeof cocineroMesaActual !== 'undefined' && cocineroMesaActual) {
-                    RecibeMesaCocinero(cocineroMesaActual);
+                if (typeof CocineroMostrarMesas === 'function') {
+                    CocineroMostrarMesas();
                 }
             });
         }
@@ -1005,9 +1008,19 @@ var url = 'funciones.php?BuscaComprasFechas=si';
 // FUNCION PARA MOSTRAR VENTAS DE PRODUCTOS EN VENTANA MODAL
 function RecibeMesa(codmesa){
 
+window.mesaOperacionSeq = (window.mesaOperacionSeq || 0) + 1;
+var mesaId = (typeof normalizarCodmesaRef === 'function') ? normalizarCodmesaRef(codmesa) : String(codmesa || '');
+window.codmesaActiva = mesaId;
+window.mesaCargando = true;
+window.carritoQueue = [];
+window.carritoProcessing = false;
+window.carritoRequestSeq++;
+
+var codmesaApi = (typeof codmesaRefParaApi === 'function') ? codmesaRefParaApi(codmesa) : codmesa;
+
 $('#recibemesa').html('<div class="progress"><div class="progress-bar progress-bar-primary progress-bar-striped active" role="progressbar" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100" style="width: 100%"><span class="sr-only">100% Complete</span></div></div>');
 								
-var dataString = 'BuscaMesaReservas=si&codmesa='+codmesa;
+var dataString = 'BuscaMesaReservas=si&codmesa='+codmesaApi;
 
 $.ajax({
             type: "GET",
@@ -1024,8 +1037,19 @@ $.ajax({
                 });
                 $('#recibemesa').empty();
                 $('#recibemesa').append(''+response+'').fadeIn("slow");
+                if (typeof sincronizarCodmesaDesdeDom === 'function') {
+                    sincronizarCodmesaDesdeDom();
+                } else if (mesaId) {
+                    window.codmesaActiva = mesaId;
+                }
+                window.mesaCargando = false;
                 toggleAccionesPedido();
-                cargarCarritoMesa(codmesa);
+                var mesaCarrito = (typeof obtenerCodmesaActiva === 'function') ? obtenerCodmesaActiva() : mesaId;
+                cargarCarritoMesa(mesaCarrito, function() {});
+           },
+           error: function() {
+                window.mesaCargando = false;
+                $('#recibemesa').html('<div class="alert alert-danger"><center>Error al cargar la mesa. Intente de nuevo.</center></div>');
            }
       });
 }
