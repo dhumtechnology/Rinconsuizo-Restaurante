@@ -1133,7 +1133,7 @@ public function ListarMesas()
 	$sqlSync = "UPDATE mesas m SET m.statusmesa = '0' WHERE m.statusmesa = '1' AND NOT EXISTS (SELECT 1 FROM ventas v WHERE v.codmesa = m.codmesa AND v.statusventa = 'PENDIENTE')";
 	$this->dbh->exec($sqlSync);
 	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
-		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS fechapedido,
+		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS fechapedido,
 		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS pedidos_cocina,
 		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '0' AND v.statusventa = 'PENDIENTE') AS pedidos_activos
 		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala";
@@ -6026,7 +6026,11 @@ if($_SESSION["acceso"] == 'repartidor'){
 
 	} else {
 
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.totalpago, ventas.entregado, ventas.delivery, ventas.repartidor, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.direccliente, usuarios.nombres, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo WHERE ventas.delivery = 1 AND ventas.repartidor != 0 AND ventas.entregado = 1 AND ventas.codigo = '".$_SESSION["codigo"]."' GROUP BY detalleventas.codventa";
+	$filtroUsuario = ($_SESSION["acceso"] == 'administrador')
+		? ""
+		: " AND ventas.codigo = '".$_SESSION["codigo"]."'";
+
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.totalpago, ventas.entregado, ventas.delivery, ventas.repartidor, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.direccliente, usuarios.nombres, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo WHERE ventas.delivery = 1 AND ventas.entregado = 1".$filtroUsuario." GROUP BY detalleventas.codventa";
         foreach ($this->dbh->query($sql) as $row)
 		{
 			$this->p[] = $row;
@@ -6599,14 +6603,19 @@ public function RegistrarDelivery()
 		exit;
 	}
 
-	if (strip_tags(isset($_POST['fechavencecredito']))) { $fechavencecredito = strip_tags(date("Y-m-d",strtotime($_POST['fechavencecredito']))); } else { $fechavencecredito =''; }
-	$f1 = new DateTime($fechavencecredito);
-	$f2 = new DateTime("now");
+	if ($_POST["tipopagove"] == "CREDITO" && isset($_POST['fechavencecredito']) && $_POST['fechavencecredito'] !== '') {
+		$fechavencecredito = strip_tags(date("Y-m-d", strtotime($_POST['fechavencecredito'])));
+	} else {
+		$fechavencecredito = '0000-00-00';
+	}
 
-	if($_POST["tipopagove"] == "CREDITO" && $f2 > $f1) { 
-
-		echo "7";
-		exit;
+	if ($_POST["tipopagove"] == "CREDITO" && $fechavencecredito !== '0000-00-00') {
+		$f1 = new DateTime($fechavencecredito);
+		$f2 = new DateTime("now");
+		if ($f2 > $f1) {
+			echo "7";
+			exit;
+		}
 	}
 
 	$sql1 = " select codarqueo from arqueocaja  order by codarqueo desc limit 1";
@@ -6677,15 +6686,19 @@ if (strip_tags($_POST["tipopagove"]=="CONTADO")) { $formapagove = strip_tags($_P
 
 if (strip_tags(isset($_POST['montopagado']))) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado =''; }
 if (strip_tags(isset($_POST['montodevuelto']))) { $montodevuelto = strip_tags($_POST['montodevuelto']); } else { $montodevuelto =''; }
-if (strip_tags(isset($_POST['fechavencecredito']))) { $fechavencecredito = strip_tags(date("Y-m-d",strtotime($_POST['fechavencecredito']))); } else { $fechavencecredito =''; }
+if ($_POST["tipopagove"] == "CREDITO" && isset($_POST['fechavencecredito']) && $_POST['fechavencecredito'] !== '') {
+	$fechavencecredito = strip_tags(date("Y-m-d", strtotime($_POST['fechavencecredito'])));
+} else {
+	$fechavencecredito = '0000-00-00';
+}
 if (strip_tags($_POST["tipopagove"]=="CONTADO")) { $statusventa = strip_tags("PAGADA"); } else { $statusventa = "PENDIENTE"; }
 					$statuspago = "0";
 					$fechaventa = strip_tags(date("Y-m-d H:i:s"));
 					$codigo = strip_tags($_SESSION["codigo"]);
 					$cocinero = strip_tags('1');
 					$delivery = strip_tags($_POST["delivery"]);
-if (strip_tags(isset($_POST['repartidor']))) { $repartidor = strip_tags($_POST['repartidor']); } else { $repartidor ='0'; }
-if (strip_tags(isset($_POST['repartidor']))) { $entregado = strip_tags("1"); } else { $entregado ='0'; }
+if (strip_tags(isset($_POST['repartidor'])) && $_POST['repartidor'] !== '') { $repartidor = strip_tags($_POST['repartidor']); } else { $repartidor ='0'; }
+					$entregado = strip_tags('1');
 if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_POST['observaciones']); } else { $observaciones =''; }
 					$stmt->execute();
 

@@ -1,8 +1,6 @@
-<!doctype html>
-
 <?php
-session_start(); 
-$session_id= session_id();
+require_once __DIR__ . '/web_session.php';
+$session_id = web_session_id();
 include "db/core/autoload.php";
 include "db/core/app/model/CategoriasData.php";
 include "db/core/app/model/ProductoData.php";
@@ -10,6 +8,7 @@ include "db/core/app/model/CarritoData.php";
 
 include "db/core/app/model/ClientesData.php";
 ?>
+<!doctype html>
 <html lang="es"  class="default" >
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <head> 

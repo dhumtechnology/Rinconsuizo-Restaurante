@@ -4395,6 +4395,11 @@ $('document').ready(function()
 									});
 								}
 						   }
+				}).fail(function() {
+					$("#error").fadeIn(1000, function(){
+						$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ERROR AL REGISTRAR EL PEDIDO. VERIFIQUE ARQUEO DE CAJA Y DATOS DEL FORMULARIO.</div></center>');
+						$("#btn-venta").html('<span class="fa fa-save"></span> Registrar Pedido');
+					});
 				});
 				return false;
 		         }

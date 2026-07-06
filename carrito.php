@@ -1,8 +1,6 @@
-<!doctype html>
-
 <?php
-session_start(); 
-$session_id= session_id();
+require_once __DIR__ . '/web_session.php';
+$session_id = web_session_id();
 include "db/core/autoload.php";
 include "db/core/app/model/CategoriasData.php";
 include "db/core/app/model/ProductoData.php";
@@ -10,6 +8,7 @@ include "db/core/app/model/CarritoData.php";
 
 include "db/core/app/model/ClientesData.php";
 ?>
+<!doctype html>
 <html lang="es"  class="default" >
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <head> 
@@ -286,23 +285,28 @@ include "db/core/app/model/ClientesData.php";
             
           <div class="cart-overview js-cart" data-refresh-url="">
           	<ul class="cart-items" >
-          	<?php $tpms = CarritoData::getAllTemporal($session_id); 
-	        $total=0;
-	        if(@count($tpms)>0){
-	          $total=0;
-	          foreach($tpms as $tpm):?>
+          	<?php $tpms = CarritoData::getAllTemporal($session_id);
+	        $total = 0;
+	        $cantidad = 0;
+	        if (@count($tpms) > 0) {
+	          foreach ($tpms as $tpm):
+	            $prod = $tpm->getProducto();
+	            if (!$prod) {
+	                continue;
+	            }
+	          ?>
 	          	
 	          	
 	          	<li class="cart-item">
 	          		<div class="product-line-grid row">
 	          			<div class="product-line-grid-left col-md-3 col-xs-4">
 	          				<span class="product-image media-middle">
-	          					<img src="sistema/fotos/<?php echo $tpm->getProducto()->codproducto; ?>.jpg">
+	          					<img src="sistema/fotos/<?php echo $prod->codproducto; ?>.jpg">
 	          				</span>
-	          			</div> 
+	          			</div>
 	          			<div class="product-line-grid-body col-md-4 col-xs-8">
 	          				<div class="product-line-info"><a href="" class="label">
-	          					<?php echo $tpm->getProducto()->producto ;?></a></div>
+	          					<?php echo $prod->producto; ?></a></div>
 	          				<div class="product-line-info product-price h5 has-discount">
 	          					<div class="current-price"><span class="price">$ <?php echo $tpm->precio;?></span></div>
 	          				</div>
@@ -326,7 +330,7 @@ include "db/core/app/model/ClientesData.php";
       					  </div>
 					      <div class="col-md-2 col-xs-2 text-xs-right">
 					        <div class="cart-line-product-actions">
-					        	<a href="#" onclick="eliminar('<?php echo $tpm->id; ?>')">
+					        	<a href="#" onclick="eliminar('<?php echo (int) $tpm->id; ?>'); return false;">
 					        		<i class="fa fa-trash"></i> </a>
 					        
 					        </div>
@@ -338,14 +342,16 @@ include "db/core/app/model/ClientesData.php";
 	          		</div>
 	          	</li>
 	          	<?php
-	              $total=($tpm->cantidad*$tpm->precio)+$total;
-	          endforeach; 
-
-	        }else{ $total=0; ?>
-
-	        </ul>
+	              $total = ($tpm->cantidad * $tpm->precio) + $total;
+	              $cantidad = $tpm->cantidad + $cantidad;
+	          endforeach;
+	          echo '</ul>';
+	        } else {
+	          $total = 0;
+	          echo '</ul>';
+	        ?>
             <span class="no-items">No hay más artículos en el carrito</span>
-        	<?php }; ?>
+        	<?php } ?>
           </div>
         </div>
         <a class="label" href="productos.php"><i class="material-icons">chevron_left</i>Seguir comprando</a>
@@ -526,19 +532,27 @@ include "db/core/app/model/ClientesData.php";
     
       function eliminar(id)
     {
-      
       $.ajax({
         type: "GET",
         url: "del_tmp.php",
-        data: "id="+id, 
-     beforeSend: function(objeto){
-      $("#resultados").html("Mensaje: Cargando...");
-      },
-        success: function(datos){
-    $("#resultados").html(datos);
-    }
+        data: "id=" + id,
+        xhrFields: { withCredentials: true },
+        beforeSend: function() {
+          $("#resultados").html('<div class="col-xs-12"><p>Cargando...</p></div>');
+        },
+        success: function(datos) {
+          $("#resultados").html(datos);
+          var count = $("#resultados .cart-item").length;
+          var totalTxt = $("#resultados .cart-total .value").first().text() || '$0';
+          $("#_desktop_cart .cart-products-count").text(count);
+          $("#_desktop_cart .cart-count-items").text(totalTxt.trim());
+        },
+        error: function() {
+          alert('No se pudo eliminar el producto. Recargue la página e intente de nuevo.');
+          window.location.reload();
+        }
       });
-
+      return false;
     }
     
   

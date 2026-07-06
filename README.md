@@ -113,6 +113,14 @@ docker compose exec web bash
 
 Copia `.env.example` a `.env`. Las credenciales se inyectan automáticamente en PHP vía `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`.
 
+**Correo (verificación de cuenta):** el registro usa SMTP con PHPMailer, no la función `mail()` de PHP (en Docker no hay servidor de correo). Configure en `.env`:
+
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` (`tls` o `ssl`)
+- `SMTP_USER`, `SMTP_PASS` (con Gmail use una [contraseña de aplicación](https://myaccount.google.com/apppasswords))
+- `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`
+
+Tras cambiar `.env`, reinicie: `docker compose up -d --force-recreate web`
+
 ## Instalación manual (sin Docker)
 
 1. PHP >= 7.4 con extensiones: `pdo_mysql`, `mysqli`, `gd`, `mbstring`, `zip`

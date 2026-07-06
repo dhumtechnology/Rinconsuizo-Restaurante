@@ -42,10 +42,12 @@ ob_start();
 include "mail/voucher.php";
 $mensaje = ob_get_contents();
 ob_end_clean();
-$cabeceras  = 'MIME-Version: 1.0' . "\r\n";
-$cabeceras .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";   
-$cabeceras .= 'From: NRO DE CONFIRMACION <rinconsuizo0744@gmail.com>' . "\r\n";    
-mail($para, $titulo, $mensaje, $cabeceras);
+
+require_once "mail/enviar_correo.php";
+$envio = enviar_correo_web($para, $titulo, $mensaje, $_POST['nombre']);
+if (!$envio['ok']) {
+    error_log('Registro cliente: fallo envío correo a ' . $para . ' — ' . $envio['error']);
+}
 
 
 session_start();
@@ -74,6 +76,9 @@ if ($result->num_rows > 0) {
     $_SESSION['expire'] = $_SESSION['start'] + (5 * 60);
 
  
+    if (!$envio['ok']) {
+        print "<script>alert('Su cuenta fue creada, pero no se pudo enviar el correo de verificación. Revise spam o contacte al administrador.');</script>";
+    }
     print "<script>window.location='micuenta.php';</script>"; 
 
  } else { 

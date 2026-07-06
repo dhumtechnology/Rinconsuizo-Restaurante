@@ -44,6 +44,7 @@ function agregar(id, e) {
     type: 'POST',
     url: 'agregar_tmp.php',
     dataType: 'json',
+    xhrFields: { withCredentials: true },
     data: {
       id: id,
       precio_venta: precio_venta,

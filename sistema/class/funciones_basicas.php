@@ -476,30 +476,33 @@ function getMesaEstadoMesero($mesa)
 
     $pendientesCocina = isset($mesa['pedidos_cocina']) ? (int) $mesa['pedidos_cocina'] : 0;
     $pedidosActivos = isset($mesa['pedidos_activos']) ? (int) $mesa['pedidos_activos'] : 0;
+    $fechapedido = isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '';
+    $tienePedidoAbierto = ($pendientesCocina > 0 || $pedidosActivos > 0);
+
+    if (!$tienePedidoAbierto) {
+        return array(
+            'color' => '#5cb85c',
+            'listo' => false,
+            'timer' => false,
+            'fechapedido' => ''
+        );
+    }
 
     if ($pendientesCocina > 0) {
         return array(
             'color' => 'red',
             'listo' => false,
             'timer' => true,
-            'fechapedido' => isset($mesa['fechapedido']) ? $mesa['fechapedido'] : ''
+            'fechapedido' => $fechapedido
         );
     }
 
-    if ($pedidosActivos > 0) {
-        return array(
-            'color' => '#f0ad4e',
-            'listo' => true,
-            'timer' => false,
-            'fechapedido' => ''
-        );
-    }
-
+    // Cocina entregó; el cronómetro sigue hasta que caja cierre la mesa
     return array(
-        'color' => '#5cb85c',
-        'listo' => false,
-        'timer' => false,
-        'fechapedido' => ''
+        'color' => '#f0ad4e',
+        'listo' => true,
+        'timer' => true,
+        'fechapedido' => $fechapedido
     );
 }
 

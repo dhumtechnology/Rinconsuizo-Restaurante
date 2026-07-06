@@ -1,6 +1,6 @@
 <?php
-session_start();
-$session_id = session_id();
+require_once __DIR__ . '/web_session.php';
+$session_id = web_session_id();
 
 include "db/core/autoload.php";
 include "db/core/app/model/CategoriasData.php";
@@ -31,10 +31,16 @@ if (isset($_GET['id'])) {
     if ($del) {
         $del->del();
     }
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(carritoResumen($session_id));
+        exit;
+    }
 }
 
-if (isset($_POST['cantidad']) && isset($_POST['precio_venta']) && isset($_POST['id'])) {
-    $producto = CarritoData::getByIdProductoSession($_POST['id'], $session_id);
+if (isset($_POST['cantidad']) && isset($_POST['precio_venta']) && array_key_exists('id', $_POST)) {
+    $idProducto = (int) $_POST['id'];
+    $producto = CarritoData::getByIdProductoSession($idProducto, $session_id);
 
     if ($producto) {
         $temporal = CarritoData::getById($producto->id);
@@ -42,7 +48,7 @@ if (isset($_POST['cantidad']) && isset($_POST['precio_venta']) && isset($_POST['
         $temporal->updateCantidad();
     } else {
         $temporal = new CarritoData();
-        $temporal->id_producto = $_POST['id'];
+        $temporal->id_producto = $idProducto;
         $temporal->cantidad = $_POST['cantidad'];
         $temporal->precio = $_POST['precio_venta'];
         $temporal->sessionn_id = $session_id;
