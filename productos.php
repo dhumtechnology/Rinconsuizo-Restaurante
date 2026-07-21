@@ -7,6 +7,9 @@ include "db/core/app/model/ProductoData.php";
 include "db/core/app/model/CarritoData.php";
 
 include "db/core/app/model/ClientesData.php";
+
+$qBusqueda = isset($_GET['q']) ? trim($_GET['q']) : '';
+$idCategoria = (isset($_GET['id']) && $_GET['id'] !== '') ? (int) $_GET['id'] : 0;
 ?>
 <!doctype html>
 <html lang="es"  class="default" >
@@ -22,7 +25,7 @@ include "db/core/app/model/ClientesData.php";
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
-<link rel="stylesheet" href="css/tienda-mejoras.css?v=3" type="text/css" media="all">
+<link rel="stylesheet" href="css/tienda-mejoras.css?v=4" type="text/css" media="all">
 
 </head>
 
@@ -278,13 +281,15 @@ include "db/core/app/model/ClientesData.php";
     <ul class="category-top-menu">
       <li>
         <ul class="category-sub-menu">
-          
+          <li data-depth="0">
+            <a href="productos.php<?php echo $qBusqueda !== '' ? ('?q='.rawurlencode($qBusqueda)) : ''; ?>">Todas</a>
+          </li>
           <?php $categorias = CategoriasData::getAll();
             if(@count($categorias)>0){ ?>  
             <?php foreach($categorias as $categoria):?>
 
               <li data-depth="0">
-                <a href="productos.php?id=<?php echo $categoria->codcategoria; ?>"><?php echo $categoria->nomcategoria; ?></a>
+                <a href="productos.php?id=<?php echo (int) $categoria->codcategoria; ?><?php echo $qBusqueda !== '' ? '&q='.rawurlencode($qBusqueda) : ''; ?>"><?php echo htmlspecialchars($categoria->nomcategoria); ?></a>
                 <div class="navbar-toggler collapse-icons"><i class="fa fa-caret-right add"></i>
                 </div>
               </li>
@@ -315,7 +320,31 @@ include "db/core/app/model/ClientesData.php";
             <div class="block-category card card-block">
             <h1 class="h1">Nuestra carta</h1>
             <div class="block-category-inner">
-                                            </div>
+              <form class="rs-product-search" method="get" action="productos.php" role="search">
+                <?php if ($idCategoria > 0) { ?>
+                  <input type="hidden" name="id" value="<?php echo $idCategoria; ?>">
+                <?php } ?>
+                <label class="sr-only" for="rs-buscar-producto">Buscar productos</label>
+                <div class="rs-product-search-inner">
+                  <input
+                    type="search"
+                    id="rs-buscar-producto"
+                    name="q"
+                    class="form-control"
+                    value="<?php echo htmlspecialchars($qBusqueda); ?>"
+                    placeholder="Buscar platos, bebidas..."
+                    autocomplete="off"
+                  >
+                  <button type="submit" class="btn rs-btn-search" title="Buscar">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                    <span>Buscar</span>
+                  </button>
+                  <?php if ($qBusqueda !== '') { ?>
+                    <a class="btn rs-btn-clear" href="productos.php<?php echo $idCategoria > 0 ? ('?id='.$idCategoria) : ''; ?>" title="Limpiar búsqueda">Limpiar</a>
+                  <?php } ?>
+                </div>
+              </form>
+            </div>
         </div>
     </div>
   
@@ -338,19 +367,21 @@ include "db/core/app/model/ClientesData.php";
     </div>
     <div class="col-lg-6 col-md-9">
       <div class="row sort-by-row">
-          <span class="col-sm-3 col-md-3 hidden-sm-down sort-by">Ordenar por:</span>
+          <span class="col-sm-3 col-md-3 hidden-sm-down sort-by">Categoría:</span>
           <div class="col-md-12 products-sort-order dropdown">
-              <select class="form-control select2" required  name="id_categoria">   
-                <?php $categorias = CategoriasData::getAll();?>
-               <option value="">--- Seleciona categoría ---</option> 
-                 <?php foreach($categorias as $categoria):?>
-                    <option value="<?php echo $categoria->id;?>"><?php echo $categoria->nomcategoria;?></option>
-              <?php endforeach;?>                  
+              <select class="form-control" id="rs-filtro-categoria" name="id_categoria">
+               <option value="">Todas las categorías</option>
+                 <?php
+                 $categoriasSelect = CategoriasData::getAll();
+                 if (@count($categoriasSelect) > 0) {
+                   foreach ($categoriasSelect as $categoria) {
+                     $sel = ($idCategoria > 0 && (int) $categoria->codcategoria === $idCategoria) ? ' selected' : '';
+                     echo '<option value="'.(int) $categoria->codcategoria.'"'.$sel.'>'.htmlspecialchars($categoria->nomcategoria).'</option>';
+                   }
+                 }
+                 ?>
             </select>
           </div>
-        
-
-                 
        </div>
     </div>
 
@@ -375,16 +406,22 @@ include "db/core/app/model/ClientesData.php";
     <div class="row">
                     
              
-     <?php 
-      if(isset($_GET['id']) and $_GET['id']){
-        $productos = ProductoData::getBycategoria($_GET['id']);
-      }else{
+     <?php
+      if ($qBusqueda !== '' || $idCategoria > 0) {
+        $productos = ProductoData::buscar($qBusqueda, $idCategoria > 0 ? $idCategoria : null);
+      } else {
         $productos = ProductoData::getAll();
       }
-     
-        if(@count($productos)>0){ ?>  
+
+        if (@count($productos) > 0) { ?>
+        <?php if ($qBusqueda !== '') { ?>
+          <div class="col-12 rs-search-result-msg">
+            <p>Resultados para <strong><?php echo htmlspecialchars($qBusqueda); ?></strong>: <?php echo (int) count($productos); ?> producto(s)</p>
+          </div>
+        <?php } ?>
         <?php foreach($productos as $productoc):?>
-          <div class="ajax_block_product col-sp-12 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 last-item-of-tablet-line last-item-of-mobile-line ">    
+          <div class="ajax_block_product col-sp-12 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 last-item-of-tablet-line last-item-of-mobile-line "
+               data-nombre="<?php echo htmlspecialchars(mb_strtolower($productoc->producto, 'UTF-8')); ?>">    
                   <article class="product-miniature js-product-miniature" data-id-product="1" data-id-product-attribute="0" itemscope itemtype="">
                     <div class="thumbnail-container">
                       <div class="product-image">
@@ -495,9 +532,16 @@ include "db/core/app/model/ClientesData.php";
           </div>
 
         <?php endforeach; ?>
-    <?php }else{  echo"<h4 class='alert alert-success'>NO HAY REGISTRO</h4>"; }; ?>        
-                                       
-     
+    <?php } else {
+      if ($qBusqueda !== '') {
+        echo '<div class="col-12"><h4 class="alert alert-warning rs-search-empty">No se encontraron productos para &ldquo;'.htmlspecialchars($qBusqueda).'&rdquo;.</h4></div>';
+      } else {
+        echo "<h4 class='alert alert-success'>NO HAY REGISTRO</h4>";
+      }
+    }; ?>
+
+                                        
+      
 
 
 
@@ -616,9 +660,20 @@ include "db/core/app/model/ClientesData.php";
 <script src="css/jquery.js"></script>
 <script src="js/tienda-nav.js"></script>
 <script src="js/carrito-home.js?v=3"></script>
-
-
-
+<script>
+(function () {
+  var select = document.getElementById("rs-filtro-categoria");
+  if (!select) return;
+  select.addEventListener("change", function () {
+    var params = new URLSearchParams();
+    if (this.value) params.set("id", this.value);
+    var qInput = document.getElementById("rs-buscar-producto");
+    if (qInput && qInput.value.trim()) params.set("q", qInput.value.trim());
+    var qs = params.toString();
+    window.location.href = "productos.php" + (qs ? "?" + qs : "");
+  });
+})();
+</script>
 
   </body>
 

@@ -4,7 +4,7 @@
   left: 8px;
   bottom: 8px;
   z-index: 99999;
-  width: 320px;
+  width: 360px;
   max-width: calc(100vw - 16px);
   background: #1e2430;
   border: 1px solid #3a4454;
@@ -32,15 +32,27 @@
   border-bottom: 1px solid #2f3848;
 }
 
-#teclado-tactil .tt-title {
-  color: #aeb6c2;
-  font-size: 11px;
-  letter-spacing: 0.02em;
-}
-
-#teclado-tactil .tt-bar-actions {
+#teclado-tactil .tt-tabs {
   display: flex;
   gap: 4px;
+}
+
+#teclado-tactil .tt-tab {
+  border: 0;
+  border-radius: 5px;
+  background: #2c3545;
+  color: #c5ccd6;
+  font-size: 11px;
+  font-weight: 700;
+  height: 24px;
+  min-width: 40px;
+  padding: 0 8px;
+  cursor: pointer;
+}
+
+#teclado-tactil .tt-tab.tt-tab-on {
+  background: #01ba9a;
+  color: #fff;
 }
 
 #teclado-tactil .tt-row {
@@ -51,8 +63,8 @@
 }
 
 #teclado-tactil .tt-key {
-  min-width: 26px;
-  height: 30px;
+  min-width: 28px;
+  height: 32px;
   padding: 0 5px;
   border: 0;
   border-radius: 5px;
@@ -60,7 +72,7 @@
   color: #f4f6f8;
   font-size: 13px;
   font-weight: 600;
-  line-height: 30px;
+  line-height: 32px;
   text-align: center;
   cursor: pointer;
   flex: 0 0 auto;
@@ -74,13 +86,17 @@
 }
 
 #teclado-tactil .tt-key.tt-wide {
-  min-width: 42px;
+  min-width: 44px;
   font-size: 11px;
+}
+
+#teclado-tactil .tt-key.tt-mode {
+  background: #3a4a62;
 }
 
 #teclado-tactil .tt-key.tt-space {
   flex: 1 1 auto;
-  min-width: 110px;
+  min-width: 90px;
 }
 
 #teclado-tactil .tt-key.tt-enter {
@@ -106,16 +122,16 @@
   color: #fff;
 }
 
-@media (max-width: 380px) {
+@media (max-width: 400px) {
   #teclado-tactil {
     width: calc(100vw - 12px);
     left: 6px;
     bottom: 6px;
   }
   #teclado-tactil .tt-key {
-    min-width: 22px;
-    height: 28px;
-    line-height: 28px;
+    min-width: 24px;
+    height: 30px;
+    line-height: 30px;
     font-size: 12px;
   }
 }

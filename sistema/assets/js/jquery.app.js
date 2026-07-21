@@ -364,12 +364,12 @@ function toggle_slimscroll(item){
   window.__tecladoTactilAssets = true;
   var css = document.createElement('link');
   css.rel = 'stylesheet';
-  css.href = 'assets/css/teclado-tactil.css?v=2';
+  css.href = 'assets/css/teclado-tactil.css?v=3';
   (document.head || document.documentElement).appendChild(css);
   var js = document.createElement('script');
   js.async = false;
   js.defer = false;
-  js.src = 'assets/script/teclado-tactil.js?v=2';
+  js.src = 'assets/script/teclado-tactil.js?v=3';
   (document.body || document.documentElement).appendChild(js);
 })();
 

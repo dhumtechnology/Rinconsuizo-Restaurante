@@ -388,7 +388,11 @@ exit;
                         <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
           <label class="control-label">Código de Barra: </label>
-<input type="text" class="form-control" name="codigobarra" id="codigobarra" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Código de Barra" <?php if (isset($reg[0]['codigobarra'])) { ?> value="<?php echo $reg[0]['codigobarra']; ?>"<?php } ?> tabindex="10" required="" aria-required="true">
+<?php if (isset($reg[0]['codigobarra'])) { ?>
+<input type="text" class="form-control" name="codigobarra" id="codigobarra" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Código de Barra" value="<?php echo htmlspecialchars($reg[0]['codigobarra']); ?>" tabindex="10">
+<?php } else { ?>
+<input type="text" class="form-control" name="codigobarra" id="codigobarra" autocomplete="off" placeholder="Se genera automáticamente" value="<?php echo htmlspecialchars($tra->GenerarCodigoBarraUnico()); ?>" tabindex="10" readonly="readonly">
+<?php } ?>
                         <i class="fa fa-barcode form-control-feedback"></i> 
                               </div> 
                         </div>

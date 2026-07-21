@@ -1,38 +1,40 @@
 /**
  * Teclado virtual táctil (español latino) para el sistema POS.
- * Se muestra al enfocar o tocar inputs/textareas.
+ * Capas: letras, números y símbolos.
  */
 (function (window, document) {
   'use strict';
 
-  if (window.TecladoTactil && window.TecladoTactil.__ready) {
+  if (window.TecladoTactil && window.TecladoTactil.__v === 3) {
     return;
   }
 
   var LAYOUTS = {
     letters: [
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
       ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
       ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ñ'],
       ['shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'back'],
-      ['123', 'á', 'é', 'í', 'ó', 'ú', 'ü', '¿', '¡', 'space', 'enter']
+      ['sym', 'á', 'é', 'í', 'ó', 'ú', 'ü', '¿', '¡', 'space', 'enter']
     ],
     lettersShift: [
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
       ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'],
       ['shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'back'],
-      ['123', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ü', '?', '!', 'space', 'enter']
+      ['sym', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ü', '?', '!', 'space', 'enter']
     ],
     numbers: [
       ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
       ['-', '/', ':', ';', '(', ')', '$', '&', '@', '"'],
-      ['#+=', '.', ',', '?', '!', "'", '°', '%', 'back'],
-      ['ABC', '+', '=', '*', '#', 'space', 'enter']
+      ['.', ',', '?', '!', "'", '°', '%', '+', '=', 'back'],
+      ['abc', 'sym', '*', '#', 'space', 'enter']
     ],
     symbols: [
       ['[', ']', '{', '}', '#', '%', '^', '*', '+', '='],
       ['_', '\\', '|', '~', '<', '>', '€', '£', '¥', '•'],
-      ['123', '.', ',', '?', '!', "'", '¿', '¡', 'back'],
-      ['ABC', '@', '&', '-', 'space', 'enter']
+      ['¿', '¡', '«', '»', '°', '±', '×', '÷', 'back'],
+      ['abc', '123', '@', '&', '-', 'space', 'enter']
     ]
   };
 
@@ -47,38 +49,26 @@
   var root = null;
 
   function isEditable(el) {
-    if (!el || !el.tagName) {
-      return false;
-    }
+    if (!el || !el.tagName) return false;
     var tag = el.tagName.toLowerCase();
     if (tag === 'textarea') {
       return !el.disabled && !el.readOnly && !(el.classList && el.classList.contains('no-teclado'));
     }
-    if (tag !== 'input') {
-      return false;
-    }
+    if (tag !== 'input') return false;
     var type = (el.getAttribute('type') || 'text').toLowerCase();
     var blocked = {
       hidden: 1, checkbox: 1, radio: 1, file: 1, submit: 1, button: 1,
       image: 1, reset: 1, color: 1, range: 1, datetime: 1, 'datetime-local': 1,
       month: 1, week: 1
     };
-    if (blocked[type]) {
-      return false;
-    }
-    if (el.disabled || el.readOnly || (el.classList && el.classList.contains('no-teclado'))) {
-      return false;
-    }
+    if (blocked[type]) return false;
+    if (el.disabled || el.readOnly || (el.classList && el.classList.contains('no-teclado'))) return false;
     return true;
   }
 
   function currentLayout() {
-    if (state.mode === 'numbers') {
-      return LAYOUTS.numbers;
-    }
-    if (state.mode === 'symbols') {
-      return LAYOUTS.symbols;
-    }
+    if (state.mode === 'numbers') return LAYOUTS.numbers;
+    if (state.mode === 'symbols') return LAYOUTS.symbols;
     return state.shift ? LAYOUTS.lettersShift : LAYOUTS.letters;
   }
 
@@ -87,6 +77,9 @@
     if (key === 'back') return '⌫';
     if (key === 'space') return 'espacio';
     if (key === 'enter') return 'intro';
+    if (key === '123') return '123';
+    if (key === 'abc') return 'ABC';
+    if (key === 'sym') return '#@';
     return key;
   }
 
@@ -96,7 +89,7 @@
     else if (key === 'back') cls += ' tt-wide tt-back';
     else if (key === 'space') cls += ' tt-space';
     else if (key === 'enter') cls += ' tt-wide tt-enter';
-    else if (key === '123' || key === 'ABC' || key === '#+=') cls += ' tt-wide';
+    else if (key === '123' || key === 'abc' || key === 'sym') cls += ' tt-wide tt-mode';
     return cls;
   }
 
@@ -108,11 +101,24 @@
     return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   }
 
+  function modeTab(id, label) {
+    var active = state.mode === id ? ' tt-tab-on' : '';
+    return '<button type="button" class="tt-tab' + active + '" data-key="mode:' + id + '">' + label + '</button>';
+  }
+
   function render() {
     if (!root) return;
     var layout = currentLayout();
-    var html = '<div class="tt-bar"><span class="tt-title">Teclado</span><div class="tt-bar-actions">' +
-      '<button type="button" class="tt-key tt-close" data-key="hide" title="Cerrar">✕</button></div></div>';
+    var html = '';
+    html += '<div class="tt-bar">';
+    html += '<div class="tt-tabs">';
+    html += modeTab('letters', 'ABC');
+    html += modeTab('numbers', '123');
+    html += modeTab('symbols', '#@');
+    html += '</div>';
+    html += '<button type="button" class="tt-key tt-close" data-key="hide" title="Cerrar">✕</button>';
+    html += '</div>';
+
     for (var r = 0; r < layout.length; r++) {
       html += '<div class="tt-row">';
       for (var c = 0; c < layout[r].length; c++) {
@@ -126,9 +132,7 @@
   }
 
   function ensureRoot() {
-    if (root && document.body.contains(root)) {
-      return root;
-    }
+    if (root && document.body.contains(root)) return root;
     root = document.getElementById('teclado-tactil');
     if (!root) {
       root = document.createElement('div');
@@ -140,9 +144,11 @@
     root.onmousedown = function (e) {
       e.preventDefault();
       state.keepOpen = true;
+      state.showAt = Date.now();
     };
     root.ontouchstart = function () {
       state.keepOpen = true;
+      state.showAt = Date.now();
     };
 
     root.onclick = function (e) {
@@ -152,6 +158,7 @@
       }
       if (!t || t === root) return;
       e.preventDefault();
+      e.stopPropagation();
       handleKey(t.getAttribute('data-key'));
     };
 
@@ -193,9 +200,7 @@
       }
     }
     if (window.jQuery) {
-      try {
-        window.jQuery(el).trigger('input').trigger('keyup').trigger('change');
-      } catch (e2) { /* ignore */ }
+      try { window.jQuery(el).trigger('input').trigger('keyup').trigger('change'); } catch (e2) { /* ignore */ }
     }
   }
 
@@ -229,12 +234,28 @@
     dispatchInput(el);
   }
 
+  function setMode(mode) {
+    state.mode = mode;
+    state.shift = false;
+    state.keepOpen = true;
+    state.showAt = Date.now();
+    render();
+    if (state.target && isEditable(state.target)) {
+      try { state.target.focus(); } catch (e) { /* ignore */ }
+    }
+  }
+
   function handleKey(key) {
+    if (!key) return;
     if (key === 'hide') { hide(); return; }
-    if (key === 'shift') { state.shift = !state.shift; render(); return; }
-    if (key === '123') { state.mode = 'numbers'; state.shift = false; render(); return; }
-    if (key === '#+=') { state.mode = 'symbols'; state.shift = false; render(); return; }
-    if (key === 'ABC') { state.mode = 'letters'; state.shift = false; render(); return; }
+    if (key.indexOf('mode:') === 0) {
+      setMode(key.split(':')[1]);
+      return;
+    }
+    if (key === 'shift') { state.shift = !state.shift; state.keepOpen = true; render(); return; }
+    if (key === '123') { setMode('numbers'); return; }
+    if (key === 'sym') { setMode('symbols'); return; }
+    if (key === 'abc') { setMode('letters'); return; }
     if (key === 'back') { backspace(); return; }
     if (key === 'space') { insertText(' '); return; }
     if (key === 'enter') {
@@ -254,16 +275,14 @@
   }
 
   function openFor(el) {
-    if (isEditable(el)) {
-      show(el);
-    }
+    if (root && root.contains(el)) return;
+    if (isEditable(el)) show(el);
   }
 
-  function onFocusIn(e) {
-    openFor(e.target);
-  }
+  function onFocusIn(e) { openFor(e.target); }
 
   function onPointer(e) {
+    if (root && root.contains(e.target)) return;
     openFor(e.target);
   }
 
@@ -276,24 +295,23 @@
         }
         return;
       }
-      // Evita cierre inmediato al abrir en pantallas táctiles
-      if (Date.now() - state.showAt < 250) {
-        return;
-      }
+      if (Date.now() - state.showAt < 350) return;
       var active = document.activeElement;
-      if (root && root.contains(active)) {
-        return;
-      }
-      if (!isEditable(active)) {
-        hide();
-      }
-    }, 200);
+      if (root && root.contains(active)) return;
+      if (!isEditable(active)) hide();
+    }, 220);
   }
 
   function init() {
     if (!document.body) {
       setTimeout(init, 50);
       return;
+    }
+    // Reemplazar instancia vieja si existía
+    var old = document.getElementById('teclado-tactil');
+    if (old && (!window.TecladoTactil || window.TecladoTactil.__v !== 3)) {
+      old.parentNode.removeChild(old);
+      root = null;
     }
     ensureRoot();
     render();
@@ -306,13 +324,14 @@
 
     window.TecladoTactil = {
       __ready: true,
+      __v: 3,
       init: init,
       show: show,
       hide: hide
     };
   }
 
-  window.TecladoTactil = { __ready: false, init: init, show: show, hide: hide };
+  window.TecladoTactil = { __ready: false, __v: 3, init: init, show: show, hide: hide };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

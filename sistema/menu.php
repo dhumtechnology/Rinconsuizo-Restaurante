@@ -226,8 +226,8 @@ if(isset($_SESSION['acceso'])) {
 		
                 <?php } ?>
 
-<link rel="stylesheet" href="assets/css/teclado-tactil.css?v=2">
-<script src="assets/script/teclado-tactil.js?v=2"></script>
+<link rel="stylesheet" href="assets/css/teclado-tactil.css?v=3">
+<script src="assets/script/teclado-tactil.js?v=3"></script>
 
 </body>
 </html>

@@ -3523,6 +3523,52 @@ exit;
 	}
 ############################### FUNCION PARA CODIGO PRODUCTO #################################
 
+############################### FUNCION PARA CODIGO DE BARRA UNICO ###########################
+	/**
+	 * Genera un código de barra numérico único (13 dígitos, prefijo interno 200).
+	 */
+	public function GenerarCodigoBarraUnico()
+	{
+		self::SetNames();
+		$base = 2000000000000; // 13 dígitos: 2 + 12
+		$sql = "SELECT codigobarra FROM productos
+			WHERE codigobarra REGEXP '^[0-9]{8,15}$'
+			AND CAST(codigobarra AS UNSIGNED) >= ?
+			ORDER BY CAST(codigobarra AS UNSIGNED) DESC
+			LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($base));
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		if ($row && isset($row['codigobarra']) && is_numeric($row['codigobarra'])) {
+			$next = ((int) $row['codigobarra']) + 1;
+		} else {
+			$next = $base + 1;
+		}
+
+		// Garantizar unicidad (por si hay huecos o carreras)
+		for ($i = 0; $i < 50; $i++) {
+			$codigo = (string) $next;
+			if (strlen($codigo) > 15) {
+				$codigo = substr((string) (time() . mt_rand(100, 999)), 0, 15);
+			}
+			$check = $this->dbh->prepare("SELECT codproducto FROM productos WHERE codigobarra = ? LIMIT 1");
+			$check->execute(array($codigo));
+			if ($check->rowCount() === 0) {
+				return $codigo;
+			}
+			$next++;
+		}
+		return substr((string) (time() . mt_rand(1000, 9999)), 0, 15);
+	}
+
+	public function CodigoBarraProducto()
+	{
+		$codigo = $this->GenerarCodigoBarraUnico();
+		echo $codigo;
+		return $codigo;
+	}
+############################### FUNCION PARA CODIGO DE BARRA UNICO ###########################
+
 ########################### FUNCION PARA REGISTRAR PRODUCTOS #################################
 	public function RegistrarProductos()
 	{
@@ -3575,7 +3621,16 @@ exit;
 			$ivaproducto = strip_tags($_POST["ivaproducto"]);
 			$descproducto = strip_tags($_POST["descproducto"]);
 			$codproveedor = strip_tags($_POST["codproveedor"]);
-			if (strip_tags($_POST['codigobarra']!="")) { $codigobarra = strip_tags($_POST['codigobarra']); } else { $codigobarra ='00000000000'; }
+			$codigobarra = isset($_POST['codigobarra']) ? trim(strip_tags($_POST['codigobarra'])) : '';
+			if ($codigobarra === '' || $codigobarra === '0' || $codigobarra === '00000000000') {
+				$codigobarra = $this->GenerarCodigoBarraUnico();
+			} else {
+				$chkBarra = $this->dbh->prepare("SELECT codproducto FROM productos WHERE codigobarra = ? LIMIT 1");
+				$chkBarra->execute(array($codigobarra));
+				if ($chkBarra->rowCount() > 0) {
+					$codigobarra = $this->GenerarCodigoBarraUnico();
+				}
+			}
 			$favorito = strip_tags($_POST["favorito"]);
 			$statusproducto = strip_tags($_POST["statusproducto"]);
 			$stmt->execute();
