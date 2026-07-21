@@ -356,17 +356,7 @@ function toggle_slimscroll(item){
     }
 }
 
-var wow = new WOW(
-  {
-    boxClass: 'wow', // animated element css class (default is wow)
-    animateClass: 'animated', // animation css class (default is animated)
-    offset: 50, // distance to the element when triggering the animation (default is 0)
-    mobile: false        // trigger animations on mobile devices (true is default)
-  }
-);
-wow.init();
-
-/* Teclado táctil (español latino) — cargado en todo el sistema */
+/* Teclado táctil (español latino) — cargar ANTES de WOW por si falla */
 (function () {
   if (window.__tecladoTactilAssets) {
     return;
@@ -374,10 +364,25 @@ wow.init();
   window.__tecladoTactilAssets = true;
   var css = document.createElement('link');
   css.rel = 'stylesheet';
-  css.href = 'assets/css/teclado-tactil.css?v=1';
-  document.head.appendChild(css);
+  css.href = 'assets/css/teclado-tactil.css?v=2';
+  (document.head || document.documentElement).appendChild(css);
   var js = document.createElement('script');
-  js.src = 'assets/script/teclado-tactil.js?v=1';
   js.async = false;
+  js.defer = false;
+  js.src = 'assets/script/teclado-tactil.js?v=2';
   (document.body || document.documentElement).appendChild(js);
 })();
+
+try {
+  var wow = new WOW(
+    {
+      boxClass: 'wow',
+      animateClass: 'animated',
+      offset: 50,
+      mobile: false
+    }
+  );
+  wow.init();
+} catch (e) {
+  /* WOW opcional */
+}
