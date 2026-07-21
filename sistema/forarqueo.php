@@ -9,7 +9,7 @@ $con = $con->ContarRegistros();
 $tra = new Login();
 $ses = $tra->ExpiraSession();
 
-if(isset($_POST['btn-submit']))
+if(isset($_POST['btn-submit']) || (isset($_POST['codcaja']) && isset($_POST['montoinicial']) && isset($_POST['fecharegistro']) && !isset($_POST['btn-update'])))
 {
 $reg = $tra->RegistrarArqueoCaja();
 exit;
@@ -41,7 +41,7 @@ exit;
 <script type="text/javascript" src="assets/script/titulos.js"></script>
 <script type="text/javascript" src="assets/script/script2.js"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
-<script type="text/javascript" src="assets/script/script.js"></script>
+<script type="text/javascript" src="assets/script/script.js?v=arqueo2"></script>
 <!-- script jquery -->	
 	
 
@@ -273,10 +273,13 @@ exit;
       <?php
       $caja = new Login();
       $caja = $caja->ListarCajas();
+      if ($caja == "" || !is_array($caja) || count($caja) == 0) {
+          echo '<option value="" disabled>NO TIENE CAJAS ASIGNADAS</option>';
+      } else {
       for($i=0;$i<sizeof($caja);$i++){
                   ?>
   <option value="<?php echo $caja[$i]['codcaja']; ?>"><?php echo $caja[$i]['nrocaja'].": ".$caja[$i]['nombrecaja']; ?></option>       
-                      <?php } ?>
+                      <?php } } ?>
                   </select>
                               </div> 
                         </div>

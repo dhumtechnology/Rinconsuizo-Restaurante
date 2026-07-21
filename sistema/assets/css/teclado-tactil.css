@@ -1,0 +1,121 @@
+/* Teclado virtual táctil — es-LAT, esquina inferior izquierda */
+#teclado-tactil {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 99999;
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  background: #1e2430;
+  border: 1px solid #3a4454;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  padding: 6px;
+  display: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+#teclado-tactil.tt-visible {
+  display: block;
+}
+
+#teclado-tactil .tt-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 5px;
+  padding: 0 2px 4px;
+  border-bottom: 1px solid #2f3848;
+}
+
+#teclado-tactil .tt-title {
+  color: #aeb6c2;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+#teclado-tactil .tt-bar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+#teclado-tactil .tt-row {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin-bottom: 3px;
+}
+
+#teclado-tactil .tt-key {
+  min-width: 26px;
+  height: 30px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 5px;
+  background: #2c3545;
+  color: #f4f6f8;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 30px;
+  text-align: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+  box-shadow: 0 1px 0 #12161e;
+}
+
+#teclado-tactil .tt-key:active,
+#teclado-tactil .tt-key.tt-active {
+  background: #01ba9a;
+  color: #fff;
+}
+
+#teclado-tactil .tt-key.tt-wide {
+  min-width: 42px;
+  font-size: 11px;
+}
+
+#teclado-tactil .tt-key.tt-space {
+  flex: 1 1 auto;
+  min-width: 110px;
+}
+
+#teclado-tactil .tt-key.tt-enter {
+  min-width: 54px;
+  background: #2563a8;
+}
+
+#teclado-tactil .tt-key.tt-back {
+  min-width: 48px;
+  background: #5a3d3d;
+}
+
+#teclado-tactil .tt-key.tt-close {
+  min-width: 28px;
+  height: 24px;
+  line-height: 24px;
+  background: #4a5568;
+  font-size: 12px;
+}
+
+#teclado-tactil .tt-key.tt-shift.tt-on {
+  background: #01ba9a;
+  color: #fff;
+}
+
+@media (max-width: 380px) {
+  #teclado-tactil {
+    width: calc(100vw - 12px);
+    left: 6px;
+    bottom: 6px;
+  }
+  #teclado-tactil .tt-key {
+    min-width: 22px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 12px;
+  }
+}

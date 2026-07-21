@@ -565,7 +565,10 @@ $('document').ready(function() {
 </script>
 
 
-    <?php } else { ?>
+    <?php } else {
+        $checkArqueo = new Login();
+        $hayArqueoAbierto = $checkArqueo->TieneArqueoAbiertoParaVentas();
+    ?>
 
                     
                     <div class="row">
@@ -577,6 +580,16 @@ $('document').ready(function() {
                             <div class="col-sm-12">
                                 <div id="error"></div>
 
+<?php if (!$hayArqueoAbierto) { ?>
+                                <div class="panel panel-primary">
+                                    <div class="panel-heading">
+            <h3 class="panel-title"><i class="fa fa-cutlery"></i> Control de Mesas</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <?php echo $checkArqueo->MensajeSinArqueoVentas(); ?>
+                                    </div>
+                                </div>
+<?php } else { ?>
                                 <div class="panel panel-primary" id="panel-control-mesas">
                                     <div class="panel-heading">
             <h3 class="panel-title"><i class="fa fa-cutlery"></i> Control de Mesas</h3>
@@ -605,6 +618,7 @@ $('document').ready(function() {
                                         </div>
                                     </div>
                                 </div>
+<?php } ?>
                             </div>
 
 
@@ -612,17 +626,24 @@ $('document').ready(function() {
                     </div>
 </div>
 
+<?php if ($hayArqueoAbierto) { ?>
 <script type="text/javascript">
     $('document').ready(function() {
         setTimeout(function run() {
             var enModoJuntar = typeof window.mesasUnionModoActivo === 'function' && window.mesasUnionModoActivo();
             if ($('#salas-mesas').length && typeof recargarMesasPanel === 'function' && $('#panel-control-mesas').is(':visible') && !enModoJuntar) {
+                // No recargar si ya se muestra el aviso de sin arqueo
+                if ($('#salas-mesas').find('.nav-tabs, .users-list').length === 0 && $('#salas-mesas').text().indexOf('ARQUEO') !== -1) {
+                    setTimeout(run, 3000);
+                    return;
+                }
                 recargarMesasPanel();
             }
             setTimeout(run, 3000);
         }, 3000);
     });
 </script>
+<?php } ?>
 
          <?php } ?>
 

@@ -365,3 +365,19 @@ var wow = new WOW(
   }
 );
 wow.init();
+
+/* Teclado táctil (español latino) — cargado en todo el sistema */
+(function () {
+  if (window.__tecladoTactilAssets) {
+    return;
+  }
+  window.__tecladoTactilAssets = true;
+  var css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = 'assets/css/teclado-tactil.css?v=1';
+  document.head.appendChild(css);
+  var js = document.createElement('script');
+  js.src = 'assets/script/teclado-tactil.js?v=1';
+  js.async = false;
+  (document.body || document.documentElement).appendChild(js);
+})();

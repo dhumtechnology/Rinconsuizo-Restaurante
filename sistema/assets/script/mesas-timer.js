@@ -85,6 +85,17 @@
             tabActiva = $activeLink.attr('href');
         }
         $.get('funciones.php?MesasPanel=si', function(html) {
+            var contenido = '' + html;
+            if (contenido.indexOf('NO EXISTE UN ARQUEO DE CAJA') !== -1) {
+                if (typeof mostrarVistaMesas === 'function') {
+                    mostrarVistaMesas();
+                }
+                $panel.html(contenido);
+                $('#recibemesa').empty();
+                $('#productos-categorias').empty();
+                window.codmesaActiva = '';
+                return;
+            }
             $panel.html(html);
             if (tabActiva && $panel.find('.nav-tabs a[href="' + tabActiva + '"]').length) {
                 $panel.find('.nav-tabs a[href="' + tabActiva + '"]').tab('show');

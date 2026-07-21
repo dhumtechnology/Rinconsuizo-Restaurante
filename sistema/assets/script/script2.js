@@ -693,17 +693,14 @@ $.ajax({
 
 //FUNCION PARA CALCULAR LA DIFERENCIA EN CIERRE DE CAJA
 $(document).ready(function (){
-          $('.calculo').keyup(function (){
-			
-			var efectivo = $('input#dineroefectivo').val();
-		    var estimado = $('input#estimado').val();
-						
-			//REALIZO EL CALCULO Y MUESTRO LA DEVOLUCION
-			total=efectivo - estimado;
-			var original=parseFloat(total.toFixed(2));
-			$("#diferencia").val(original.toFixed(2));/**/
-			
-          });
+	function recalcDiferencia() {
+		var efectivo = parseFloat(String($('input#dineroefectivo').val()).replace(',', '.'));
+		var estimado = parseFloat(String($('input#estimado').val()).replace(',', '.'));
+		if (isNaN(efectivo)) efectivo = 0;
+		if (isNaN(estimado)) estimado = 0;
+		$("#diferencia").val((efectivo - estimado).toFixed(2));
+	}
+	$(document).on('keyup blur change', '.calculo, #dineroefectivo', recalcDiferencia);
 });
 
 
@@ -1053,7 +1050,20 @@ $.ajax({
             type: "GET",
 			url: "funciones.php",
             data: dataString,
-            success: function(response) { 
+            success: function(response) {
+                var html = '' + response;
+                // Sin arqueo: no abrir productos ni carrito
+                if (html.indexOf('NO EXISTE UN ARQUEO DE CAJA') !== -1) {
+                    window.mesaCargando = false;
+                    window.codmesaActiva = '';
+                    if (typeof mostrarVistaMesas === 'function') {
+                        mostrarVistaMesas();
+                    }
+                    $('#salas-mesas').html(html);
+                    $('#recibemesa').empty();
+                    $('#productos-categorias').empty();
+                    return;
+                }
                 if (typeof mostrarVistaProductos === 'function') {
                     mostrarVistaProductos();
                 }
@@ -1063,7 +1073,7 @@ $.ajax({
                     }
                 });
                 $('#recibemesa').empty();
-                $('#recibemesa').append(''+response+'').fadeIn("slow");
+                $('#recibemesa').append(html).fadeIn("slow");
                 if (typeof sincronizarCodmesaDesdeDom === 'function') {
                     sincronizarCodmesaDesdeDom();
                 } else if (mesaId) {

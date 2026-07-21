@@ -11,7 +11,7 @@ $ses = $tra->ExpiraSession();
 
 $reg = $tra->ArqueoCajaPorId();
 
-if(isset($_POST['btn-update']))
+if(isset($_POST['btn-update']) || (isset($_POST['codarqueo']) && isset($_POST['codcaja']) && isset($_POST['dineroefectivo']) && isset($_POST['montoinicial'])))
 {
 $reg = $tra->CerrarArqueoCaja();
 exit;
@@ -38,7 +38,7 @@ exit;
 <script type="text/javascript" src="assets/script/titulos.js"></script>
 <script type="text/javascript" src="assets/script/script2.js"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
-<script type="text/javascript" src="assets/script/script.js"></script>
+<script type="text/javascript" src="assets/script/script.js?v=cierrearqueo2"></script>
 <!-- script jquery -->	
 	
 
@@ -310,7 +310,7 @@ exit;
 				<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
    <label class="control-label">Efectivo Disponible: <span class="symbol required"></span></label>
- <input type="text" class="form-control calculo" name="dineroefectivo" id="dineroefectivo" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Dinero en Efectivo" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" required="" aria-required="true">
+ <input type="text" class="form-control calculo" name="dineroefectivo" id="dineroefectivo" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Dinero en Efectivo" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" value="0.00" required="" aria-required="true">
                         <i class="fa fa-usd form-control-feedback"></i>  
                               </div> 
                         </div>  	
@@ -320,7 +320,7 @@ exit;
 				<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
         <label class="control-label">Diferencia: <span class="symbol required"></span></label>
- <input type="text" class="form-control" name="diferencia" id="diferencia" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Diferencia en Caja" readonly="readonly">
+ <input type="text" class="form-control" name="diferencia" id="diferencia" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Diferencia en Caja" value="<?php echo number_format(0 - ($reg[0]['montoinicial']+$reg[0]['ingresos']-$reg[0]['egresos']), 2, '.', ''); ?>" readonly="readonly">
                         <i class="fa fa-usd form-control-feedback"></i>  
                               </div> 
                         </div> 
@@ -329,7 +329,7 @@ exit;
 				<div class="col-md-8"> 
                                <div class="form-group has-feedback"> 
                         <label class="control-label">Comentario: </label>
-<textarea name="comentarios" class="form-control" id="comentarios" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Comentario de Cierre" required="" aria-required="true"></textarea>
+<textarea name="comentarios" class="form-control" id="comentarios" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Comentario de Cierre"></textarea>
                         <i class="fa fa-comment-o form-control-feedback"></i>  
                               </div> 
                         </div>  	

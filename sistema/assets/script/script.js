@@ -3434,24 +3434,22 @@ $('document').ready(function()
 	  {
 			codcaja: { required: true, },
 			montoinicial: { required: true, number : true},
-			dineroefectivo: { required: true, number : true},
-			comentarios: { required: true,},
+			fecharegistro: { required: true, },
 	   },
        messages:
 	   {
 			codcaja: { required: "Seleccione Caja para Arqueo" },
 			montoinicial:{ required: "Ingrese Monto Inicial", number: "Ingrese solo digitos con 2 decimales" },
-			dineroefectivo:{ required: "Ingrese Monto en Efectivo", number: "Ingrese solo digitos con 2 decimales" },
-			comentarios:{  required: "Ingrese Comentario de Cierre" },
+			fecharegistro:{ required: "Ingrese Hora de Apertura" },
        },
 	   submitHandler: submitForm	
        });  
 	   /* validation */
 	   
-	   /* form submit */
+	 /* form submit */
 	  function submitForm()
 	   {		
-				var data = $("#arqueocaja").serialize();
+				var data = $("#arqueocaja").serialize() + "&btn-submit=1";
 				
 				$.ajax({
 				
@@ -3464,8 +3462,9 @@ $('document').ready(function()
 					$("#btn-submit").html('<i class="fa fa-refresh"></i> Verificando...');
 				},
 				success :  function(data)
-						   {						
-								if(data==1){
+						   {
+								var resp = $.trim(data);
+								if(resp==1 || resp=='1'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3477,7 +3476,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data=='2'){
+								else if(resp=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3493,13 +3492,20 @@ $('document').ready(function()
 										
 									$("#error").fadeIn(1000, function(){
 											
-						$("#error").html('<center> '+data+' </center>');
-						$("#arqueocaja")[0].reset();		
+						$("#error").html('<center> '+resp+' </center>');
+						if ($("#arqueocaja").length) {
+							$("#arqueocaja")[0].reset();
+							if (typeof getTime === 'function') { getTime(); }
+						}
 						setTimeout(function() { $("#error").html(""); }, 5000);		
 						$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
 									});
 								}
-						   }
+						   },
+				error: function() {
+					$("#error").html('<center><div class="alert alert-danger">Error al registrar el arqueo. Intente de nuevo.</div></center>').fadeIn();
+					$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+				}
 				});
 				return false;
 		}
@@ -3598,21 +3604,26 @@ $('document').ready(function()
 /* FUNCION JQUERY PARA VALIDAR CIERRE DE CAJA */	 
 $('document').ready(function()
 { 
-								
+	function recalcularDiferenciaCierre() {
+		var efectivo = parseFloat(String($('input#dineroefectivo').val()).replace(',', '.')) || 0;
+		var estimado = parseFloat(String($('input#estimado').val()).replace(',', '.')) || 0;
+		$("#diferencia").val((efectivo - estimado).toFixed(2));
+	}
+
      /* validation */
 	 $("#cierrecaja").validate({
       rules:
 	  {
 			codcaja: { required: true, },
 			montoinicial: { required: true, number : true},
-			dineroefectivo: { required: true, number : true},
+			dineroefectivo: { required: true, number : true, min: 0},
 			comentarios: { required: false,},
 	   },
        messages:
 	   {
 			codcaja: { required: "Seleccione Caja para Arqueo" },
 			montoinicial:{ required: "Ingrese Monto Inicial", number: "Ingrese solo digitos con 2 decimales" },
-			dineroefectivo:{ required: "Ingrese Monto en Efectivo", number: "Ingrese solo digitos con 2 decimales" },
+			dineroefectivo:{ required: "Ingrese Monto en Efectivo", number: "Ingrese solo digitos con 2 decimales", min: "El efectivo no puede ser negativo" },
 			comentarios:{  required: "Ingrese Comentario de Cierre" },
        },
 	   submitHandler: submitForm	
@@ -3621,22 +3632,11 @@ $('document').ready(function()
 	   
 	   /* form submit */
 	  function submitForm()
-	   {		
-				var data = $("#cierrecaja").serialize();
+	   {
+				recalcularDiferenciaCierre();
+				var data = $("#cierrecaja").serialize() + "&btn-update=1";
 				var id= $("#cierrecaja").attr("data-id");
-				var dineroefectivo = $('#dineroefectivo').val();
 		        var codarqueo = id;
-	
-	       if (dineroefectivo==0.00 || dineroefectivo==0) {
-	            
-				$("#dineroefectivo").focus();
-				$('#dineroefectivo').val("");
-				$('#dineroefectivo').css('border-color','#01ba9a');
-				alert('POR FAVOR INGRESE UN MONTO VALIDO PARA EFECTIVO DISPONIBLE');
-         
-        return false;
-	 
-	  } else {
 				
 				$.ajax({
 				
@@ -3649,8 +3649,9 @@ $('document').ready(function()
 					$("#btn-update").html('<i class="fa fa-refresh"></i> Verificando ...');
 				},
 				success :  function(data)
-						   {						
-								if(data==1){
+						   {
+								var resp = $.trim(data);						
+								if(resp==1 || resp=='1'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3661,7 +3662,7 @@ $('document').ready(function()
 									});
 																				
 								} 
-								else if(data=='2'){
+								else if(resp=='2'){
 									
 									$("#error").fadeIn(1000, function(){
 											
@@ -3688,7 +3689,6 @@ $('document').ready(function()
 				});
 				return false;
 	  }
-		}
 	   /* form submit */
 });
 /* FIN DE  FUNCION JQUERY PARA VALIDAR CIERRE DE CAJA */
@@ -4234,7 +4234,7 @@ $('document').ready(function()
 	   /* form submit */
 	  function submitForm()
 	   {		
-			  var data = $("#deliver").serialize();
+			  var data = $("#deliver").serialize() + "&btn-venta=1";
 			  var nuevaFila ="<tr>"+"<td colspan=4><center><label><h5>NO HAY PRODUCTOS AGREGADOS</h5></label></center></td>"+"</tr>";
 			  var total = $('#txtTotal').val();
 			  var cliente = $('#cliente').val();
@@ -4268,8 +4268,9 @@ $('document').ready(function()
 					$("#btn-venta").html('<i class="fa fa-refresh"></i> Verificando...');
 				},
 				success :  function(data)
-						   {						
-								if(data==1){
+						   {
+								var resp = $.trim(data);						
+								if(resp==1 || resp=='1'){
 									
 						$("#error").fadeIn(1000, function(){
 											
@@ -4318,7 +4319,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data=='5')
+								else if(resp=='5')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4330,7 +4331,14 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data=='6')
+								else if(resp=='NO_ARQUEO' || (typeof resp === 'string' && resp.indexOf('ARQUEO DE CAJA') !== -1))
+								{
+					$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA ACTIVO PARA PROCESAR DELIVERY. DEBE INICIARLO PARA CONTINUAR.<br> SI DESEA REALIZAR UN ARQUEO DE CAJA HAZ CLIC <a href="forarqueo">AQUI</a></div></center>');
+					$("#btn-venta").html('<span class="fa fa-save"></span> Registrar Pedido');
+									});
+								}
+								else if(resp=='6')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4342,7 +4350,7 @@ $('document').ready(function()
 										
 									});
 								}
-								else if(data=='7')
+								else if(resp=='7')
 								{
 									
 					$("#error").fadeIn(1000, function(){
@@ -4395,9 +4403,14 @@ $('document').ready(function()
 									});
 								}
 						   }
-				}).fail(function() {
+				}).fail(function(xhr) {
+					var detalle = (xhr && xhr.responseText) ? $.trim(xhr.responseText).substring(0, 300) : '';
 					$("#error").fadeIn(1000, function(){
-						$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ERROR AL REGISTRAR EL PEDIDO. VERIFIQUE ARQUEO DE CAJA Y DATOS DEL FORMULARIO.</div></center>');
+						var msg = 'ERROR AL REGISTRAR EL PEDIDO. VERIFIQUE QUE SU USUARIO TENGA UN ARQUEO DE CAJA ABIERTO Y QUE HAYA PRODUCTOS EN EL CARRITO.';
+						if (detalle.indexOf('ARQUEO') !== -1 || detalle.indexOf('arqueo') !== -1) {
+							msg = detalle;
+						}
+						$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> '+msg+'</div></center>');
 						$("#btn-venta").html('<span class="fa fa-save"></span> Registrar Pedido');
 					});
 				});

@@ -1,6 +1,17 @@
 <?php
 require_once("class/class.php");
 
+// Endpoints AJAX limpios (sin scripts) — deben ir primero
+if (isset($_GET['MesasPanel'])) {
+	$cajaMesas = new Login();
+	$cajaMesas->VerificaArqueo();
+	exit;
+}
+if (isset($_GET['MesasPanelCocinero'])) {
+	echo renderMesasPanelCocinero('padding:12px;margin:11px;float:left;width:90px;');
+	exit;
+}
+
 if (isset($_POST['accion']) && $_POST['accion'] === 'JuntarMesas') {
     $union = new Login();
     $union->JuntarMesas();
@@ -1668,18 +1679,12 @@ $TotalMonto+=$reg[$i]['totalc'];
 
 <?php 
 ############################ RECARGA GRILLA DE MESAS CON CRONOMETRO ###########################
-if (isset($_GET['MesasPanel'])) {
-    echo renderMesasPanel('padding:12px;margin:11px;float:left;width:90px;');
-    exit;
-}
+# (Manejado al inicio de este archivo: ?MesasPanel=si)
 ?>
 
 <?php 
 ############################ RECARGA GRILLA DE MESAS COCINERO ###########################
-if (isset($_GET['MesasPanelCocinero'])) {
-    echo renderMesasPanelCocinero('padding:12px;margin:11px;float:left;width:90px;');
-    exit;
-}
+# (Manejado al inicio de este archivo: ?MesasPanelCocinero=si)
 ?>
 
 <?php 
@@ -1824,6 +1829,12 @@ for($i=0;$i<sizeof($reg);$i++){
 <?php
 ####################### MUESTRA FORMULARIO PARA RESERVAR MESAS PARA VENTAS ####################
 if (isset($_GET['BuscaMesaReservas']) && isset($_GET['codmesa'])) {
+
+$arqueoCheck = new Login();
+if (!$arqueoCheck->TieneArqueoAbiertoParaVentas()) {
+	echo $arqueoCheck->MensajeSinArqueoVentas();
+	exit;
+}
 
 $arqueo = new Login();
 $arqueo = $arqueo->VerificaVentas(); 

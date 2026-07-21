@@ -1,5 +1,12 @@
 <?php
 require_once("class/class.php");
+if (isset($_GET['salas_mesas'])) {
+	$cajaCheck = new Login();
+	if (!$cajaCheck->TieneArqueoAbiertoParaVentas()) {
+		echo $cajaCheck->MensajeSinArqueoVentas();
+		exit;
+	}
+}
 if (isset($_GET['salas_mesas'])): ?>
 <script type="text/javascript" src="assets/script/script2.js"></script>
 <?php endif; ?>
@@ -77,7 +84,13 @@ if (isset($_GET['salas_mesas'])): ?>
 
 
 
-<?php if (isset($_GET['prod_categorias'])): ?>
+<?php if (isset($_GET['prod_categorias'])):
+$cajaProd = new Login();
+if (!$cajaProd->TieneArqueoAbiertoParaVentas()) {
+	echo $cajaProd->MensajeSinArqueoVentas();
+	exit;
+}
+?>
 
 <input type="hidden" name="codproducto" id="codproducto" placeholder="Codigo">
 <input type="hidden" name="codcategoria" id="codcategoria" placeholder="Categoria">

@@ -1480,6 +1480,10 @@ public function JuntarMesas()
 		echo json_encode(array('ok' => false, 'msg' => 'No tiene permiso para juntar mesas.'));
 		exit;
 	}
+	if (!$this->TieneArqueoAbiertoParaVentas()) {
+		echo json_encode(array('ok' => false, 'msg' => 'Debe existir un arqueo de caja abierto para juntar mesas.'));
+		exit;
+	}
 	if (!$this->TablaMesasUnidasExiste()) {
 		echo json_encode(array('ok' => false, 'msg' => 'Ejecute la migración sistema/migrations/001_mesas_unidas.sql en la base de datos.'));
 		exit;
@@ -1543,6 +1547,10 @@ public function SepararMesasUnion()
 	header('Content-Type: application/json; charset=UTF-8');
 	if (!isset($_SESSION['acceso']) || !in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true)) {
 		echo json_encode(array('ok' => false, 'msg' => 'No tiene permiso para separar mesas.'));
+		exit;
+	}
+	if (!$this->TieneArqueoAbiertoParaVentas()) {
+		echo json_encode(array('ok' => false, 'msg' => 'Debe existir un arqueo de caja abierto para separar mesas.'));
 		exit;
 	}
 	$codmesa = isset($_POST['codmesa']) ? (int) $_POST['codmesa'] : 0;
@@ -2208,13 +2216,23 @@ public function RegistrarCajas()
 public function ListarCajas()
 {
 	self::SetNames();
-	$sql = " select * from cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo";
+	$this->p = array();
+	// Cajero: solo cajas asignadas a su usuario. Admin (y demás): todas.
+	if (isset($_SESSION["acceso"]) && $_SESSION["acceso"] == "cajero") {
+		$sql = "SELECT * FROM cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE cajas.codigo = ? ORDER BY cajas.nrocaja ASC";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($_SESSION["codigo"]));
+		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
+		}
+		return $this->p;
+	}
+	$sql = "SELECT * FROM cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo ORDER BY cajas.nrocaja ASC";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
 	}
 	return $this->p;
-	$this->dbh=null;
 }
 ################################# FUNCION PARA LISTAR CAJAS #################################
 
@@ -2285,23 +2303,26 @@ public function CajaPorId()
 public function CajerosSessionPorId()
 	{
 		self::SetNames();
-		$sql = " select * from cajas where codigo = ? ";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array($_SESSION["codigo"]) );
-		$num = $stmt->rowCount();
-		if($num==0)
-		{
-			echo "";
-		}
-		else
-		{
-			if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
+		$this->p = array();
+		// Preferir la caja del arqueo activo usable (admin puede usar arqueo de otro cajero)
+		$arq = $this->ObtenerArqueoAbiertoParaVentas();
+		if ($arq && !empty($arq['codcaja'])) {
+			$sql = "SELECT * FROM cajas WHERE codcaja = ? LIMIT 1";
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array($arq['codcaja']));
+			if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 				$this->p[] = $row;
+				return $this->p;
 			}
-			return $this->p;
-			$this->dbh=null;
 		}
+		$sql = "SELECT * FROM cajas WHERE codigo = ? LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($_SESSION["codigo"]));
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
+			return $this->p;
+		}
+		return $this->p;
 	}
 ###################################### FUNCION SESSION CAJAS ######################################
 
@@ -5341,16 +5362,25 @@ public function BuscarComprasProveedor()
 public function RegistrarArqueoCaja()
 {
 	self::SetNames();
-	if(empty($_POST["codcaja"]) or empty($_POST["montoinicial"]) or empty($_POST["fecharegistro"]))
+	if(empty($_POST["codcaja"]) || empty($_POST["fecharegistro"]) || !isset($_POST["montoinicial"]) || trim((string) $_POST["montoinicial"]) === '')
 	{
 		echo "1";
 		exit;
 	}
 
-	$sql = "select codigo from cajas where codcaja = '".$_POST["codcaja"]."'";
-	foreach ($this->dbh->query($sql) as $row)
-	{
-		$this->p[] = $row;
+	$sql = "select codigo from cajas where codcaja = ? LIMIT 1";
+	$stmtCaja = $this->dbh->prepare($sql);
+	$stmtCaja->execute(array($_POST["codcaja"]));
+	$row = $stmtCaja->fetch(PDO::FETCH_ASSOC);
+	if (!$row) {
+		echo "1";
+		exit;
+	}
+	// Cajero solo puede aperturar arqueo de cajas asignadas a él
+	if (isset($_SESSION["acceso"]) && $_SESSION["acceso"] == "cajero"
+		&& (string) $row['codigo'] !== (string) $_SESSION["codigo"]) {
+		echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> NO TIENE ACCESO A ESTA CAJA PARA REALIZAR ARQUEO.</center></div>";
+		exit;
 	}
 	$codigo = $row['codigo'];
 
@@ -5376,15 +5406,24 @@ public function RegistrarArqueoCaja()
 
 		$codcaja = strip_tags($_POST["codcaja"]);
 		$montoinicial = strip_tags($_POST["montoinicial"]);
-		if (strip_tags(isset($_POST['ingresos']))) { $ingresos = strip_tags($_POST['ingresos']); } else { $ingresos =''; }
-		if (strip_tags(isset($_POST['egresos']))) { $egresos = strip_tags($_POST['egresos']); } else { $egresos =''; }
-		if (strip_tags(isset($_POST['dineroefectivo']))) { $dineroefectivo = strip_tags($_POST['dineroefectivo']); } else { $dineroefectivo =''; }
-		if (strip_tags(isset($_POST['diferencia']))) { $diferencia = strip_tags($_POST['diferencia']); } else { $diferencia =''; }
-		if (strip_tags(isset($_POST['comentarios']))) { $comentarios = strip_tags($_POST['comentarios']); } else { $comentarios =''; }
-		$fechaapertura = strip_tags(date("Y-m-d h:i:s",strtotime($_POST['fecharegistro'])));
-		$fechacierre = strip_tags(date("0000-00-00 00:00:00"));
-		$statusarqueo = strip_tags("1");
-		$stmt->execute();
+		$ingresos = '0.00';
+		$egresos = '0.00';
+		$dineroefectivo = '0.00';
+		$diferencia = '0.00';
+		$comentarios = isset($_POST['comentarios']) ? strip_tags($_POST['comentarios']) : '';
+		$ts = strtotime($_POST['fecharegistro']);
+		$fechaapertura = $ts ? date("Y-m-d H:i:s", $ts) : date("Y-m-d H:i:s");
+		$fechacierre = '0000-00-00 00:00:00';
+		$statusarqueo = "1";
+		$ok = $stmt->execute();
+		if (!$ok) {
+			$fechacierre = '1970-01-01 00:00:00';
+			$ok = $stmt->execute();
+		}
+		if (!$ok) {
+			echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>No se pudo registrar el arqueo. Verifique los datos.</div>";
+			exit;
+		}
 
 		echo "<div class='alert alert-success'>";
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
@@ -5460,7 +5499,7 @@ public function ActualizarArqueoCaja()
 {
 
 	self::SetNames();
-	if(empty($_POST["codarqueo"]) or empty($_POST["codcaja"]) or empty($_POST["montoinicial"]) or empty($_POST["fechaapertura"]))
+	if(empty($_POST["codarqueo"]) or empty($_POST["codcaja"]) or empty($_POST["fechaapertura"]) || !isset($_POST["montoinicial"]) || trim((string) $_POST["montoinicial"]) === '')
 	{
 		echo "1";
 		exit;
@@ -5503,55 +5542,75 @@ public function CerrarArqueoCaja()
 {
 
 	self::SetNames();
-	if(empty($_POST["codarqueo"]) or empty($_POST["codcaja"]) or empty($_POST["montoinicial"]) or empty($_POST["dineroefectivo"]))
+	if (empty($_POST["codarqueo"]) || empty($_POST["codcaja"])
+		|| !isset($_POST["montoinicial"]) || trim((string) $_POST["montoinicial"]) === ''
+		|| !isset($_POST["dineroefectivo"]) || trim((string) $_POST["dineroefectivo"]) === '')
 	{
 		echo "1";
 		exit;
 	}
 
-	$sql = " select * from ventas WHERE statuspago = '1'";
-	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute();
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-
-		$sql = " update arqueocaja set "
-		." dineroefectivo = ?, "
-		." diferencia = ?, "
-		." comentarios = ?, "
-		." fechacierre = ?, "
-		." statusarqueo = ? "
-		." where "
-		." codarqueo = ?;
-		";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->bindParam(1, $dineroefectivo);
-		$stmt->bindParam(2, $diferencia);
-		$stmt->bindParam(3, $comentarios);
-		$stmt->bindParam(4, $fechacierre);
-		$stmt->bindParam(5, $statusarqueo);
-		$stmt->bindParam(6, $codarqueo);
-
-		$dineroefectivo = strip_tags($_POST["dineroefectivo"]);
-		$diferencia = strip_tags($_POST["diferencia"]);
-		$comentarios = strip_tags($_POST['comentarios']);
-		$fechacierre = strip_tags(date("Y-m-d h:i:s"));
-		$statusarqueo = strip_tags("0");
-		$codarqueo = strip_tags($_POST["codarqueo"]);
-		$stmt->execute();
-
-		echo "<div class='alert alert-info'>";
-		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-		echo "<span class='fa fa-check-square-o'></span> EL ARQUEO DE CAJA FUE CERRADO EXITOSAMENTE";
-		echo "</div>";		
+	$codarqueo = strip_tags($_POST["codarqueo"]);
+	$codcaja = strip_tags($_POST["codcaja"]);
+	$dineroefectivo = str_replace(',', '', trim(strip_tags($_POST["dineroefectivo"])));
+	if (!is_numeric($dineroefectivo) || (float) $dineroefectivo < 0) {
+		echo "1";
 		exit;
 	}
-	else
+	$dineroefectivo = number_format((float) $dineroefectivo, 2, '.', '');
+
+	// Diferencia: preferir cálculo servidor (permite efectivo 0.00)
+	$montoinicial = (float) str_replace(',', '', (string) $_POST["montoinicial"]);
+	$ingresos = isset($_POST["ingresos"]) ? (float) str_replace(',', '', (string) $_POST["ingresos"]) : 0;
+	$egresos = isset($_POST["egresos"]) ? (float) str_replace(',', '', (string) $_POST["egresos"]) : 0;
+	$estimado = $montoinicial + $ingresos - $egresos;
+	if (isset($_POST["diferencia"]) && trim((string) $_POST["diferencia"]) !== '' && is_numeric(str_replace(',', '', (string) $_POST["diferencia"]))) {
+		$diferencia = number_format((float) str_replace(',', '', (string) $_POST["diferencia"]), 2, '.', '');
+	} else {
+		$diferencia = number_format((float) $dineroefectivo - $estimado, 2, '.', '');
+	}
+
+	$comentarios = isset($_POST['comentarios']) ? strip_tags($_POST['comentarios']) : '';
+	$fechacierre = date("Y-m-d H:i:s");
+	$statusarqueo = "0";
+
+	// Solo bloquear si hay ventas de esta caja aún pendientes de cobro
+	$sql = "SELECT idventa FROM ventas WHERE codcaja = ? AND statuspago = '1' LIMIT 1";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute(array($codcaja));
+	if ($stmt->rowCount() > 0)
 	{
 		echo "2";
 		exit;
 	}
+
+	$sql = "UPDATE arqueocaja SET
+		dineroefectivo = ?,
+		diferencia = ?,
+		comentarios = ?,
+		fechacierre = ?,
+		statusarqueo = ?
+		WHERE codarqueo = ? AND statusarqueo = '1'";
+	$stmt = $this->dbh->prepare($sql);
+	$ok = $stmt->execute(array(
+		$dineroefectivo,
+		$diferencia,
+		$comentarios,
+		$fechacierre,
+		$statusarqueo,
+		$codarqueo
+	));
+
+	if (!$ok || $stmt->rowCount() < 1) {
+		echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><span class='fa fa-info-circle'></span> NO SE PUDO CERRAR EL ARQUEO. VERIFIQUE QUE SIGA ABIERTO.</div>";
+		exit;
+	}
+
+	echo "<div class='alert alert-info'>";
+	echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+	echo "<span class='fa fa-check-square-o'></span> EL ARQUEO DE CAJA FUE CERRADO EXITOSAMENTE";
+	echo "</div>";
+	exit;
 }
 ########################## FUNCION PARA CERRAR ARQUEO DE CAJA #############################
 
@@ -6097,9 +6156,25 @@ if(base64_decode($_GET["tipomovimientocaja"])=="INGRESO"){
 		$this->p = array();
 
 if($_SESSION["acceso"] == 'repartidor'){
-	// Asignados a mí + nuevos sin repartidor (repartidor 0 / vacío)
+	// Solo externos / web (no internos). Asignados a mí + sin asignar.
 	$codigo = isset($_SESSION["codigo"]) ? (string) $_SESSION["codigo"] : '0';
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.totalpago, ventas.entregado, ventas.delivery, ventas.repartidor, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.direccliente, usuarios.nombres, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo WHERE ventas.delivery = 1 AND ventas.entregado = 1 AND (ventas.repartidor = ? OR ventas.repartidor = '0' OR ventas.repartidor = '' OR ventas.repartidor IS NULL) GROUP BY detalleventas.codventa ORDER BY CASE WHEN ventas.repartidor = ? THEN 1 ELSE 0 END ASC, ventas.idventa ASC";
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.totalpago, ventas.entregado, ventas.delivery, ventas.repartidor, ventas.observaciones, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.direccliente, usuarios.nombres, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles
+		FROM ventas
+		INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa
+		LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente
+		LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo
+		WHERE ventas.delivery = 1
+		AND ventas.entregado = 1
+		AND (ventas.repartidor = ? OR ventas.repartidor = '0' OR ventas.repartidor = '' OR ventas.repartidor IS NULL)
+		AND IFNULL(ventas.observaciones,'') NOT LIKE '%DELIVERY INTERNO%'
+		AND (
+			IFNULL(ventas.observaciones,'') LIKE '%PEDIDO WEB%'
+			OR IFNULL(ventas.observaciones,'') LIKE '%DELIVERY EXTERNO%'
+			OR ventas.codigo = 0 OR ventas.codigo = '0'
+			OR (ventas.codcliente IS NOT NULL AND ventas.codcliente <> 0 AND ventas.codcliente <> '0')
+		)
+		GROUP BY detalleventas.codventa
+		ORDER BY CASE WHEN ventas.repartidor = ? THEN 1 ELSE 0 END ASC, ventas.idventa ASC";
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute(array($codigo, $codigo));
 	while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -6135,8 +6210,19 @@ if($_SESSION["acceso"] == 'repartidor'){
 		}
 		$codventa = strip_tags(base64_decode($_GET["codventa"]));
 		$codigo = (string) $_SESSION["codigo"];
-		// Solo si sigue sin asignar (evita carrera entre repartidores)
-		$sql = "UPDATE ventas SET repartidor = ? WHERE codventa = ? AND delivery = 1 AND entregado = 1 AND (repartidor = '0' OR repartidor = '' OR repartidor IS NULL)";
+		// Solo externos/web sin asignar (no internos)
+		$sql = "UPDATE ventas SET repartidor = ?
+			WHERE codventa = ?
+			AND delivery = 1
+			AND entregado = 1
+			AND (repartidor = '0' OR repartidor = '' OR repartidor IS NULL)
+			AND IFNULL(observaciones,'') NOT LIKE '%DELIVERY INTERNO%'
+			AND (
+				IFNULL(observaciones,'') LIKE '%PEDIDO WEB%'
+				OR IFNULL(observaciones,'') LIKE '%DELIVERY EXTERNO%'
+				OR codigo = 0 OR codigo = '0'
+				OR (codcliente IS NOT NULL AND codcliente <> 0 AND codcliente <> '0')
+			)";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute(array($codigo, $codventa));
 		if ($stmt->rowCount() > 0) {
@@ -6188,14 +6274,8 @@ if($_SESSION["acceso"] == 'repartidor'){
 	{
 		self::SetNames();
 
-        $sql = " SELECT * FROM arqueocaja WHERE codigo = ? and statusarqueo = 1";
-        $stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array($_SESSION["codigo"]));
-		$num = $stmt->rowCount();
-		if($num==0)
-		{ ?>
-
-
+		if (!$this->TieneArqueoAbiertoParaVentas()) {
+		?>
 		<div class="row">
     <div class="col-sm-12">
        <div class="panel panel-primary">
@@ -6204,34 +6284,25 @@ if($_SESSION["acceso"] == 'repartidor'){
                 <div class="row">
                     <div class="col-sm-12 col-xs-12">
                      <div class="box-body">
-
-        <?php
-    echo "<div class='alert alert-danger'>";
-    echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-    echo "<center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS, DEBERA DE INICIARLO PARA CONTINUAR.<br> SI DESEA REALIZAR UN ARQUEO DE CAJA HAZ CLIC <a href='forarqueo'>AQUI</a></center>";
-    echo "</div>";
-        ?>                        
-
-                     </div> 
+        <?php echo $this->MensajeSinArqueoVentas(); ?>
+                     </div>
                  </div>
              </div>
          </div>
      </div>
  </div>
 </div>
-
 		<?php
+			return;
 		}
-		else
-		{
 
-
-$sql = "select codcaja from cajas where codigo = '".$_SESSION["codigo"]."'";
-foreach ($this->dbh->query($sql) as $row)
-{
-	$this->p[] = $row;
-}
-$codcaja = $row['codcaja'];
+		// Caja del arqueo abierto usable (admin puede usar cualquiera activo)
+		$rowArq = $this->ObtenerArqueoAbiertoParaVentas();
+		if (!$rowArq) {
+			echo $this->MensajeSinArqueoVentas();
+			return;
+		}
+		$codcaja = $rowArq['codcaja'];
 
 $config = new Login();
 $config = $config->ConfiguracionPorId();
@@ -6654,7 +6725,6 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 
 
 			<?php
-		} 
 }
 ############################## FUNCION VERIFICA CAJAS PARA DELIVERY ##################################
 
@@ -6662,6 +6732,10 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 public function RegistrarDelivery()
 {
 	self::SetNames();
+	if (!$this->TieneArqueoAbiertoParaVentas()) {
+		echo "NO_ARQUEO";
+		exit;
+	}
 	if(empty($_POST["txtTotal"]) or empty($_POST["txtTotalCompra"]))
 	{
 		echo "1";
@@ -6696,13 +6770,6 @@ public function RegistrarDelivery()
 			exit;                           }
 		}
 
-
-		if($_POST["codcaja"]=="")
-	{
-		echo "5";
-		exit;
-	}
-
 	if ($_POST["tipopagove"] == "CREDITO" && $_POST["cliente"] == '') { 
 
 		echo "6";
@@ -6724,14 +6791,17 @@ public function RegistrarDelivery()
 		}
 	}
 
-	$sql1 = " select codarqueo from arqueocaja  order by codarqueo desc limit 1";
-					foreach ($this->dbh->query($sql1) as $row){
-
-	$codarqueocaja=$row["codarqueo"];
-
+	$rowArq = $this->ObtenerArqueoAbiertoParaVentas();
+	if (!$rowArq) {
+		echo "NO_ARQUEO";
+		exit;
 	}
+	$codarqueocaja = $rowArq["codarqueo"];
+	// Forzar caja del arqueo activo (no confiar solo en el POST)
+	$codcajaArqueo = $rowArq["codcaja"];
 
 	$codventa = $this->GenerarSiguienteCodventa();
+	$numeroComandaLote = $this->ObtenerSiguienteNumeroComanda($codventa);
 
 		$query = " insert into ventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
@@ -6770,14 +6840,18 @@ public function RegistrarDelivery()
 
 
 		
-		$codcaja = strip_tags('0');
+		$codcaja = isset($_POST["codcaja"]) && $_POST["codcaja"] !== '' ? strip_tags($_POST["codcaja"]) : '0';
+		if ($codcaja === '0' || $codcaja === '' || (string) $codcaja !== (string) $codcajaArqueo) {
+			$codcaja = $codcajaArqueo;
+		}
 
 		$comprobante = strip_tags('1');
 		$serie_doc = strip_tags('001');
 		$aceptado = strip_tags('no');
 		$enviado = strip_tags('1');
 
-		$codcliente = strip_tags($_POST["cliente"]);
+		$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
+		if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
 		$codmesa = strip_tags("0");
 		$subtotalivasive = strip_tags($_POST["txtsubtotal"]);
 		$subtotalivanove = strip_tags($_POST["txtsubtotal2"]);
@@ -6787,25 +6861,41 @@ if (strip_tags(isset($_POST['descuento']))) { $descuentove = strip_tags($_POST['
 if (strip_tags(isset($_POST['txtDescuento']))) { $totaldescuentove = strip_tags($_POST['txtDescuento']); } else { $totaldescuentove ='0.00'; }
 					$totalpago = strip_tags($_POST["txtTotal"]);
 					$totalpago2 = strip_tags($_POST["txtTotalCompra"]);
-if (strip_tags(isset($_POST['tipopagove']))) { $tipopagove = strip_tags($_POST['tipopagove']); } else { $tipopagove =''; }
-if (strip_tags($_POST["tipopagove"]=="CONTADO")) { $formapagove = strip_tags($_POST["formapagove"]); } else { $formapagove = "CREDITO"; }
+if (strip_tags(isset($_POST['tipopagove']))) { $tipopagove = strip_tags($_POST['tipopagove']); } else { $tipopagove ='CONTADO'; }
+if ($tipopagove == "CONTADO") { $formapagove = isset($_POST["formapagove"]) ? strip_tags($_POST["formapagove"]) : 'EFECTIVO'; } else { $formapagove = "CREDITO"; }
 
-if (strip_tags(isset($_POST['montopagado']))) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado =''; }
-if (strip_tags(isset($_POST['montodevuelto']))) { $montodevuelto = strip_tags($_POST['montodevuelto']); } else { $montodevuelto =''; }
+if (strip_tags(isset($_POST['montopagado']))) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado ='0.00'; }
+if (strip_tags(isset($_POST['montodevuelto']))) { $montodevuelto = strip_tags($_POST['montodevuelto']); } else { $montodevuelto ='0.00'; }
 if ($_POST["tipopagove"] == "CREDITO" && isset($_POST['fechavencecredito']) && $_POST['fechavencecredito'] !== '') {
 	$fechavencecredito = strip_tags(date("Y-m-d", strtotime($_POST['fechavencecredito'])));
 } else {
 	$fechavencecredito = '0000-00-00';
 }
-if (strip_tags($_POST["tipopagove"]=="CONTADO")) { $statusventa = strip_tags("PAGADA"); } else { $statusventa = "PENDIENTE"; }
+if ($tipopagove == "CONTADO") { $statusventa = strip_tags("PAGADA"); } else { $statusventa = "PENDIENTE"; }
 					$statuspago = "0";
 					$fechaventa = strip_tags(date("Y-m-d H:i:s"));
 					$codigo = strip_tags($_SESSION["codigo"]);
 					$cocinero = strip_tags('1');
-					$delivery = strip_tags($_POST["delivery"]);
+					$delivery = strip_tags(isset($_POST["delivery"]) ? $_POST["delivery"] : '1');
 if (strip_tags(isset($_POST['repartidor'])) && $_POST['repartidor'] !== '') { $repartidor = strip_tags($_POST['repartidor']); } else { $repartidor ='0'; }
-					$entregado = strip_tags('1');
+	$tipopedido = isset($_POST['tipopedido']) ? strtoupper(trim(strip_tags($_POST['tipopedido']))) : 'INTERNO';
+	if ($tipopedido !== 'EXTERNO') {
+		$tipopedido = 'INTERNO';
+		$repartidor = '0';
+	}
+	// Pendiente de entrega para cocina/caja; el repartidor filtra por marca INTERNO/EXTERNO/WEB.
+	$entregado = '1';
 if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_POST['observaciones']); } else { $observaciones =''; }
+	$observaciones = trim($observaciones);
+	if ($tipopedido === 'EXTERNO') {
+		if (stripos($observaciones, 'DELIVERY EXTERNO') === false && stripos($observaciones, 'PEDIDO WEB') === false) {
+			$observaciones = trim('DELIVERY EXTERNO ' . $observaciones);
+		}
+	} else {
+		if (stripos($observaciones, 'DELIVERY INTERNO') === false) {
+			$observaciones = trim('DELIVERY INTERNO ' . $observaciones);
+		}
+	}
 					$stmt->execute();
 
 
@@ -6820,7 +6910,9 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 		
 		$existenciadb = $row['existencia'];
 
-		$query = " insert into detalleventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+		$query = $this->TieneNumerocomanda()
+			? "INSERT INTO detalleventas (codventa, codcliente, codproducto, producto, codcategoria, cantventa, preciocompra, precioventa, ivaproducto, importe, importe2, fechadetalleventa, statusdetalle, codigo, comanda, numerocomanda) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			: " insert into detalleventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 						$stmt = $this->dbh->prepare($query);
 						$stmt->bindParam(1, $codventa);
 						$stmt->bindParam(2, $codcliente);
@@ -6837,9 +6929,13 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 						$stmt->bindParam(13, $statusdetalle);
 						$stmt->bindParam(14, $codigo);
 						$stmt->bindParam(15, $comanda);
+						if ($this->TieneNumerocomanda()) {
+							$stmt->bindParam(16, $numerocomanda);
+						}
 
 
-						$codcliente = strip_tags($_POST["cliente"]);
+						$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
+						if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
 						$codproducto = strip_tags($venta[$i]['txtCodigo']);
 						$producto = strip_tags($venta[$i]['descripcion']);
 						$codcategoria = strip_tags($venta[$i]['tipo']);
@@ -6850,10 +6946,11 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 						$importe = strip_tags($venta[$i]['cantidad'] * $venta[$i]['precio2']);
 						$importe2 = strip_tags($venta[$i]['cantidad'] * $venta[$i]['precio']);
 						$fechadetalleventa = strip_tags(date("Y-m-d H:i:s"));
-						$statusdetalle = "0";
+						$statusdetalle = "1";
 						
 						$codigo = strip_tags($_SESSION['codigo']);
 						$comanda = "1";
+						$numerocomanda = $numeroComandaLote;
 						$stmt->execute();
 
 						$sql = " update productos set "
@@ -7098,67 +7195,91 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 ############################### CLASE VENTAS DE PRODUCTOS ##############################
 
 ################################# FUNCION VERIFICA CAJAS PARA VENTAS ###############################
+	/**
+	 * ¿Hay arqueo abierto que permita ventas en mostrador?
+	 * Cajero: su propio arqueo.
+	 * Administrador y mesero: cualquier arqueo abierto del local.
+	 */
+	public function TieneArqueoAbiertoParaVentas()
+	{
+		return $this->ObtenerArqueoAbiertoParaVentas() !== null;
+	}
+
+	/**
+	 * Devuelve el arqueo abierto usable para ventas/delivery: array(codarqueo, codcaja) o null.
+	 * Cajero: solo el suyo. Admin: prefiere el suyo, si no hay usa cualquiera abierto. Mesero: cualquiera abierto.
+	 */
+	public function ObtenerArqueoAbiertoParaVentas()
+	{
+		self::SetNames();
+		if (!isset($_SESSION['acceso']) || !isset($_SESSION['codigo'])) {
+			return null;
+		}
+		if (!in_array($_SESSION['acceso'], array('administrador', 'cajero', 'mesero'), true)) {
+			return null;
+		}
+
+		// Preferir arqueo del usuario logueado (admin/cajero)
+		if ($_SESSION['acceso'] == 'administrador' || $_SESSION['acceso'] == 'cajero') {
+			$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE codigo = ? AND statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1";
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array($_SESSION['codigo']));
+			$row = $stmt->fetch(PDO::FETCH_ASSOC);
+			if ($row) {
+				return $row;
+			}
+			// Admin: puede operar con cualquier arqueo activo del local
+			if ($_SESSION['acceso'] == 'administrador') {
+				$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1";
+				$stmt = $this->dbh->prepare($sql);
+				$stmt->execute();
+				$row = $stmt->fetch(PDO::FETCH_ASSOC);
+				return $row ? $row : null;
+			}
+			return null;
+		}
+
+		// Mesero: cualquier arqueo abierto
+		$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute();
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $row ? $row : null;
+	}
+
+	public function MensajeSinArqueoVentas()
+	{
+		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] == 'cajero') {
+			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS, DEBERA DE INICIARLO PARA CONTINUAR.<br> SI DESEA REALIZAR UN ARQUEO DE CAJA HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
+		}
+		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] == 'administrador') {
+			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA ACTIVO PARA PROCESAR VENTAS O DELIVERY.<br> DEBE HABER AL MENOS UN ARQUEO ABIERTO EN EL LOCAL. SI DESEA INICIAR UNO HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
+		}
+		return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS.<br>EL MESERO NO PUEDE TOMAR PEDIDOS HASTA QUE EL CAJERO O ADMINISTRADOR INICIE EL ARQUEO DE CAJA.</center></div>";
+	}
+
 	public function VerificaArqueo()
 	{
 		self::SetNames();
-  
-  if($_SESSION["acceso"] == "administrador" || $_SESSION["acceso"] == "cajero"){
-
-        $sql = " SELECT * FROM arqueocaja WHERE codigo = ? and statusarqueo = 1";
-        $stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array($_SESSION["codigo"]));
-		$num = $stmt->rowCount();
-		if($num==0)
-		{
-    echo "<div class='alert alert-danger'>";
-    echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-    echo "<center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS, DEBERA DE INICIARLO PARA CONTINUAR.<br> SI DESEA REALIZAR UN ARQUEO DE CAJA HAZ CLIC <a href='forarqueo'>AQUI</a></center>";
-    echo "</div>";
-		?>
-		<?php
+		if (!$this->TieneArqueoAbiertoParaVentas()) {
+			echo $this->MensajeSinArqueoVentas();
+			return;
 		}
-		else
-		{
-			?>
-
-	<!-- Aquí todo el código para mesas y sillas -->
-<?php echo renderMesasPanel('display:inline;margin:18px;float:left;width:78px;height:65px;'); ?>
-<!-- Fin de todo el código para mesas y sillas -->
-
-			<?php
-		} 
-
-	} else {
-
-        $sql = " SELECT * FROM arqueocaja WHERE statusarqueo = '1'";
-        $stmt = $this->dbh->prepare($sql);
-		$stmt->execute();
-		$num = $stmt->rowCount();
-		if($num==0)
-		{
-	echo "<div class='alert alert-danger'>";
-    echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-    echo "<center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS, DIRIJASE AL ADMINISTRADOR O CAJERO PARA QUE INICIE PARA PROCESAR VENTAS</center>";
-    echo "</div>";
-		}
-		else
-		{
-			?>
-
-	<!-- Aquí todo el código para mesas y sillas -->
-<?php echo renderMesasPanel('padding:12px;margin:11px;float:left;width:90px;'); ?>
-<!-- Fin de todo el código para mesas y sillas -->
-
-			<?php
-		}
+		$estilo = (isset($_SESSION['acceso']) && ($_SESSION['acceso'] == 'administrador' || $_SESSION['acceso'] == 'cajero'))
+			? 'display:inline;margin:18px;float:left;width:78px;height:65px;'
+			: 'padding:12px;margin:11px;float:left;width:90px;';
+		echo renderMesasPanel($estilo);
 	}
-}
 ############################ FUNCION VERIFICA CAJAS PARA VENTAS ################################
 
 ############################ FUNCION PARA VERIFICAR MESAS PARA VENTAS #######################
 public function VerificaVentas()
 {
 	self::SetNames();
+	if (!$this->TieneArqueoAbiertoParaVentas()) {
+		echo $this->MensajeSinArqueoVentas();
+		exit;
+	}
 	$sql = " select ivav, simbolo from configuracion";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute();
@@ -7280,6 +7401,10 @@ $mesa = $mesa->MesasPorId();
 public function RegistrarVentas()
 {
 	self::SetNames();
+	if (!$this->TieneArqueoAbiertoParaVentas()) {
+		echo $this->MensajeSinArqueoVentas();
+		exit;
+	}
 	$codmesaPedido = isset($_POST['codmesa']) ? $_POST['codmesa'] : '';
 	activarCarritoMesa($codmesaPedido);
 	$codmesaPrincipal = $this->ResolverMesaPrincipal(strip_tags($codmesaPedido));
@@ -7329,13 +7454,12 @@ public function RegistrarVentas()
 			exit;                           }
 		}
 
-	$sql1 = " select codarqueo from arqueocaja  order by codarqueo desc limit 1";
-	$codarqueocaja = 1;
-					foreach ($this->dbh->query($sql1) as $row){
-
-	$codarqueocaja=$row["codarqueo"];
-
+	$rowArq = $this->ObtenerArqueoAbiertoParaVentas();
+	if (!$rowArq) {
+		echo "NO_ARQUEO";
+		exit;
 	}
+	$codarqueocaja = $rowArq["codarqueo"];
 
 
 	$codventa = $this->GenerarSiguienteCodventa();
@@ -7622,6 +7746,11 @@ echo "</div>";
 public function AgregaPedidos()
 {
 
+	self::SetNames();
+	if (!$this->TieneArqueoAbiertoParaVentas()) {
+		echo $this->MensajeSinArqueoVentas();
+		exit;
+	}
 	$codmesaPedido = isset($_POST['codmesa']) ? $_POST['codmesa'] : '';
 	activarCarritoMesa($codmesaPedido);
 
@@ -8114,7 +8243,11 @@ exit;
 ############################## FUNCION PARA CERRAR MESAS EN VENTAS ###########################
 public function CerrarMesa()
 {
-	self::SetNames();	
+	self::SetNames();
+	if (!$this->TieneArqueoAbiertoParaVentas()) {
+		echo $this->MensajeSinArqueoVentas();
+		exit;
+	}
 	if(empty($_POST["codventa"]) or empty($_POST["codmesa"]))
 	{
 		echo "1";
