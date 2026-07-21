@@ -1067,7 +1067,8 @@ CREATE TABLE `reservas` (
   `id_cliente` int(11) NOT NULL,
   `cantidad` int(11) NOT NULL,
   `fecha` datetime NOT NULL,
-  `mensaje` varchar(255) DEFAULT NULL
+  `mensaje` varchar(255) DEFAULT NULL,
+  `telefono` varchar(30) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --

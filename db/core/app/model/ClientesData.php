@@ -25,6 +25,20 @@ class ClientesData {
 		Executor::doit($sql);
 	}
 
+	public function updateTelefono(){
+		$cod = (int) $this->codcliente;
+		$tlf = addslashes($this->tlfcliente);
+		$sql = "update ".self::$tablename." set tlfcliente=\"$tlf\" where codcliente=$cod";
+		Executor::doit($sql);
+	}
+
+	public function updateEmail(){
+		$cod = (int) $this->codcliente;
+		$email = addslashes($this->emailcliente);
+		$sql = "update ".self::$tablename." set emailcliente=\"$email\" where codcliente=$cod";
+		Executor::doit($sql);
+	}
+
 	public static function getById($id){
 		$sql = "select * from ".self::$tablename." where codcliente=$id";
 		$query = Executor::doit($sql);

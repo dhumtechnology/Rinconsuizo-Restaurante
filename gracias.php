@@ -308,9 +308,6 @@ include "db/core/app/model/ClientesData.php";
                           Gracias por su preferencia. Revisa tu correo electrónico para confirmar tu pedido y ver tu comprobante.
                         <?php } ?>
                       </h4>
-                      <?php if (isset($_GET['tipo']) && $_GET['tipo'] === 'reserva') { ?>
-                      <p class="mt-2">El restaurante verá tu reserva en el panel <strong>Reserva por web</strong>.</p>
-                      <?php } ?>
                       
                   </div>
 

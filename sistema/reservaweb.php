@@ -270,6 +270,7 @@ $reg = $tra->ListarArqueoCaja();
 													<th>N°</th>
 													<th>Nombres cliente</th>
 													<th>Correo electrónico</th>
+													<th>Teléfono</th>
 													<th>Personas</th>
 													<th>Hora de llegada</th>
 													<th>Mensaje</th>
@@ -294,12 +295,14 @@ if (!is_array($reservas)) {
             $cli = $reserva->getCliente();
             $nom = ($cli && isset($cli->nomcliente)) ? $cli->nomcliente : 'Cliente #' . (int) $reserva->id_cliente;
             $mailCli = ($cli && isset($cli->emailcliente)) ? $cli->emailcliente : '—';
+            $tlfReserva = !empty($reserva->telefono) ? $reserva->telefono : (($cli && !empty($cli->tlfcliente)) ? $cli->tlfcliente : '—');
         ?>
           
           <tr role="row" class="odd">
                          <td class="sorting_1" tabindex="0"><?php echo (int) $reserva->id; ?></td>
                                                <td><?php echo htmlspecialchars($nom); ?></td>
                                                <td><?php echo htmlspecialchars($mailCli); ?></td>
+                                               <td><?php echo htmlspecialchars($tlfReserva); ?></td>
                                                <td><?php echo (int) $reserva->cantidad; ?></td>
                                                <td><?php echo htmlspecialchars($reserva->fecha); ?></td>
                                                <td><?php echo htmlspecialchars($reserva->mensaje); ?></td>
@@ -316,7 +319,7 @@ if (!is_array($reservas)) {
 
         <?php endforeach; ?>
     <?php } else { ?>
-          <tr><td colspan="7" class="text-center">No hay reservas web registradas.</td></tr>
+          <tr><td colspan="8" class="text-center">No hay reservas web registradas.</td></tr>
     <?php } ?>   
 
 

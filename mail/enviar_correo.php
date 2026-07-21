@@ -8,9 +8,6 @@
 
 function cargar_env_smtp_si_falta()
 {
-    if (getenv('SMTP_HOST')) {
-        return;
-    }
     $envFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env';
     if (!is_readable($envFile)) {
         return;
@@ -47,11 +44,14 @@ function enviar_correo_web($para, $asunto, $html, $nombreDestino = '')
     $host = getenv('SMTP_HOST') ?: '';
     $user = getenv('SMTP_USER') ?: '';
     $pass = getenv('SMTP_PASS') ?: '';
+    // Gmail app password: espacios son solo visuales
+    $pass = str_replace(' ', '', $pass);
     $port = (int) (getenv('SMTP_PORT') ?: 587);
     $fromEmail = getenv('SMTP_FROM_EMAIL') ?: $user;
     $fromName = getenv('SMTP_FROM_NAME') ?: 'Rincon Suizo';
     $secure = strtolower(getenv('SMTP_SECURE') ?: 'tls');
 
+    $para = trim((string) $para);
     if ($para === '' || !filter_var($para, FILTER_VALIDATE_EMAIL)) {
         return [
             'ok' => false,
@@ -76,6 +76,13 @@ function enviar_correo_web($para, $asunto, $html, $nombreDestino = '')
     $mail->Username = $user;
     $mail->Password = $pass;
     $mail->Port = $port;
+    $mail->SMTPOptions = array(
+        'ssl' => array(
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true,
+        ),
+    );
 
     if ($secure === 'ssl') {
         $mail->SMTPSecure = 'ssl';
@@ -85,6 +92,7 @@ function enviar_correo_web($para, $asunto, $html, $nombreDestino = '')
 
     $mail->setFrom($fromEmail, $fromName);
     $mail->addAddress($para, $nombreDestino);
+    $mail->addReplyTo($fromEmail, $fromName);
     $mail->isHTML(true);
     $mail->Subject = $asunto;
     $mail->Body = $html;

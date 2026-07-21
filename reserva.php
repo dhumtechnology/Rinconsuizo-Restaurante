@@ -312,7 +312,14 @@ include "db/core/app/model/ClientesData.php";
         <div class="form-group row">
           <label class="col-md-3 form-control-label">Correo electrónico</label>
           <div class="col-md-6">
-            <input class="form-control" name="email" type="email" value="<?php echo $cliente->emailcliente;?>" required placeholder="Ejem: minombre@gmail.com">
+            <input class="form-control" name="email" type="email" value="<?php echo htmlspecialchars($cliente->emailcliente);?>" required placeholder="Ejem: minombre@gmail.com">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label">Teléfono / Celular</label>
+          <div class="col-md-6">
+            <input class="form-control" name="telefono" type="tel" value="<?php echo htmlspecialchars(isset($cliente->tlfcliente) ? $cliente->tlfcliente : '');?>" required placeholder="Ejem: 999888777" autocomplete="tel">
           </div>
         </div>
 
