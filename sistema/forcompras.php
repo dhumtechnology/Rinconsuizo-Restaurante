@@ -332,7 +332,7 @@ exit;
 						
 						<div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
-                 <label class="control-label">Tiene Iva: </label>
+                 <label class="control-label">Tiene IGV: </label>
             <i class="fa fa-bars form-control-feedback"></i>
          <select name="ivaproducto" id="ivaproducto" class='form-control agregac'>
 												<option value="">SELECCIONE</option>
@@ -354,7 +354,7 @@ exit;
     <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Código</div><h3 class="panel-title"></th>
     <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Descripción de Producto</div><h3 class="panel-title"></th>
     <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Precio</div><h3 class="panel-title"></th>
-    <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">IVA</div><h3 class="panel-title"></th>
+    <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">IGV</div><h3 class="panel-title"></th>
     <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Importe</div><h3 class="panel-title"></th>
     <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Acción</div></h3></th>
     </tr>
@@ -372,11 +372,11 @@ exit;
 <table id="carritototal">
                         <tr>
 <td width="10">&nbsp;</td>
-<td width="350"><span class="Estilo10"><label>Subtotal Con IVA <?php echo $config[0]['ivac'] ?> %:</label></span></td>
+<td width="350"><span class="Estilo10"><label>Subtotal Con IGV <?php echo $config[0]['ivac'] ?> %:</label></span></td>
 <td width="150"><span class="Estilo10"><?php echo "<strong>".$simbolo."</strong>"; ?><label id="lblsubtotal" name="lblsubtotal">0.00</label><input type="hidden" name="txtsubtotal" id="txtsubtotal" value="0.00"/></span></td>
                           
 
-<td width="350"><span class="Estilo10"><label>Subtotal IVA 0%:</label></span></td>
+<td width="350"><span class="Estilo10"><label>Subtotal IGV 0%:</label></span></td>
 <td width="150"><span class="Estilo10"><?php echo "<strong>".$simbolo."</strong>"; ?><label id="lblsubtotal2" name="lblsubtotal2">0.00</label><input type="hidden" name="txtsubtotal2" id="txtsubtotal2" value="0.00"/></span></td>
 
  <td width="200"><span class="Estilo10"><center><label style="font-size:26px;">Total:</label></center></span></td>
@@ -384,7 +384,7 @@ exit;
                         <tr>
                           <td>&nbsp;</td>
 
-<td><span class="Estilo10"><label>IVA <?php echo $config[0]['ivac'] ?>%: <input class="number" type="hidden" name="iva" id="iva" onKeyPress="EvaluateText('%f', this);" style="border-radius:4px;height:30px;width:70px;" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" value="<?php echo $config[0]['ivac'] ?>"></label></span></td>
+<td><span class="Estilo10"><label>IGV <?php echo $config[0]['ivac'] ?>%: <input class="number" type="hidden" name="iva" id="iva" onKeyPress="EvaluateText('%f', this);" style="border-radius:4px;height:30px;width:70px;" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" value="<?php echo $config[0]['ivac'] ?>"></label></span></td>
 <td><span class="Estilo10"><?php echo "<strong>".$simbolo."</strong>"; ?><label id="lbliva" name="lbliva">0.00</label><input type="hidden" name="txtIva" id="txtIva" value="0.00"/></span></td>
 
 

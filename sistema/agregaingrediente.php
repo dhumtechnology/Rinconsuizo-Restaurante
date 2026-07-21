@@ -320,8 +320,8 @@ exit;
                           </div>	
                             <div class="col-md-2"> 
                                <div class="form-group has-feedback"> 
-                               <label for="field-2" class="control-label">Iva:</label> 
-							   <br /><abbr title="Iva Producto"><?php echo $reg[0]['ivaproducto']; ?></abbr>
+                               <label for="field-2" class="control-label">IGV:</label> 
+							   <br /><abbr title="IGV Producto"><?php echo $reg[0]['ivaproducto']; ?></abbr>
                               </div>
 							  </div>
 							  

@@ -270,9 +270,9 @@ $ses = $tra->ExpiraSession();
                                   <th>N°</th>
                                   <th>Nº de Compra</th>
                                   <th>Proveedor</th>
-                                  <th>Subtotal Con Iva %</th>
-                                  <th>Subtotal IVA 0%</th>
-                                  <th>Iva</th>
+                                  <th>Subtotal Con IGV %</th>
+                                  <th>Subtotal IGV 0%</th>
+                                  <th>IGV</th>
                                   <th>Total</th>
                                   <th>N° de Articulos</th>
                                   <th>Acciones</th>

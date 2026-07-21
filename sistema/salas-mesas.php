@@ -81,10 +81,10 @@ if (isset($_GET['salas_mesas'])): ?>
 
 <input type="hidden" name="codproducto" id="codproducto" placeholder="Codigo">
 <input type="hidden" name="codcategoria" id="codcategoria" placeholder="Categoria">
-<input type="hidden" name="precioconiva" id="precioconiva" placeholder="Precio con Iva">
+<input type="hidden" name="precioconiva" id="precioconiva" placeholder="Precio con IGV">
 <input type="hidden" name="precio" id="precio" placeholder="Precio de Compra">
 <input type="hidden" name="precio2" id="precio2" placeholder="Precio de Venta">
-<input type="hidden" name="ivaproducto" id="ivaproducto" placeholder="Iva Producto">
+<input type="hidden" name="ivaproducto" id="ivaproducto" placeholder="IGV Producto">
 <input type="hidden" name="existencia" id="existencia" placeholder="Existencia">
 <input type="hidden" name="cantidad" id="cantidad" value="1" placeholder="Cantidad">
 
@@ -163,7 +163,7 @@ echo "<img src='fotos/".$producto[$ii]['codproducto'].".jpg?' class='img-circle'
 } else {
 
 echo "<img src='fotos/producto.png' class='img-circle' style='width:60px;height:60px;'>";  } ?></p>
-    <h5>$ <?php echo $producto[$ii]['precioventa'];?></h5>
+    <h5>S/ <?php echo $producto[$ii]['precioventa'];?></h5>
 <h5><i class="fa fa-bars"></i> <?php echo $producto[$ii]['existencia'];?></h5><br>
                                         </div><br>
                                     </div>
@@ -256,32 +256,48 @@ $tra = new Login(); ?>
                                   <th>Procesar</th>
                               </tr>
                                                  </thead>
-                                                 <tbody>
+                                               <tbody>
 <?php 
 $a=1;
 $mostrador = new Login();
 $reg = $mostrador->ListarDelivery();
+$esRepartidor = (isset($_SESSION["acceso"]) && $_SESSION["acceso"] == 'repartidor');
 
-if($reg==""){
+if($reg=="" || empty($reg)){
 
     echo "";      
     
 } else {
 
-for($i=0;$i<sizeof($reg);$i++){  
+for($i=0;$i<sizeof($reg);$i++){
+$sinAsignar = empty($reg[$i]['repartidor']) || (string)$reg[$i]['repartidor'] === '0';
 ?>
                                                <tr role="row" class="odd">
                                     <td class="sorting_1" tabindex="0"><?php echo $a++; ?></td>
-<td><abbr title="<?php echo $cliente = ( $reg[$i]['cliente'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nomcliente']); ?>"> <?php echo $reg[$i]['cedcliente']; ?></abbr></td>
+<td><abbr title="<?php echo $cliente = ( $reg[$i]['cliente'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nomcliente']); ?>"> <?php echo $reg[$i]['cedcliente']; ?></abbr>
+<?php if ($esRepartidor && !empty($reg[$i]['direccliente'])) { echo "<br><small>".htmlspecialchars($reg[$i]['direccliente'])."</small>"; } ?>
+</td>
 <td><?php echo "<span style='font-size:12px;'><strong>".$reg[$i]['detalles']."</strong></span>"; ?></td>
 
-<?php if($_SESSION["acceso"] != 'repartidor'){ ?><td><?php echo $reg[$i]['nombres']; ?></td><?php } ?>
+<?php if(!$esRepartidor){ ?><td><?php echo $reg[$i]['nombres']; ?></td><?php } ?>
 
-<td><?php if($reg[$i]['entregado']== '0') { echo "<span class='label label-success'><i class='fa fa-check'></i> ENTREGADA</span>"; } else { echo "<span class='label label-danger'><i class='fa fa-times'></i> PENDIENTE</span>"; } ?></td>
+<td><?php
+if ($esRepartidor && $sinAsignar) {
+	echo "<span class='label label-warning'><i class='fa fa-clock-o'></i> SIN ASIGNAR</span>";
+} elseif ($reg[$i]['entregado']== '0') {
+	echo "<span class='label label-success'><i class='fa fa-check'></i> ENTREGADA</span>";
+} else {
+	echo "<span class='label label-danger'><i class='fa fa-motorcycle'></i> ".($esRepartidor ? "ASIGNADO A MÍ" : "PENDIENTE")."</span>";
+}
+?></td>
                     <td>
 <a class="btn btn-success btn-xs" data-placement="left" title="Ver Cliente" data-original-title="" data-href="#" data-toggle="modal" data-target="#panel-modal" data-backdrop="static" data-keyboard="false" onClick="VerCliente('<?php echo base64_encode($reg[$i]["codcliente"]); ?>')"><i class="fa fa-user"></i></a>
 
+<?php if ($esRepartidor && $sinAsignar) { ?>
+<a class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Tomar pedido" onClick="TomarDelivery('<?php echo base64_encode($reg[$i]["codventa"]) ?>','<?php echo base64_encode("TOMARDELIVERY") ?>')"><i class="fa fa-hand-paper-o"></i> Tomar</a>
+<?php } else { ?>
 <a class="btn btn-info btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Procesar Entrega" onClick="ProcesarDelivery('<?php echo base64_encode($reg[$i]["codventa"]) ?>','<?php echo base64_encode("PROCESARENTREGA") ?>')"><i class="fa fa-motorcycle"></i></a>
+<?php } ?>
 
 <a href="reportepdf?codventa=<?php echo base64_encode($reg[$i]['codventa']); ?>&tipo=<?php echo base64_encode("TICKET") ?>" target="_black" rel="noopener noreferrer" class="btn btn-info btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Ticket de Venta"><i class="fa fa-print"></i></a>
 </td>

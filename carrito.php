@@ -22,6 +22,7 @@ include "db/core/app/model/ClientesData.php";
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
+<link rel="stylesheet" href="css/tienda-mejoras.css" type="text/css" media="all">
 
 </head>
 
@@ -79,7 +80,7 @@ include "db/core/app/model/ClientesData.php";
           <span>Moneda:</span>
           <ul class="link">
               <li>
-                <a title="Dop" rel="nofollow" href="#" class="dropdown-item">DOP</a>
+                <a title="Soles" rel="nofollow" href="#" class="dropdown-item">PEN</a>
               </li>
           </ul>
         </div>
@@ -153,7 +154,7 @@ include "db/core/app/model/ClientesData.php";
 			    
                 <nav data-megamenu-id="9770107693982036" class="leo-megamenu cavas_menu navbar navbar-default enable-canvas " role="navigation">
                   <div class="navbar-header">
-                    <button type="button" class="navbar-toggler hidden-lg-up" data-toggle="collapse" data-target=".megamenu-off-canvas-9770107693982036">
+                    <button type="button" class="navbar-toggler hidden-lg-up" data-toggle="collapse" data-target=".megamenu-off-canvas-9770107693982036" aria-expanded="false" aria-label="Abrir menú">
                         <span class="sr-only">Navegación de palanca</span>
                                             &#9776;                    
                     </button>
@@ -202,10 +203,10 @@ include "db/core/app/model/ClientesData.php";
                    
 <div id="_desktop_cart">
   <div class="blockcart cart-preview inactive" data-refresh-url="">
-    <div class="header btn-header btn-cart">
+    <a href="carrito.php" class="header btn-header btn-cart" title="Ir al checkout">
               <i class="icon-nqt-shopping-basket" aria-hidden="true"></i>
         <span class="cart-products-count"><?php echo @count(CarritoData::getAllTemporal($session_id));?></span>
-          </div>
+          </a>
    
      <?php $tpms = CarritoData::getAllTemporal($session_id); 
         $total=0;
@@ -218,7 +219,7 @@ include "db/core/app/model/ClientesData.php";
           endforeach; 
         }else{ $total=0; };?>
 
-    <span class="cart-count-items">$ <?php echo $total;?></span>
+    <span class="cart-count-items">S/ <?php echo $total;?></span>
   </div>
 </div>
 
@@ -308,7 +309,7 @@ include "db/core/app/model/ClientesData.php";
 	          				<div class="product-line-info"><a href="" class="label">
 	          					<?php echo $prod->producto; ?></a></div>
 	          				<div class="product-line-info product-price h5 has-discount">
-	          					<div class="current-price"><span class="price">$ <?php echo $tpm->precio;?></span></div>
+	          					<div class="current-price"><span class="price">S/ <?php echo $tpm->precio;?></span></div>
 	          				</div>
 	          			</div>
 	          			
@@ -319,11 +320,15 @@ include "db/core/app/model/ClientesData.php";
 					      <div class="col-md-10 col-xs-6">
 					        <div class="row">
 		          				<div class="col-md-5 col-xs-6 col-sp-12 qty">
-		                          <h4><?php echo $tpm->cantidad;?></h4>
+		                          <div class="rs-qty" data-id="<?php echo (int) $tpm->id; ?>">
+		                            <button type="button" class="rs-qty-btn" onclick="cambiarCantidad(<?php echo (int) $tpm->id; ?>, -1);" aria-label="Disminuir">−</button>
+		                            <span class="rs-qty-val"><?php echo (int) $tpm->cantidad; ?></span>
+		                            <button type="button" class="rs-qty-btn" onclick="cambiarCantidad(<?php echo (int) $tpm->id; ?>, 1);" aria-label="Aumentar">+</button>
+		                          </div>
 		                      	</div>
 						        <div class="col-md-7 col-xs-2 col-sp-12 price">
 						            <span class="product-price">
-						              <strong>$<?php echo $tpm->precio*$tpm->cantidad;?> </strong>
+						              <strong>S/ <?php echo $tpm->precio*$tpm->cantidad;?> </strong>
 						            </span>
 						        </div>
         					</div>
@@ -364,7 +369,7 @@ include "db/core/app/model/ClientesData.php";
             <div class="card-block">
               <div class="cart-summary-line" id="cart-subtotal-products">
                   <span class="label js-subtotal"> <?php echo $cantidad;?> artículos</span>
-                  <span class="value"> $<?php echo $total;?></span>
+                  <span class="value"> S/ <?php echo $total;?></span>
               </div>
               <div class="cart-summary-line" id="cart-subtotal-shipping">
                   <span class="label">Transporte</span>
@@ -375,11 +380,11 @@ include "db/core/app/model/ClientesData.php";
             <div class="card-block cart-summary-totals">
               <div class="cart-summary-line">
                 <span class="label">Total iva</span>
-                <span class="value">$ 0</span>
+                <span class="value">S/ 0</span>
               </div>
               <div class="cart-summary-line cart-total">
                 <span class="label">Total </span>
-                <span class="value"> $<?php echo $total;?></span>
+                <span class="value"> S/ <?php echo $total;?></span>
               </div>
         
       
@@ -526,36 +531,71 @@ include "db/core/app/model/ClientesData.php";
 
 </main>
 
-  <script src="css/jquery.js"></script>  
+  <script src="css/jquery.js"></script>
+<script src="js/tienda-nav.js"></script>  
 <script type="text/javascript">
-      
-    
-      function eliminar(id)
-    {
-      $.ajax({
+    var _carritoBusy = false;
+
+    function actualizarHeaderDesdeResultados() {
+      var count = $("#resultados .cart-item").length;
+      var totalTxt = $("#resultados .cart-total .value").first().text() || 'S/ 0';
+      $("#_desktop_cart .cart-products-count").text(count);
+      $("#_desktop_cart .cart-count-items").text(totalTxt.trim());
+    }
+
+    function refrescarCarrito(extraData) {
+      return $.ajax({
         type: "GET",
         url: "del_tmp.php",
-        data: "id=" + id,
+        data: extraData || {},
         xhrFields: { withCredentials: true },
-        beforeSend: function() {
-          $("#resultados").html('<div class="col-xs-12"><p>Cargando...</p></div>');
-        },
         success: function(datos) {
           $("#resultados").html(datos);
-          var count = $("#resultados .cart-item").length;
-          var totalTxt = $("#resultados .cart-total .value").first().text() || '$0';
-          $("#_desktop_cart .cart-products-count").text(count);
-          $("#_desktop_cart .cart-count-items").text(totalTxt.trim());
+          actualizarHeaderDesdeResultados();
         },
         error: function() {
-          alert('No se pudo eliminar el producto. Recargue la página e intente de nuevo.');
+          alert('No se pudo actualizar el carrito. Recargue la página e intente de nuevo.');
           window.location.reload();
+        }
+      });
+    }
+
+    function eliminar(id) {
+      if (_carritoBusy) return false;
+      _carritoBusy = true;
+      $("#resultados").html('<div class="col-xs-12"><p>Cargando...</p></div>');
+      refrescarCarrito({ id: id }).always(function() {
+        _carritoBusy = false;
+      });
+      return false;
+    }
+
+    function cambiarCantidad(id, delta) {
+      if (_carritoBusy) return false;
+      _carritoBusy = true;
+      $.ajax({
+        type: "POST",
+        url: "cantidad_tmp.php",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        data: { id: id, delta: delta },
+        success: function(resp) {
+          if (!resp || !resp.ok) {
+            _carritoBusy = false;
+            alert('No se pudo actualizar la cantidad.');
+            return;
+          }
+          refrescarCarrito().always(function() {
+            _carritoBusy = false;
+          });
+        },
+        error: function() {
+          _carritoBusy = false;
+          alert('No se pudo actualizar la cantidad.');
         }
       });
       return false;
     }
-    
-  
 </script>
 </body>
 </html>

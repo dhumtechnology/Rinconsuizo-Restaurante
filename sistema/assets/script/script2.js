@@ -779,6 +779,34 @@ $.ajax({
 
 
 // FUNCION PARA PROCESAR DELIVERY DE PRODUCTOS
+function refrescarListaDelivery(){
+	if ($("#cargadelivery").length) {
+		$("#cargadelivery").load("salas-mesas.php?Muestra_Delivery=si");
+	}
+	if ($("#muestradelivery").length) {
+		$("#muestradelivery").load("salas-mesas.php?Muestra_Delivery=si");
+	}
+}
+
+function TomarDelivery(codventa,tipo){
+var toma = confirm("Desea tomar este pedido de delivery? Quedara asignado a usted.");
+if ( toma ) {
+$('#entregadelivery').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
+var dataString = 'codventa='+codventa+'&tipo='+tipo;
+$.ajax({
+	type: "GET",
+	url: "eliminar.php",
+	data: dataString,
+	success: function(response) {
+		$('#entregadelivery').empty();
+		$('#entregadelivery').append(''+response+'').fadeIn("slow");
+		refrescarListaDelivery();
+		setTimeout(function() { $("#entregadelivery").html(""); }, 5000);
+	}
+});
+}
+}
+
 function ProcesarDelivery(codventa,tipo){
 
 var entrega = confirm("ESTA SEGURO DE REALIZAR LA ENTREGA DE DELIVERY?")
@@ -796,9 +824,8 @@ $.ajax({
             success: function(response) {            
                 $('#entregadelivery').empty();
                 $('#entregadelivery').append(''+response+'').fadeIn("slow");
-        $("#muestradelivery").load("salas-mesas.php?Muestra_Delivery=si");
+        refrescarListaDelivery();
         setTimeout(function() { $("#entregadelivery").html(""); }, 5000);
-                $('#'+parent).remove();
            }
       });
    }

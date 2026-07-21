@@ -51,7 +51,7 @@ $cantidad = 0;
 	          				<div class="product-line-info"><a href="" class="label">
 	          					<?php echo htmlspecialchars($prod->producto); ?></a></div>
 	          				<div class="product-line-info product-price h5 has-discount">
-	          					<div class="current-price"><span class="price">$ <?php echo $tpm->precio; ?></span></div>
+	          					<div class="current-price"><span class="price">S/ <?php echo $tpm->precio; ?></span></div>
 	          				</div>
 	          			</div>
 					  <div class="product-line-grid-right product-line-actions col-md-5 col-xs-12">
@@ -60,11 +60,15 @@ $cantidad = 0;
 					      <div class="col-md-10 col-xs-6">
 					        <div class="row">
 		          				<div class="col-md-5 col-xs-6 col-sp-12 qty">
-		                          <h4><?php echo $tpm->cantidad; ?></h4>
+		                          <div class="rs-qty" data-id="<?php echo (int) $tpm->id; ?>">
+		                            <button type="button" class="rs-qty-btn" onclick="cambiarCantidad(<?php echo (int) $tpm->id; ?>, -1);" aria-label="Disminuir">−</button>
+		                            <span class="rs-qty-val"><?php echo (int) $tpm->cantidad; ?></span>
+		                            <button type="button" class="rs-qty-btn" onclick="cambiarCantidad(<?php echo (int) $tpm->id; ?>, 1);" aria-label="Aumentar">+</button>
+		                          </div>
 		                      	</div>
 						        <div class="col-md-7 col-xs-2 col-sp-12 price">
 						            <span class="product-price">
-						              <strong>$<?php echo $tpm->precio * $tpm->cantidad; ?></strong>
+						              <strong>S/ <?php echo $tpm->precio * $tpm->cantidad; ?></strong>
 						            </span>
 						        </div>
         					</div>
@@ -101,7 +105,7 @@ $cantidad = 0;
             <div class="card-block">
               <div class="cart-summary-line" id="cart-subtotal-products">
                   <span class="label js-subtotal"><?php echo $cantidad; ?> artículos</span>
-                  <span class="value">$<?php echo $total; ?></span>
+                  <span class="value">S/ <?php echo $total; ?></span>
               </div>
               <div class="cart-summary-line" id="cart-subtotal-shipping">
                   <span class="label">Transporte</span>
@@ -111,11 +115,11 @@ $cantidad = 0;
             <div class="card-block cart-summary-totals">
               <div class="cart-summary-line">
                 <span class="label">Total iva</span>
-                <span class="value">$ 0</span>
+                <span class="value">S/ 0</span>
               </div>
               <div class="cart-summary-line cart-total">
                 <span class="label">Total</span>
-                <span class="value">$<?php echo $total; ?></span>
+                <span class="value">S/ <?php echo $total; ?></span>
               </div>
             </div>
           </div>

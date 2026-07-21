@@ -428,7 +428,25 @@ function renderEsperaBadge($fechapedido)
     if ($inicioTs === false || $inicioTs <= 0) {
         return '';
     }
-    return '<span class="mesa-espera" data-inicio-ts="' . (int) $inicioTs . '" style="display:inline-block;margin-top:3px;font-size:10px;background:#333;color:#fff;padding:2px 7px;border-radius:12px;line-height:1.4;"><i class="fa fa-clock-o"></i> <span class="mesa-espera-text">00:00</span></span>';
+    $diffSec = time() - $inicioTs;
+    if ($diffSec < 0) {
+        $diffSec = 0;
+    }
+    $h = (int) floor($diffSec / 3600);
+    $m = (int) floor(($diffSec % 3600) / 60);
+    $s = (int) ($diffSec % 60);
+    $texto = ($h > 0)
+        ? sprintf('%02d:%02d:%02d', $h, $m, $s)
+        : sprintf('%02d:%02d', $m, $s);
+    $minutos = $diffSec / 60;
+    if ($minutos >= 15) {
+        $bg = '#d9534f';
+    } elseif ($minutos >= 5) {
+        $bg = '#f0ad4e';
+    } else {
+        $bg = '#333';
+    }
+    return '<span class="mesa-espera" data-inicio-ts="' . (int) $inicioTs . '" style="display:inline-block;margin-top:3px;font-size:10px;background:' . $bg . ';color:#fff;padding:2px 7px;border-radius:12px;line-height:1.4;"><i class="fa fa-clock-o"></i> <span class="mesa-espera-text">' . $texto . '</span></span>';
 }
 
 function aplicarMapaUnionAMesas($mesas, $mapa)
@@ -442,6 +460,10 @@ function aplicarMapaUnionAMesas($mesas, $mapa)
     if (empty($mapa['por_mesa'])) {
         return $mesas;
     }
+    $porCod = array();
+    foreach ($mesas as $mesa) {
+        $porCod[(string) $mesa['codmesa']] = $mesa;
+    }
     $resultado = array();
     foreach ($mesas as $mesa) {
         $cod = (string) $mesa['codmesa'];
@@ -452,6 +474,37 @@ function aplicarMapaUnionAMesas($mesas, $mapa)
             $mesa['nombremesa'] = implode(' + ', $mapa['grupos'][$cod]['nombres']);
             $mesa['es_union'] = 1;
             $mesa['codmesa_principal'] = $cod;
+            // Acumular métricas del grupo para que el timer no se pierda
+            $cocina = 0;
+            $activos = 0;
+            $pendientes = 0;
+            $fechaMin = null;
+            $status = (int) $mesa['statusmesa'];
+            foreach ($mapa['grupos'][$cod]['mesas'] as $codGrupo) {
+                $codGrupo = (string) $codGrupo;
+                if (!isset($porCod[$codGrupo])) {
+                    continue;
+                }
+                $m = $porCod[$codGrupo];
+                $cocina += isset($m['pedidos_cocina']) ? (int) $m['pedidos_cocina'] : 0;
+                $activos += isset($m['pedidos_activos']) ? (int) $m['pedidos_activos'] : 0;
+                $pendientes += isset($m['pedidos_pendientes']) ? (int) $m['pedidos_pendientes'] : 0;
+                if ((int) $m['statusmesa'] === 1) {
+                    $status = 1;
+                }
+                if (!empty($m['fechapedido']) && $m['fechapedido'] !== '0000-00-00 00:00:00') {
+                    if ($fechaMin === null || strtotime($m['fechapedido']) < strtotime($fechaMin)) {
+                        $fechaMin = $m['fechapedido'];
+                    }
+                }
+            }
+            $mesa['pedidos_cocina'] = $cocina;
+            $mesa['pedidos_activos'] = $activos;
+            $mesa['pedidos_pendientes'] = $pendientes > 0 ? $pendientes : ($cocina + $activos);
+            $mesa['statusmesa'] = (string) $status;
+            if ($fechaMin !== null) {
+                $mesa['fechapedido'] = $fechaMin;
+            }
         }
         $resultado[] = $mesa;
     }
@@ -463,23 +516,27 @@ function esMeseroSesion()
     return isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'mesero';
 }
 
+function puedeGestionarUnionMesas()
+{
+    if (!isset($_SESSION['acceso'])) {
+        return false;
+    }
+    return in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true);
+}
+
 function getMesaEstadoMesero($mesa)
 {
-    if ($mesa['statusmesa'] == '0') {
-        return array(
-            'color' => '#5cb85c',
-            'listo' => false,
-            'timer' => false,
-            'fechapedido' => ''
-        );
-    }
-
     $pendientesCocina = isset($mesa['pedidos_cocina']) ? (int) $mesa['pedidos_cocina'] : 0;
     $pedidosActivos = isset($mesa['pedidos_activos']) ? (int) $mesa['pedidos_activos'] : 0;
+    $pedidosPendientes = isset($mesa['pedidos_pendientes'])
+        ? (int) $mesa['pedidos_pendientes']
+        : ($pendientesCocina + $pedidosActivos);
     $fechapedido = isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '';
-    $tienePedidoAbierto = ($pendientesCocina > 0 || $pedidosActivos > 0);
+    $statusmesa = (int) $mesa['statusmesa'];
 
-    if (!$tienePedidoAbierto) {
+    // Libre solo cuando caja liberó la mesa (sin ventas PENDIENTE)
+    $ocupada = ($statusmesa === 1) || ($pedidosPendientes > 0);
+    if (!$ocupada) {
         return array(
             'color' => '#5cb85c',
             'listo' => false,
@@ -487,21 +544,24 @@ function getMesaEstadoMesero($mesa)
             'fechapedido' => ''
         );
     }
+
+    // Mientras la mesa esté ocupada el cronómetro sigue (rojo o amarillo)
+    $timer = !empty($fechapedido) && $fechapedido !== '0000-00-00 00:00:00';
 
     if ($pendientesCocina > 0) {
         return array(
             'color' => 'red',
             'listo' => false,
-            'timer' => true,
+            'timer' => $timer,
             'fechapedido' => $fechapedido
         );
     }
 
-    // Cocina entregó; el cronómetro sigue hasta que caja cierre la mesa
+    // Cocina entregó: amarillo + LISTO, timer sigue hasta que caja cierre
     return array(
         'color' => '#f0ad4e',
         'listo' => true,
-        'timer' => true,
+        'timer' => $timer,
         'fechapedido' => $fechapedido
     );
 }
@@ -527,8 +587,8 @@ function renderMesaListItem($mesa, $imgStyle = 'display:inline;margin:18px;float
         && (int) (isset($mesa['pedidos_cocina']) ? $mesa['pedidos_cocina'] : 0) === 0) {
         $pedidoActivo = false;
     }
-    $claseExtra = (esMeseroSesion() && !$pedidoActivo) ? ' mesa-unible' : '';
-    $onclick = esMeseroSesion()
+    $claseExtra = (puedeGestionarUnionMesas() && !$pedidoActivo) ? ' mesa-unible' : '';
+    $onclick = puedeGestionarUnionMesas()
         ? "manejarClickMesa(this, '" . $codmesaEnc . "')"
         : "RecibeMesa('" . $codmesaEnc . "')";
     ob_start();
@@ -559,7 +619,7 @@ function renderMesasPanel($imgStyle = 'display:inline;margin:18px;float:left;wid
         echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> NO EXISTEN SALAS REGISTRADAS ACTUALMENTE</center></div>";
         return ob_get_clean();
     }
-    if (esMeseroSesion()) {
+    if (puedeGestionarUnionMesas()) {
         ?>
         <div id="barra-juntar-mesas" class="clearfix" style="margin-bottom:12px;padding:8px;background:#f9f9f9;border-radius:4px;">
             <button type="button" id="btn-modo-juntar" class="btn btn-info btn-sm"><i class="fa fa-link"></i> Juntar mesas</button>

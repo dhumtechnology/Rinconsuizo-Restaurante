@@ -100,6 +100,11 @@ $tra->EntregarDelivery();
 exit;
 break;
 
+case 'TOMARDELIVERY':
+$tra->TomarDelivery();
+exit;
+break;
+
 
 }
 ?>

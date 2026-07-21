@@ -336,7 +336,7 @@ exit;
 															
 							<div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
-                  <label class="control-label">Iva de Producto: <span class="symbol required"></span></label>
+                  <label class="control-label">IGV de Producto: <span class="symbol required"></span></label>
 <select name="ivaproductoc" id="ivaproductoc" class='form-control' required="" aria-required="true">
 												<option value="">SELECCIONE</option>
 	<option value="SI"<?php if (!(strcmp('SI', $reg[0]['ivaproductoc']))) {echo "selected=\"selected\"";} ?>>SI</option>

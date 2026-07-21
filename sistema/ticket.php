@@ -40,7 +40,8 @@ if($ve[0]['delivery']!="1"){
 $this->SetXY(4, 25);
 $this->Cell(4, 5, "SALA: ".utf8_decode($ve[0]['nombresala']), 0 , 0);
 $this->SetXY(4, 28);
-$this->Cell(4, 5, "N° DE MESA: ".utf8_decode($ve[0]['nombremesa']), 0 , 0);
+$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "N° DE MESA: ";
+$this->Cell(4, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
 $this->SetXY(4, 31);
 $this->Cell(4, 5, "MESERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(4, 34);
@@ -125,19 +126,19 @@ $this->Ln(3);
 
 $this->SetX(1);
 $this->SetFont('Arial','B',8);
-$this->CellFitSpace(30,3,"SUBTOTAL IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(30,3,"SUBTOTAL IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivasive"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(1);
 $this->SetFont('Arial','B',8);
-$this->CellFitSpace(30,3,"SUBTOTAL IVA 0%:",0,0,'R');
+$this->CellFitSpace(30,3,"SUBTOTAL IGV 0%:",0,0,'R');
 $this->SetFont('Arial','B',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(1);
 $this->SetFont('Arial','B',8);
-$this->CellFitSpace(30,3,"IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(30,3,"IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["totalivave"], 2, '.', ',')),0,1,'R');
 

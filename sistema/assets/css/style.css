@@ -280,6 +280,15 @@ a.simple:link, a.simple:visited, a.simple:active, a.simple:hover {
 	height: 380px;
 }
 
+/* Delivery: productos a la izquierda, orden a la derecha (como mesa) */
+@media (min-width: 768px) {
+	.delivery-layout #delivery-orden {
+		position: sticky;
+		top: 70px;
+		z-index: 2;
+	}
+}
+
 .darkblue-panel {
 	text-align: center;
 	background: #444c57; 

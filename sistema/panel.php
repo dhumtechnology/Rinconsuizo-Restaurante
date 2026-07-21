@@ -63,9 +63,9 @@
         <script src="assets/js/jquery.min.js"></script> 
       <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
         <script type="text/javascript" src="assets/script/titulos.js"></script>
-        <script type="text/javascript" src="assets/script/script2.js"></script>
+        <script type="text/javascript" src="assets/script/script2.js?v=tomar2"></script>
         <script type="text/javascript" src="assets/script/jsventas.js"></script>
-<?php if ($_SESSION['acceso'] === 'mesero') { ?>
+<?php if (in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true)) { ?>
         <script type="text/javascript" src="assets/script/mesas-union.js"></script>
 <?php } ?>
         <script type="text/javascript" src="assets/script/validation.min.js"></script>
@@ -476,23 +476,38 @@ $a=1;
 $mostrador = new Login();
 $reg = $mostrador->ListarDelivery();
 
-if($reg==""){
+if($reg=="" || empty($reg)){
 
     echo "";      
     
 } else {
 
-for($i=0;$i<sizeof($reg);$i++){  
+for($i=0;$i<sizeof($reg);$i++){
+$sinAsignar = empty($reg[$i]['repartidor']) || (string)$reg[$i]['repartidor'] === '0';
 ?>
                                                <tr role="row" class="odd">
                                     <td class="sorting_1" tabindex="0"><?php echo $a++; ?></td>
-<td><abbr title="<?php echo $cliente = ( $reg[$i]['cliente'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nomcliente']); ?>"> <?php echo $reg[$i]['cedcliente']; ?></abbr></td>
+<td><abbr title="<?php echo $cliente = ( $reg[$i]['cliente'] == '0' ? "<span class='label label-warning'> SIN ASIGNAR</span>" : $reg[$i]['nomcliente']); ?>"> <?php echo $reg[$i]['cedcliente']; ?></abbr>
+<?php if (!empty($reg[$i]['direccliente'])) { echo "<br><small>".htmlspecialchars($reg[$i]['direccliente'])."</small>"; } ?>
+</td>
 <td><?php echo "<span style='font-size:12px;'><strong>".$reg[$i]['detalles']."</strong></span>"; ?></td>
-<td><?php if($reg[$i]['entregado']== '0') { echo "<span class='label label-success'><i class='fa fa-check'></i> ENTREGADA</span>"; } else { echo "<span class='label label-danger'><i class='fa fa-times'></i> PENDIENTE</span>"; } ?></td>
+<td><?php
+if ($sinAsignar) {
+	echo "<span class='label label-warning'><i class='fa fa-clock-o'></i> SIN ASIGNAR</span>";
+} elseif ($reg[$i]['entregado']== '0') {
+	echo "<span class='label label-success'><i class='fa fa-check'></i> ENTREGADA</span>";
+} else {
+	echo "<span class='label label-danger'><i class='fa fa-motorcycle'></i> ASIGNADO A MÍ</span>";
+}
+?></td>
                                                <td>
 <a class="btn btn-success btn-xs" data-placement="left" title="Ver Cliente" data-original-title="" data-href="#" data-toggle="modal" data-target="#panel-modal" data-backdrop="static" data-keyboard="false" onClick="VerCliente('<?php echo base64_encode($reg[$i]["codcliente"]); ?>')"><i class="fa fa-user"></i></a>
 
+<?php if ($sinAsignar) { ?>
+<a class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Tomar pedido" onClick="TomarDelivery('<?php echo base64_encode($reg[$i]["codventa"]) ?>','<?php echo base64_encode("TOMARDELIVERY") ?>')"><i class="fa fa-hand-paper-o"></i> Tomar</a>
+<?php } else { ?>
 <a class="btn btn-info btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Procesar Entrega" onClick="ProcesarDelivery('<?php echo base64_encode($reg[$i]["codventa"]) ?>','<?php echo base64_encode("PROCESARENTREGA") ?>')"><i class="fa fa-motorcycle"></i></a>
+<?php } ?>
 
 <a href="reportepdf?codventa=<?php echo base64_encode($reg[$i]['codventa']); ?>&tipo=<?php echo base64_encode("TICKET") ?>" target="_black" rel="noopener noreferrer" class="btn btn-info btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Ticket de Venta"><i class="fa fa-print"></i></a>
 </td>
@@ -517,14 +532,37 @@ for($i=0;$i<sizeof($reg);$i++){
 </div>
 
 <script type="text/javascript">
-    $('document').ready(function() {
-    setTimeout(function run() {        
-        $("#cargadelivery").load("salas-mesas.php?Muestra_Delivery=si");
-        setTimeout(run, 5000);
-    }, 2000);
-                           
+function refrescarListaDelivery(){
+	if ($("#cargadelivery").length) {
+		$("#cargadelivery").load("salas-mesas.php?Muestra_Delivery=si");
+	}
+	if ($("#muestradelivery").length) {
+		$("#muestradelivery").load("salas-mesas.php?Muestra_Delivery=si");
+	}
+}
+function TomarDelivery(codventa, tipo){
+	if (!confirm("Desea tomar este pedido de delivery? Quedara asignado a usted.")) {
+		return;
+	}
+	$('#entregadelivery').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
+	$.ajax({
+		type: "GET",
+		url: "eliminar.php",
+		data: "codventa=" + codventa + "&tipo=" + tipo,
+		success: function(response) {
+			$('#entregadelivery').html(response).fadeIn("slow");
+			refrescarListaDelivery();
+			setTimeout(function() { $("#entregadelivery").html(""); }, 5000);
+		}
+	});
+}
+$('document').ready(function() {
+	setTimeout(function run() {
+		$("#cargadelivery").load("salas-mesas.php?Muestra_Delivery=si");
+		setTimeout(run, 5000);
+	}, 2000);
 });
-    </script>
+</script>
 
 
     <?php } else { ?>

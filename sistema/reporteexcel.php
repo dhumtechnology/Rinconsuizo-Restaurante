@@ -257,7 +257,7 @@ header("content-disposition: attachment;filename=".$hoy.".xls");
            <th>PRECIO VENTA</th>
            <th>EXISTENCIA</th>
            <th>STOCK MINIMO</th>
-           <th>IVA</th>
+           <th>IGV</th>
            <th>DESC%</th>
            <th>PROVEEDOR</th>
            <th>CÓDIGO BARRA</th>
@@ -697,10 +697,10 @@ header("content-disposition: attachment;filename=".$hoy.".xls");
            <th>STATUS</th>
            <th>FECHA DE COMPRA</th>
            <th>Nº DE ARTICULOS</th>
-           <th>SUBTOTAL CON IVA</th>
-           <th>SUBTOTAL IVA 0%</th>
-           <th>IVA</th>
-           <th>TTOTAL IVA</th>
+           <th>SUBTOTAL CON IGV</th>
+           <th>SUBTOTAL IGV 0%</th>
+           <th>IGV</th>
+           <th>TOTAL IGV</th>
            <th>DESCUENTO</th>
            <th>TOTAL DESC</th>
            <th>TOTAL PAGO</th>
@@ -777,10 +777,10 @@ header("content-disposition: attachment;filename=".$hoy.".xls");
            <th>STATUS</th>
            <th>FECHA DE COMPRA</th>
            <th>Nº DE ARTICULOS</th>
-           <th>SUBTOTAL CON IVA</th>
-           <th>SUBTOTAL IVA 0%</th>
-           <th>IVA</th>
-           <th>TTOTAL IVA</th>
+           <th>SUBTOTAL CON IGV</th>
+           <th>SUBTOTAL IGV 0%</th>
+           <th>IGV</th>
+           <th>TOTAL IGV</th>
            <th>DESCUENTO</th>
            <th>TOTAL DESC</th>
            <th>TOTAL PAGO</th>
@@ -868,10 +868,10 @@ header("content-disposition: attachment;filename=".$hoy.".xls");
            <th>STATUS COMPRA</th>
            <th>FECHA COMPRA</th>
            <th>ARTICULOS</th>
-           <th>SUBTOTAL CON IVA</th>
-           <th>SUBTOTAL IVA 0%</th>
-           <th>IVA</th>
-           <th>TOTAL IVA</th>
+           <th>SUBTOTAL CON IGV</th>
+           <th>SUBTOTAL IGV 0%</th>
+           <th>IGV</th>
+           <th>TOTAL IGV</th>
            <th>DESCUENTO</th>
            <th>TOTAL DESC</th>
            <th>TOTAL PAGO</th>
@@ -961,10 +961,10 @@ header("content-disposition: attachment;filename=".$hoy.".xls");
            <th>STATUS DE VENTA</th>
            <th>FECHA DE VENTA</th>
            <th>Nº DE ARTICULOS</th>
-           <th>SUBTOTAL CON IVA</th>
-           <th>SUBTOTAL IVA 0%</th>
-           <th>IVA</th>
-           <th>TOTAL IVA</th>
+           <th>SUBTOTAL CON IGV</th>
+           <th>SUBTOTAL IGV 0%</th>
+           <th>IGV</th>
+           <th>TOTAL IGV</th>
            <th>DESCUENTO</th>
            <th>TOTAL DESC</th>
            <th>TOTAL PAGO</th>
@@ -1047,10 +1047,10 @@ header("content-disposition: attachment;filename=".$hoy.".xls");
            <th>STATUS DE VENTA</th>
            <th>FECHA DE VENTA</th>
            <th>Nº DE ARTICULOS</th>
-           <th>SUBTOTAL CON IVA</th>
-           <th>SUBTOTAL IVA 0%</th>
-           <th>IVA</th>
-           <th>TOTAL IVA</th>
+           <th>SUBTOTAL CON IGV</th>
+           <th>SUBTOTAL IGV 0%</th>
+           <th>IGV</th>
+           <th>TOTAL IGV</th>
            <th>DESCUENTO</th>
            <th>TOTAL DESC</th>
            <th>TOTAL PAGO</th>

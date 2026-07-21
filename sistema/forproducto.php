@@ -356,7 +356,7 @@ exit;
                               
               <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
-  <label class="control-label">Iva de Producto: <span class="symbol required"></span></label>
+  <label class="control-label">IGV de Producto: <span class="symbol required"></span></label>
             <i class="fa fa-bars form-control-feedback"></i>
                                 <?php if (isset($reg[0]['ivaproducto'])) { ?>
 <select name="ivaproducto" id="ivaproducto" class="form-control" required="" aria-required="true">

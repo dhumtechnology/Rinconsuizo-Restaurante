@@ -9,14 +9,14 @@ var $flowingBlockAttr;
 
 ########################## FUNCION PARA MOSTRAR EL FOOTER ############################
 	
-	//Pie de página
+	//Pie de pï¿½gina
 function Footer()
     {
-        //Posición: a 2 cm del final
+        //Posiciï¿½n: a 2 cm del final
   $this->Ln();
   $this->SetY(-12);
   $this->SetFont('courier','B',10);
-        //Número de página
+        //Nï¿½mero de pï¿½gina
   
   //Page number
   /*$pagenumber = '{nb}';
@@ -65,7 +65,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -97,7 +97,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -118,12 +118,12 @@ function Footer()
     $this->SetFont('courier','B',10);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->Cell(10,8,'Nº',1,0,'C', True);
+    $this->Cell(10,8,'Nï¿½',1,0,'C', True);
     $this->Cell(30,8,'Nit',1,0,'C', True);
     $this->Cell(80,8,'NOMBRES Y APELLIDOS',1,0,'C', True);
     $this->Cell(25,8,'CARGO',1,0,'C', True);
     $this->Cell(70,8,'EMAIL',1,0,'C', True);
-    $this->Cell(35,8,'Nº DE TELÉFONO',1,0,'C', True);
+    $this->Cell(35,8,'Nï¿½ DE TELï¿½FONO',1,0,'C', True);
     $this->Cell(40,8,'USUARIO',1,0,'C', True);
     $this->Cell(40,8,'NIVEL',1,1,'C', True);
     
@@ -156,7 +156,7 @@ function Footer()
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -177,7 +177,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -209,7 +209,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -229,7 +229,7 @@ function Footer()
 	$this->SetFont('courier','B',10);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->Cell(10,8,'N°',1,0,'C', True);
+	$this->Cell(10,8,'Nï¿½',1,0,'C', True);
 	$this->Cell(35,8,'IP',1,0,'C', True);
 	$this->Cell(45,8,'TIEMPO ENTRADA',1,0,'C', True);
 	$this->Cell(190,8,'NAVEGADOR DE ACCESO',1,0,'C', True);
@@ -263,7 +263,7 @@ function Footer()
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -284,7 +284,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -316,7 +316,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -336,8 +336,8 @@ function Footer()
     $this->SetFont('courier','B',10);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->Cell(10,8,'N°',1,0,'C', True);
-	$this->Cell(25,8,'N° CAJA',1,0,'C', True);
+	$this->Cell(10,8,'Nï¿½',1,0,'C', True);
+	$this->Cell(25,8,'Nï¿½ CAJA',1,0,'C', True);
 	$this->Cell(45,8,'NOMBRE DE CAJA',1,0,'C', True);
 	$this->Cell(40,8,'Nit DE CAJERO',1,0,'C', True);
 	$this->Cell(70,8,'NOMBRE DE CAJERO',1,1,'C', True);
@@ -370,7 +370,7 @@ function Footer()
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -391,7 +391,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -423,7 +423,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -443,11 +443,11 @@ function Footer()
 	$this->SetFont('courier','B',10);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->Cell(10,8,'N°',1,0,'C', True);
+	$this->Cell(10,8,'Nï¿½',1,0,'C', True);
 	$this->Cell(35,8,'Nit',1,0,'C', True);
 	$this->Cell(70,8,'NOMBRES Y APELLIDOS',1,0,'C', True);
-	$this->Cell(110,8,'DIRECCIÓN DOMICILIARIA',1,0,'C', True);
-	$this->Cell(35,8,'N° DE TELÉFONO',1,0,'C', True);
+	$this->Cell(110,8,'DIRECCIï¿½N DOMICILIARIA',1,0,'C', True);
+	$this->Cell(35,8,'Nï¿½ DE TELï¿½FONO',1,0,'C', True);
 	$this->Cell(75,8,'CORREO',1,1,'C', True);
 	
     $tra = new Login();
@@ -479,7 +479,7 @@ function Footer()
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -500,7 +500,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -532,7 +532,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -552,11 +552,11 @@ function Footer()
 	$this->SetFont('courier','B',10);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->Cell(10,8,'N°',1,0,'C', True);
+	$this->Cell(10,8,'Nï¿½',1,0,'C', True);
 	$this->Cell(28,8,'Nit',1,0,'C', True);
 	$this->Cell(70,8,'PROVEEDOR',1,0,'C', True);
-	$this->Cell(65,8,'DIRECCIÓN DOMICILIARIA',1,0,'C', True);
-	$this->Cell(32,8,'N° TELÉFONO',1,0,'C', True);
+	$this->Cell(65,8,'DIRECCIï¿½N DOMICILIARIA',1,0,'C', True);
+	$this->Cell(32,8,'Nï¿½ TELï¿½FONO',1,0,'C', True);
 	$this->Cell(75,8,'CORREO',1,0,'C', True);
 	$this->Cell(55,8,'CONTACTO',1,1,'C', True);
 	
@@ -590,7 +590,7 @@ function Footer()
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -612,7 +612,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -644,7 +644,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -664,9 +664,9 @@ function Footer()
 	$this->SetFont('courier','B',10);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->Cell(10,8,'N°',1,0,'C', True);
-	$this->Cell(25,8,'CÓDIGO',1,0,'C', True);
-	$this->Cell(75,8,'DESCRIPCIÓN DE INGREDIENTE',1,0,'C', True);
+	$this->Cell(10,8,'Nï¿½',1,0,'C', True);
+	$this->Cell(25,8,'Cï¿½DIGO',1,0,'C', True);
+	$this->Cell(75,8,'DESCRIPCIï¿½N DE INGREDIENTE',1,0,'C', True);
 	$this->Cell(25,8,'EXISTENCIA',1,0,'C', True);
 	$this->Cell(30,8,'COSTO',1,0,'C', True);
 	$this->Cell(25,8,'STOCK MIN',1,1,'C', True);
@@ -701,7 +701,7 @@ function Footer()
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -722,7 +722,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -754,7 +754,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -774,8 +774,8 @@ function Footer()
     $this->SetFont('courier','B',10);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->Cell(10,8,'N°',1,0,'C', True);
-    $this->Cell(25,8,'CÓDIGO',1,0,'C', True);
+    $this->Cell(10,8,'Nï¿½',1,0,'C', True);
+    $this->Cell(25,8,'Cï¿½DIGO',1,0,'C', True);
     $this->Cell(75,8,'NOMBRE',1,0,'C', True);
     $this->Cell(25,8,'EXISTENCIA',1,0,'C', True);
     $this->Cell(30,8,'COSTO',1,0,'C', True);
@@ -811,7 +811,7 @@ function Footer()
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -836,7 +836,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -868,7 +868,7 @@ function Footer()
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -888,11 +888,11 @@ function Footer()
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es AZUL)
-    $this->CellFitSpace(10,8,'Nº',1,0,'C', True);
+    $this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
     $this->CellFitSpace(35,8,'MOVIMIENTO',1,0,'C', True);
     $this->CellFitSpace(20,8,'ENTRADAS',1,0,'C', True);
     $this->CellFitSpace(20,8,'SALIDAS',1,0,'C', True);
-    //$this->CellFitSpace(20,8,'DEVOLUCIÓN',1,0,'C', True);
+    //$this->CellFitSpace(20,8,'DEVOLUCIï¿½N',1,0,'C', True);
     $this->CellFitSpace(40,8,'PRECIO MOVIMIENTO',1,0,'C', True);
     $this->CellFitSpace(50,8,'COSTO MOVIMIENTO',1,0,'C', True);
     $this->CellFitSpace(30,8,'STOCK ACTUAL',1,0,'C', True);
@@ -943,7 +943,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->Cell(130,6,'DETALLES DEL INGREDIENTE',1,0,'C', True);
     $this->Ln();
     
-    $this->Cell(45,6,'CÓDIGO',1,0,'C', True);
+    $this->Cell(45,6,'Cï¿½DIGO',1,0,'C', True);
     $this->SetFont('courier','B',8);
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->Cell(85,6,utf8_decode($reg[0]['codingrediente']),1,0,'C');
@@ -951,7 +951,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
-    $this->Cell(45,6,'DESCRIPCIÓN',1,0,'C', True);
+    $this->Cell(45,6,'DESCRIPCIï¿½N',1,0,'C', True);
     $this->SetFont('courier','B',8);
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->Cell(85,6,utf8_decode($reg[0]['nomingrediente']),1,0,'C');
@@ -1004,7 +1004,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -1025,7 +1025,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -1057,7 +1057,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -1077,8 +1077,8 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->CellFitSpace(10,8,'N°',1,0,'C', True);
-    $this->CellFitSpace(40,8,'CÓDIGO',1,0,'C', True);
+    $this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
+    $this->CellFitSpace(40,8,'Cï¿½DIGO',1,0,'C', True);
     $this->CellFitSpace(40,8,'INGREDIENTES',1,0,'C', True);
     $this->CellFitSpace(30,8,'PRECIO',1,0,'C', True);
     $this->CellFitSpace(20,8,'VENDIDO',1,0,'C', True);
@@ -1116,7 +1116,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -1139,7 +1139,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -1171,7 +1171,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -1191,15 +1191,15 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
 	$this->SetFont('courier','B',9);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->CellFitSpace(10,8,'N°',1,0,'C', True);
-	$this->CellFitSpace(25,8,'CÓDIGO',1,0,'C', True);
+	$this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
+	$this->CellFitSpace(25,8,'Cï¿½DIGO',1,0,'C', True);
 	$this->CellFitSpace(90,8,'DESCRIPCION DE PRODUCTO',1,0,'C', True);
 	$this->CellFitSpace(40,8,'CATEGORIA',1,0,'C', True);
 	$this->CellFitSpace(28,8,'PRECIO',1,0,'C', True);
 	$this->CellFitSpace(25,8,'EXISTENCIA',1,0,'C', True);
 	$this->CellFitSpace(35,8,'COSTO TOTAL',1,0,'C', True);
 	$this->CellFitSpace(20,8,'STOCK MIN',1,0,'C', True);
-    $this->CellFitSpace(12,8,'IVA',1,0,'C', True);
+    $this->CellFitSpace(12,8,'IGV',1,0,'C', True);
 	$this->CellFitSpace(20,8,'DESC%',1,0,'C', True);
 	$this->CellFitSpace(25,8,'STATUS',1,1,'C', True);
 	
@@ -1267,7 +1267,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -1288,7 +1288,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -1320,7 +1320,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -1340,17 +1340,17 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->CellFitSpace(10,8,'N°',1,0,'C', True);
-    $this->CellFitSpace(20,8,'CÓDIGO',1,0,'C', True);
-    $this->CellFitSpace(80,8,'DESCRIPCIÓN DE PRODUCTO',1,0,'C', True);
+    $this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
+    $this->CellFitSpace(20,8,'Cï¿½DIGO',1,0,'C', True);
+    $this->CellFitSpace(80,8,'DESCRIPCIï¿½N DE PRODUCTO',1,0,'C', True);
     $this->CellFitSpace(30,8,'CATEGORIA',1,0,'C', True);
     $this->CellFitSpace(28,8,'PRECIO',1,0,'C', True);
     $this->CellFitSpace(25,8,'EXISTENCIA',1,0,'C', True);
     $this->CellFitSpace(35,8,'STOCK MINIMO',1,0,'C', True);
-    $this->CellFitSpace(15,8,'IVA',1,0,'C', True);
+    $this->CellFitSpace(15,8,'IGV',1,0,'C', True);
     $this->CellFitSpace(20,8,'DESC%',1,0,'C', True);
     $this->CellFitSpace(20,8,'FAVORITO',1,0,'C', True);
-    $this->CellFitSpace(25,8,'CÓD BARRA',1,0,'C', True);
+    $this->CellFitSpace(25,8,'Cï¿½D BARRA',1,0,'C', True);
     $this->CellFitSpace(22,8,'STATUS',1,1,'C', True);
     
     $tra = new Login();
@@ -1389,7 +1389,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -1413,7 +1413,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -1445,7 +1445,7 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -1465,11 +1465,11 @@ $this->CellFitSpace(50,6,utf8_decode($simbolo.number_format($reg[$i]['preciounit
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es AZUL)
-    $this->CellFitSpace(10,8,'Nº',1,0,'C', True);
+    $this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
     $this->CellFitSpace(35,8,'MOVIMIENTO',1,0,'C', True);
     $this->CellFitSpace(20,8,'ENTRADAS',1,0,'C', True);
     $this->CellFitSpace(20,8,'SALIDAS',1,0,'C', True);
-    $this->CellFitSpace(20,8,'DEVOLUCIÓN',1,0,'C', True);
+    $this->CellFitSpace(20,8,'DEVOLUCIï¿½N',1,0,'C', True);
     $this->CellFitSpace(40,8,'PRECIO MOVIMIENTO',1,0,'C', True);
     $this->CellFitSpace(40,8,'COSTO MOVIMIENTO',1,0,'C', True);
     $this->CellFitSpace(30,8,'STOCK ACTUAL',1,0,'C', True);
@@ -1522,7 +1522,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->Cell(130,6,'DETALLES DEL PRODUCTO',1,0,'C', True);
     $this->Ln();
     
-    $this->Cell(45,6,'CÓDIGO',1,0,'C', True);
+    $this->Cell(45,6,'Cï¿½DIGO',1,0,'C', True);
     $this->SetFont('courier','B',8);
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->Cell(85,6,utf8_decode($reg[0]['codproducto']),1,0,'C');
@@ -1530,7 +1530,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
-    $this->Cell(45,6,'DESCRIPCIÓN',1,0,'C', True);
+    $this->Cell(45,6,'DESCRIPCIï¿½N',1,0,'C', True);
     $this->SetFont('courier','B',8);
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->Cell(85,6,utf8_decode($reg[0]['producto']),1,0,'C');
@@ -1562,7 +1562,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
-    $this->Cell(45,6,'DEVOLUCIÓN',1,0,'C', True);
+    $this->Cell(45,6,'DEVOLUCIï¿½N',1,0,'C', True);
     $this->SetFont('courier','B',8);
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->Cell(85,6,utf8_decode($TotalDevolucion),1,0,'C');
@@ -1598,7 +1598,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -1619,7 +1619,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -1651,7 +1651,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -1671,9 +1671,9 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->CellFitSpace(10,8,'N°',1,0,'C', True);
-    $this->CellFitSpace(18,8,'CÓDIGO',1,0,'C', True);
-    $this->CellFitSpace(60,8,'DESCRIPCIÓN',1,0,'C', True);
+    $this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
+    $this->CellFitSpace(18,8,'Cï¿½DIGO',1,0,'C', True);
+    $this->CellFitSpace(60,8,'DESCRIPCIï¿½N',1,0,'C', True);
     $this->CellFitSpace(28,8,'CATEGORIA',1,0,'C', True);
     $this->CellFitSpace(20,8,'PRECIO',1,0,'C', True);
     $this->CellFitSpace(18,8,'VENDIDO',1,0,'C', True);
@@ -1712,7 +1712,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->Cell(60,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(100,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(100,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(60,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -1776,7 +1776,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	$co = new Login();
     $co = $co->ComprasPorId();
 	
-####################### BLOQUE N° 1 #########################
+####################### BLOQUE Nï¿½ 1 #########################
 
    //Bloque de membrete principal
     $this->SetFillColor(192);
@@ -1787,7 +1787,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 1
 	$this->SetFont('courier','B',9);
     $this->SetXY(130, 11);
-    $this->Cell(20, 5, 'N° DE COMPRA: ', 0 , 0);
+    $this->Cell(20, 5, 'Nï¿½ DE COMPRA: ', 0 , 0);
 	$this->SetFont('courier','B',9);
     $this->SetXY(160, 11);
     $this->Cell(20, 5,utf8_decode($co[0]['codcompra']), 0 , 0);
@@ -1795,7 +1795,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 2
 	$this->SetFont('courier','B',9);
     $this->SetXY(130, 14);
-    $this->Cell(20, 5, 'N° DE SERIE: ', 0 , 0);
+    $this->Cell(20, 5, 'Nï¿½ DE SERIE: ', 0 , 0);
 	$this->SetFont('courier','B',9);
     $this->SetXY(160, 14);
     $this->Cell(20, 5,utf8_decode($co[0]['codseriec']), 0 , 0);
@@ -1811,7 +1811,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 4
 	$this->SetFont('courier','B',8);
     $this->SetXY(130, 20);
-    $this->Cell(20, 5, 'FECHA DE EMISIÓN: ', 0 , 0);
+    $this->Cell(20, 5, 'FECHA DE EMISIï¿½N: ', 0 , 0);
 	$this->SetFont('courier','',8);
     $this->SetXY(160, 20);
     $this->Cell(20, 5,utf8_decode(date("d-m-Y h:i:s")), 0 , 0);
@@ -1834,7 +1834,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	$this->Cell(20, 5,utf8_decode("VENCIDA"), 0 , 0);
 	}
 
-############################### BLOQUE N° 2 #############################	
+############################### BLOQUE Nï¿½ 2 #############################	
 
 	//Bloque de datos de empresa
     $this->SetFillColor(192);
@@ -1849,7 +1849,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 2
 	$this->SetFont('courier','B',8);
     $this->SetXY(15, 36);
-    $this->Cell(20, 5, 'RAZÓN SOCIAL :', 0 , 0);
+    $this->Cell(20, 5, 'RAZï¿½N SOCIAL :', 0 , 0);
 	$this->SetFont('courier','',8);
     $this->SetXY(40, 36);
     $this->Cell(20, 5,utf8_decode($con[0]['nomempresa']), 0 , 0);
@@ -1865,7 +1865,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     //Linea de membrete Nro 4
     $this->SetFont('courier','B',8);
     $this->SetXY(146, 36);
-    $this->Cell(20, 5, 'Nº DE TELÉF :', 0 , 0);
+    $this->Cell(20, 5, 'Nï¿½ DE TELï¿½F :', 0 , 0);
     $this->SetFont('courier','',8);
     $this->SetXY(170, 36);
     $this->Cell(20, 5,utf8_decode($con[0]['tlfempresa']), 0 , 0);
@@ -1873,7 +1873,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 5
 	$this->SetFont('courier','B',8);
     $this->SetXY(15, 40);
-    $this->Cell(20, 5, 'DIRECCIÓN :', 0 , 0);
+    $this->Cell(20, 5, 'DIRECCIï¿½N :', 0 , 0);
 	$this->SetFont('courier','',8);
     $this->SetXY(36, 40);
     $this->Cell(20, 5,utf8_decode($con[0]['direcempresa']), 0 , 0);
@@ -1910,7 +1910,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetXY(145, 44);
     $this->Cell(20, 5,utf8_decode($con[0]['correoresponsable']), 0 , 0);
 	
-######################### BLOQUE N° 3 ###########################	
+######################### BLOQUE Nï¿½ 3 ###########################	
 
 	//Bloque de datos de empresa
     $this->SetFillColor(192);
@@ -1924,7 +1924,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 2
 	$this->SetFont('courier','B',8);
     $this->SetXY(15, 56);
-    $this->Cell(20, 5, 'RAZÓN SOCIAL :', 0 , 0);
+    $this->Cell(20, 5, 'RAZï¿½N SOCIAL :', 0 , 0);
 	$this->SetFont('courier','',8);
     $this->SetXY(40, 56);
     $this->Cell(20, 5,utf8_decode($co[0]['nomproveedor']), 0 , 0);
@@ -1945,14 +1945,14 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 5
 	$this->SetFont('courier','B',8);
     $this->SetXY(15, 60);
-    $this->Cell(20, 5, 'DIRECCIÓN :', 0 , 0);
+    $this->Cell(20, 5, 'DIRECCIï¿½N :', 0 , 0);
 	$this->SetFont('courier','',8);
     $this->SetXY(36, 60);
     $this->Cell(20, 5,utf8_decode($co[0]['direcproveedor']), 0 , 0);
 	//Linea de membrete Nro 6
 	$this->SetFont('courier','B',8);
     $this->SetXY(82, 60);
-    $this->Cell(20, 5, 'Nº DE TELÉF :', 0 , 0);
+    $this->Cell(20, 5, 'Nï¿½ DE TELï¿½F :', 0 , 0);
 	$this->SetFont('courier','',8);
     $this->SetXY(105, 60);
     $this->Cell(20, 5,utf8_decode($co[0]['tlfproveedor']), 0 , 0);
@@ -1968,15 +1968,15 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	$this->SetFont('courier','B',9);
 	$this->SetTextColor(3, 3, 3); // Establece el color del texto (en este caso es Negro)
     $this->SetFillColor(229, 229, 229); // establece el color del fondo de la celda (en este caso es GRIS)
-	$this->Cell(6,8,'N°',1,0,'C', True);
-	$this->Cell(20,8,'CÓDIGO',1,0,'C', True);
-	$this->Cell(60,8,'DESCRIPCIÓN DE PRODUCTO',1,0,'C', True);
+	$this->Cell(6,8,'Nï¿½',1,0,'C', True);
+	$this->Cell(20,8,'Cï¿½DIGO',1,0,'C', True);
+	$this->Cell(60,8,'DESCRIPCIï¿½N DE PRODUCTO',1,0,'C', True);
 	$this->Cell(30,8,'CATEGORIAS',1,0,'C', True);
 	$this->Cell(20,8,'PRECIO',1,0,'C', True);
 	$this->Cell(20,8,'CANTIDAD',1,0,'C', True);
 	$this->Cell(34,8,'IMPORTE',1,1,'C', True);
 	
-	########################### BLOQUE N° 4 DE DETALLES DE PRODUCTOS ##########################	
+	########################### BLOQUE Nï¿½ 4 DE DETALLES DE PRODUCTOS ##########################	
 	//Bloque de datos de empresa
     $this->SetFillColor(192);
     $this->SetDrawColor(3,3,3);
@@ -2006,7 +2006,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->Ln();
                                  }
     
-############################ BLOQUE N° 5 DE TOTALES ################################
+############################ BLOQUE Nï¿½ 5 DE TOTALES ################################
 	//Bloque de Informacion adicional
     $this->SetFillColor(192);
     $this->SetDrawColor(3,3,3);
@@ -2015,7 +2015,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 1
 	$this->SetFont('courier','B',10);
     $this->SetXY(44, 250);
-    $this->Cell(20, 5, 'INFORMACIÓN ADICIONAL', 0 , 0);
+    $this->Cell(20, 5, 'INFORMACIï¿½N ADICIONAL', 0 , 0);
 	
 	//Linea de membrete Nro 2
 	$this->SetFont('courier','B',8);
@@ -2081,7 +2081,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 1
 	$this->SetFont('courier','B',9);
     $this->SetXY(124, 253);
-    $this->Cell(20, 5, 'SUBTOTAL IVA '.$co[0]["ivac"].'% :', 0 , 0);
+    $this->Cell(20, 5, 'SUBTOTAL IGV '.$co[0]["ivac"].'% :', 0 , 0);
     $this->SetXY(167, 253);
 	$this->SetFont('courier','',9);
     $this->Cell(20, 5,utf8_decode($con[0]['simbolo'].number_format($co[0]["subtotalivasic"], 2, '.', ',')), 0 , 0);
@@ -2089,14 +2089,14 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 1
 	$this->SetFont('courier','B',9);
     $this->SetXY(124, 257);
-    $this->Cell(20, 5, 'SUBTOTAL IVA 0% :', 0 , 0);
+    $this->Cell(20, 5, 'SUBTOTAL IGV 0% :', 0 , 0);
     $this->SetXY(167, 257);
 	$this->SetFont('courier','',9);
     $this->Cell(20, 5,utf8_decode($con[0]['simbolo'].number_format($co[0]["subtotalivanoc"], 2, '.', ',')), 0 , 0);
 	//Linea de membrete Nro 2
 	$this->SetFont('courier','B',9);
     $this->SetXY(124, 261);
-    $this->Cell(20, 5, 'IVA '.$co[0]["ivac"].'% :', 0 , 0);
+    $this->Cell(20, 5, 'IGV '.$co[0]["ivac"].'% :', 0 , 0);
     $this->SetXY(167, 261);
 	$this->SetFont('courier','',9);
     $this->Cell(20, 5,utf8_decode($con[0]['simbolo'].number_format($co[0]["totalivac"], 2, '.', ',')), 0 , 0);
@@ -2136,7 +2136,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -2168,7 +2168,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -2188,15 +2188,15 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetFont('courier','B',9);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->CellFitSpace(10,8,'N°',1,0,'C', True);
-	$this->CellFitSpace(40,8,'Nº DE COMPRA',1,0,'C', True);
+	$this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
+	$this->CellFitSpace(40,8,'Nï¿½ DE COMPRA',1,0,'C', True);
 	$this->CellFitSpace(30,8,'STATUS COMPRA',1,0,'C', True);
 	$this->CellFitSpace(40,8,'FECHA COMPRA',1,0,'C', True);
 	$this->CellFitSpace(25,8,'ARTICULOS',1,0,'C', True);
-	$this->CellFitSpace(30,8,'SUBTOTAL CON IVA',1,0,'C', True);
-	$this->CellFitSpace(30,8,'SUBTOTAL IVA 0%',1,0,'C', True);
-	$this->CellFitSpace(20,8,'IVA',1,0,'C', True);
-	$this->CellFitSpace(25,8,'TOTAL IVA',1,0,'C', True);
+	$this->CellFitSpace(30,8,'SUBTOTAL CON IGV',1,0,'C', True);
+	$this->CellFitSpace(30,8,'SUBTOTAL IGV 0%',1,0,'C', True);
+	$this->CellFitSpace(20,8,'IGV',1,0,'C', True);
+	$this->CellFitSpace(25,8,'TOTAL IGV',1,0,'C', True);
 	$this->CellFitSpace(20,8,'DESCUENTO',1,0,'C', True);
 	$this->CellFitSpace(25,8,'TOTAL DESC',1,0,'C', True);
 	$this->CellFitSpace(35,8,'TOTAL PAGO',1,1,'C', True);
@@ -2272,7 +2272,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
 	
@@ -2297,7 +2297,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -2329,7 +2329,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -2349,16 +2349,16 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	$this->SetFont('courier','B',9);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->CellFitSpace(10,8,'N°',1,0,'C', True);
-	$this->CellFitSpace(25,8,'Nº DE COMPRA',1,0,'C', True);
+	$this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
+	$this->CellFitSpace(25,8,'Nï¿½ DE COMPRA',1,0,'C', True);
 	$this->CellFitSpace(60,8,'PROVEEDOR',1,0,'C', True);
 	$this->CellFitSpace(20,8,'STATUS',1,0,'C', True);
 	$this->CellFitSpace(35,8,'FECHA COMPRA',1,0,'C', True);
 	$this->CellFitSpace(20,8,'ARTIC.',1,0,'C', True);
-	$this->CellFitSpace(25,8,'SUBT. CON IVA',1,0,'C', True);
-	$this->CellFitSpace(25,8,'SUBT. IVA 0%',1,0,'C', True);
-	$this->CellFitSpace(15,8,'IVA',1,0,'C', True);
-	$this->CellFitSpace(25,8,'TOTAL IVA',1,0,'C', True);
+	$this->CellFitSpace(25,8,'SUBT. CON IGV',1,0,'C', True);
+	$this->CellFitSpace(25,8,'SUBT. IGV 0%',1,0,'C', True);
+	$this->CellFitSpace(15,8,'IGV',1,0,'C', True);
+	$this->CellFitSpace(25,8,'TOTAL IGV',1,0,'C', True);
 	$this->CellFitSpace(15,8,'DESC.',1,0,'C', True);
 	$this->CellFitSpace(25,8,'TOTAL DESC',1,0,'C', True);
 	$this->CellFitSpace(35,8,'TOTAL PAGO',1,1,'C', True);
@@ -2434,7 +2434,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->Cell(80,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(40,6,'',0,0,'');
-    $this->Cell(140,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(140,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(80,6,'',0,0,'');
     $this->Ln(4);
 	
@@ -2461,7 +2461,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -2493,7 +2493,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -2513,17 +2513,17 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es AZUL)
-    $this->CellFitSpace(12,8,'Nº',1,0,'C', True);
-    $this->CellFitSpace(20,8,'Nº DE COMPRA',1,0,'C', True);
+    $this->CellFitSpace(12,8,'Nï¿½',1,0,'C', True);
+    $this->CellFitSpace(20,8,'Nï¿½ DE COMPRA',1,0,'C', True);
     $this->CellFitSpace(48,8,'PROVEEDOR',1,0,'C', True);
     $this->CellFitSpace(25,8,'STATUS',1,0,'C', True);
     $this->CellFitSpace(20,8,'DIAS VENC',1,0,'C', True);
     $this->CellFitSpace(40,8,'FECHA COMPRA',1,0,'C', True);
-    $this->CellFitSpace(20,8,'Nº ARTIC',1,0,'C', True);
+    $this->CellFitSpace(20,8,'Nï¿½ ARTIC',1,0,'C', True);
     $this->CellFitSpace(20,8,'DCTO',1,0,'C', True);
     $this->CellFitSpace(32,8,'SUBTOTAL 0%',1,0,'C', True);
     $this->CellFitSpace(32,8,'SUBTOTAL CON %',1,0,'C', True);
-    $this->CellFitSpace(32,8,'TOTAL IVA',1,0,'C', True);
+    $this->CellFitSpace(32,8,'TOTAL IGV',1,0,'C', True);
     $this->CellFitSpace(32,8,'TOTAL PAGO',1,1,'C', True);
     
     $TotalArticulos=0;
@@ -2599,7 +2599,7 @@ $this->CellFitSpace(32,6,utf8_decode($simbolo.number_format($reg[$i]['totalc'], 
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
 }
@@ -2699,18 +2699,19 @@ if($ve[0]['delivery']!="1"){
 $this->SetXY(3, 14);
 $this->Cell(3, 5, "SALA: ".utf8_decode($ve[0]['nombresala']), 0 , 0);
 $this->SetXY(3, 17);
-$this->Cell(3, 5, "N° DE MESA: ".utf8_decode($ve[0]['nombremesa']), 0 , 0);  
+$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "Nï¿½ DE MESA: ";
+$this->Cell(3, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);  
 $this->SetXY(3, 20);
 $this->Cell(3, 5, "MESERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(3, 23);
-$this->Cell(3, 5, "FECHA DE IMPRESIÓN: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(3, 5, "FECHA DE IMPRESIï¿½N: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
 
 } else {
 
 $this->SetXY(3, 14);
 $this->Cell(3, 5, "CAJERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(3, 17);
-$this->Cell(3, 5, "FECHA DE IMPRESIÓN: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(3, 5, "FECHA DE IMPRESIï¿½N: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
   
 }
 
@@ -2748,7 +2749,7 @@ $this->SetFont('courier','B',11);
 $this->SetTextColor(3, 3, 3); // Establece el color del texto (en este caso es Negro)
 $this->SetFillColor(229, 229, 229); // establece el color del fondo de la celda (en este caso es GRIS)
 $this->Cell(10,3,'CANT',0,0,'C');
-$this->Cell(55,3,'DESCRIPCIÓN DE PRODUCTO',0,1,'C');
+$this->Cell(55,3,'DESCRIPCIï¿½N DE PRODUCTO',0,1,'C');
 $this->SetFont('courier','B',8);
 $this->SetX(2);
 $this->Cell(70,3,'---------------------------------------',0,0,'C');
@@ -2834,7 +2835,7 @@ $this->CellFitSpace(50,3,"Nit:".utf8_decode($con[0]['rifempresa']),0,1,'C');
 $this->SetXY(4, 16.5);
 $this->CellFitSpace(50,3,utf8_decode($con[0]['nomempresa']),0,1,'C');
 $this->SetXY(4, 19.5);
-$this->CellFitSpace(50,3,"Nº TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
+$this->CellFitSpace(50,3,"Nï¿½ TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
 
 $this->SetFont('Arial','B',8);
 $this->SetX(2);
@@ -2850,7 +2851,8 @@ if($ve[0]['delivery']!="1"){
 $this->SetXY(4, 25);
 $this->Cell(4, 5, "SALA: ".utf8_decode($ve[0]['nombresala']), 0 , 0);
 $this->SetXY(4, 28);
-$this->Cell(4, 5, "N° DE MESA: ".utf8_decode($ve[0]['nombremesa']), 0 , 0);
+$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "Nï¿½ DE MESA: ";
+$this->Cell(4, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
 $this->SetXY(4, 31);
 $this->Cell(4, 5, "MESERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(4, 34);
@@ -2898,7 +2900,7 @@ $this->SetFont('Arial','B',8);
 $this->SetTextColor(3, 3, 3); // Establece el color del texto (en este caso es Negro)
 $this->SetFillColor(229, 229, 229); // establece el color del fondo de la celda (en este caso es GRIS)
 $this->Cell(6,3,'Cant',0,0,'C');
-$this->Cell(24,3,'Descripción',0,0,'C');
+$this->Cell(24,3,'Descripciï¿½n',0,0,'C');
 $this->Cell(8,3,'P.',0,0,'C');
 $this->Cell(8,3,'Importe',0,1,'C');
     
@@ -2947,7 +2949,7 @@ $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivan
 
 $this->SetX(1);
 $this->SetFont('Arial','B',8);
-$this->CellFitSpace(30,3,"IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(30,3,"IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["totalivave"], 2, '.', ',')),0,1,'R');
 
@@ -3008,7 +3010,7 @@ $this->CellFitSpace(50,3,"RUC:".utf8_decode($con[0]['rifempresa']),0,1,'C');
 $this->SetXY(4, 16.5);
 $this->CellFitSpace(50,3,utf8_decode($con[0]['nomempresa']),0,1,'C');
 $this->SetXY(4, 19.5);
-$this->CellFitSpace(50,3,"Nº TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
+$this->CellFitSpace(50,3,"Nï¿½ TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
 
 $this->SetFont('courier','B',8);
 $this->SetX(2);
@@ -3019,11 +3021,20 @@ $this->SetFont('courier','B',6.5);
 $this->SetFillColor(2,157,116);
 $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
 $this->SetXY(4, 25);
-$this->Cell(4, 5, "N° DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
+$this->Cell(4, 5, "Nï¿½ DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
 $this->SetXY(4, 28);
 $this->Cell(4, 5, "FECHA DE VENTA: ".date("d-m-Y h:i:s",strtotime($ve[0]['fechaventa'])), 0 , 0);
 $this->SetXY(4, 31);
 $this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+if (isset($ve[0]['delivery']) && $ve[0]['delivery'] != "1" && !empty($ve[0]['nombremesa'])) {
+	$this->SetXY(4, 34);
+	$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "Nï¿½ DE MESA: ";
+	$this->Cell(4, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
+	if (!empty($ve[0]['nombresala'])) {
+		$this->SetXY(4, 37);
+		$this->Cell(4, 5, "SALA: ".utf8_decode($ve[0]['nombresala']), 0 , 0);
+	}
+}
 
 $this->Ln(5);
 $this->SetFont('courier','B',8);
@@ -3058,7 +3069,7 @@ $this->SetFont('courier','B',8);
 $this->SetTextColor(3, 3, 3); // Establece el color del texto (en este caso es Negro)
 $this->SetFillColor(229, 229, 229); // establece el color del fondo de la celda (en este caso es GRIS)
 $this->Cell(6,3,'Cant',0,0,'C');
-$this->Cell(24,3,'Descripción',0,0,'C');
+$this->Cell(24,3,'Descripciï¿½n',0,0,'C');
 $this->Cell(8,3,'P.',0,0,'C');
 $this->Cell(8,3,'Importe',0,1,'C');
 
@@ -3095,19 +3106,19 @@ $this->Ln(3);
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(30,3,"SUBTOTAL IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(30,3,"SUBTOTAL IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"]-($ve[0]["subtotalivanove"]*18)/100, 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(30,3,"SUBTOTAL IVA 0%:",0,0,'R');
+$this->CellFitSpace(30,3,"SUBTOTAL IGV 0%:",0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(30,3,"IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(30,3,"IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format(($ve[0]["subtotalivanove"]*18)/100, 2, '.', ',')),0,1,'R');
 
@@ -3209,7 +3220,7 @@ $this->Ln(1);
 
 $this->SetFont('courier','B',8);
 $this->SetX(2);
-$this->Cell(50,3,'-------- INFORMACIÓN ADICIONAL --------',0,1,'C');
+$this->Cell(50,3,'-------- INFORMACIï¿½N ADICIONAL --------',0,1,'C');
 $this->Ln(1);
 
 $this->SetFont('courier','B',7);
@@ -3283,7 +3294,7 @@ $this->CellFitSpace(50,3,"RUC:".utf8_decode($con[0]['rifempresa']),0,1,'C');
 $this->SetXY(4, 16.5);
 $this->CellFitSpace(50,3,utf8_decode($con[0]['nomempresa']),0,1,'C');
 $this->SetXY(4, 19.5);
-$this->CellFitSpace(50,3,"Nº TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
+$this->CellFitSpace(50,3,"Nï¿½ TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
 
 $this->SetFont('courier','B',8);
 $this->SetX(2);
@@ -3294,11 +3305,20 @@ $this->SetFont('courier','B',6.5);
 $this->SetFillColor(2,157,116);
 $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
 $this->SetXY(4, 25);
-$this->Cell(4, 5, "N° DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
+$this->Cell(4, 5, "Nï¿½ DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
 $this->SetXY(4, 28);
 $this->Cell(4, 5, "FECHA DE VENTA: ".date("d-m-Y h:i:s",strtotime($ve[0]['fechaventa'])), 0 , 0);
 $this->SetXY(4, 31);
 $this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+if (isset($ve[0]['delivery']) && $ve[0]['delivery'] != "1" && !empty($ve[0]['nombremesa'])) {
+	$this->SetXY(4, 34);
+	$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "Nï¿½ DE MESA: ";
+	$this->Cell(4, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
+	if (!empty($ve[0]['nombresala'])) {
+		$this->SetXY(4, 37);
+		$this->Cell(4, 5, "SALA: ".utf8_decode($ve[0]['nombresala']), 0 , 0);
+	}
+}
 
 $this->Ln(5);
 $this->SetFont('courier','B',8);
@@ -3333,7 +3353,7 @@ $this->SetFont('courier','B',8);
 $this->SetTextColor(3, 3, 3); // Establece el color del texto (en este caso es Negro)
 $this->SetFillColor(229, 229, 229); // establece el color del fondo de la celda (en este caso es GRIS)
 $this->Cell(6,3,'Cant',0,0,'C');
-$this->Cell(24,3,'Descripción',0,0,'C');
+$this->Cell(24,3,'Descripciï¿½n',0,0,'C');
 $this->Cell(8,3,'P.',0,0,'C');
 $this->Cell(8,3,'Importe',0,1,'C');
 
@@ -3370,19 +3390,19 @@ $this->Ln(3);
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(30,3,"SUBTOTAL IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(30,3,"SUBTOTAL IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"]-($ve[0]["subtotalivanove"]*18)/100, 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(30,3,"SUBTOTAL IVA 0%:",0,0,'R');
+$this->CellFitSpace(30,3,"SUBTOTAL IGV 0%:",0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(30,3,"IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(30,3,"IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format(($ve[0]["subtotalivanove"]*18)/100, 2, '.', ',')),0,1,'R');
 
@@ -3484,7 +3504,7 @@ $this->Ln(1);
 
 $this->SetFont('courier','B',8);
 $this->SetX(2);
-$this->Cell(50,3,'-------- INFORMACIÓN ADICIONAL --------',0,1,'C');
+$this->Cell(50,3,'-------- INFORMACIï¿½N ADICIONAL --------',0,1,'C');
 $this->Ln(1);
 
 $this->SetFont('courier','B',7);
@@ -3556,7 +3576,7 @@ $this->SetFont('courier','B',6.5);
 $this->SetFillColor(2,157,116);
 $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
 $this->SetXY(4, 25);
-$this->Cell(4, 5, "N° de Caja: ".$reg[0]['nrocaja'], 0 , 0);
+$this->Cell(4, 5, "Nï¿½ de Caja: ".$reg[0]['nrocaja'], 0 , 0);
 $this->SetXY(4, 28);
 $this->Cell(4, 5, "Nombre de Caja: ".$reg[0]['nombrecaja'], 0 , 0);
 $this->SetXY(4, 31);
@@ -3693,7 +3713,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -3725,7 +3745,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -3739,22 +3759,22 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     
     $this->SetFont('Courier','B',14);  
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
-    $this->Cell(350,10,'VENTAS DESDE '.$_GET["desde"].' HASTA '.$_GET["hasta"].' Y CAJA N°.'.$reg[0]['nrocaja'],0,0,'C');
+    $this->Cell(350,10,'VENTAS DESDE '.$_GET["desde"].' HASTA '.$_GET["hasta"].' Y CAJA Nï¿½.'.$reg[0]['nrocaja'],0,0,'C');
     
     $this->Ln();
 	$this->SetFont('courier','B',9);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->CellFitSpace(10,8,'N°',1,0,'C', True);
-	$this->CellFitSpace(32,8,'Nº DE VENTA',1,0,'C', True);
+	$this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
+	$this->CellFitSpace(32,8,'Nï¿½ DE VENTA',1,0,'C', True);
 	$this->CellFitSpace(70,8,'CLIENTES',1,0,'C', True);
 	$this->CellFitSpace(17,8,'STATUS',1,0,'C', True);
 	$this->CellFitSpace(35,8,'FECHA VENTA',1,0,'C', True);
 	$this->CellFitSpace(15,8,'ARTIC',1,0,'C', True);
-	$this->CellFitSpace(28,8,'SUBTOT CON IVA',1,0,'C', True);
-	$this->CellFitSpace(28,8,'SUBTOT IVA 0%',1,0,'C', True);
-	$this->CellFitSpace(12,8,'IVA',1,0,'C', True);
-	$this->CellFitSpace(22,8,'TOTAL IVA',1,0,'C', True);
+	$this->CellFitSpace(28,8,'SUBTOT CON IGV',1,0,'C', True);
+	$this->CellFitSpace(28,8,'SUBTOT IGV 0%',1,0,'C', True);
+	$this->CellFitSpace(12,8,'IGV',1,0,'C', True);
+	$this->CellFitSpace(22,8,'TOTAL IGV',1,0,'C', True);
 	$this->CellFitSpace(12,8,'DESC',1,0,'C', True);
 	$this->CellFitSpace(20,8,'TOT DESC',1,0,'C', True);
 	$this->CellFitSpace(30,8,'TOTAL PAGO',1,1,'C', True);
@@ -3829,7 +3849,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -3850,7 +3870,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -3882,7 +3902,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -3902,17 +3922,17 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
 	$this->SetFont('courier','B',9);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->CellFitSpace(10,8,'N°',1,0,'C', True);
-	$this->CellFitSpace(27,8,'Nº DE VENTA',1,0,'C', True);
+	$this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
+	$this->CellFitSpace(27,8,'Nï¿½ DE VENTA',1,0,'C', True);
 	$this->CellFitSpace(20,8,'CAJA',1,0,'C', True);
 	$this->CellFitSpace(60,8,'CLIENTES',1,0,'C', True);
 	$this->CellFitSpace(17,8,'STATUS',1,0,'C', True);
 	$this->CellFitSpace(35,8,'FECHA VENTA',1,0,'C', True);
 	$this->CellFitSpace(15,8,'ARTIC',1,0,'C', True);
-	$this->CellFitSpace(28,8,'SUBTOT CON IVA',1,0,'C', True);
-	$this->CellFitSpace(28,8,'SUBTOT IVA 0%',1,0,'C', True);
-	$this->CellFitSpace(12,8,'IVA',1,0,'C', True);
-	$this->CellFitSpace(22,8,'TOTAL IVA',1,0,'C', True);
+	$this->CellFitSpace(28,8,'SUBTOT CON IGV',1,0,'C', True);
+	$this->CellFitSpace(28,8,'SUBTOT IGV 0%',1,0,'C', True);
+	$this->CellFitSpace(12,8,'IGV',1,0,'C', True);
+	$this->CellFitSpace(22,8,'TOTAL IGV',1,0,'C', True);
 	$this->CellFitSpace(12,8,'DESC',1,0,'C', True);
 	$this->CellFitSpace(20,8,'TOT DESC',1,0,'C', True);
 	$this->CellFitSpace(27,8,'TOTAL PAGO',1,1,'C', True);
@@ -3942,7 +3962,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->Cell(10,6,$a++,1,0,'C');
 	$this->CellFitSpace(27,6,$reg[$i]["codventa"],1,0,'C');
 	$this->Cell(20,6,utf8_decode($caja = ( $reg[$i]['codcaja'] == '0' ? "SIN COBRAR" : $reg[$i]["nrocaja"])),1,0,'C');
-	$this->Cell(60,6,utf8_decode($cliente = ( $reg[$i]['codcliente'] == '0' ? "SIN ASIGNACIÓN" : $reg[$i]["nomcliente"])),1,0,'C');
+	$this->Cell(60,6,utf8_decode($cliente = ( $reg[$i]['codcliente'] == '0' ? "SIN ASIGNACIï¿½N" : $reg[$i]["nomcliente"])),1,0,'C');
 	
 	if($reg[$i]['fechavencecredito']== '0000-00-00') { 
 	$this->CellFitSpace(17, 6,utf8_decode($reg[$i]['statusventa']),1,0,'C');
@@ -3990,7 +4010,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -4011,7 +4031,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -4043,7 +4063,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -4063,7 +4083,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->CellFitSpace(10,8,'N°',1,0,'C', True);
+    $this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
     $this->CellFitSpace(32,8,'CAJA',1,0,'C', True);
     $this->CellFitSpace(40,8,'HORA DE APERTURA',1,0,'C', True);
     $this->CellFitSpace(40,8,'HORA DE CIERRE',1,0,'C', True);
@@ -4102,7 +4122,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -4126,7 +4146,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -4158,7 +4178,7 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -4178,10 +4198,10 @@ $this->Codabar(6,-90,utf8_decode("1111112222223333334444445555556666667777778888
     $this->SetFont('courier','B',9);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->CellFitSpace(10,8,'N°',1,0,'C', True);
+    $this->CellFitSpace(10,8,'Nï¿½',1,0,'C', True);
     $this->CellFitSpace(35,8,'FECHA MOVIMIENTO',1,0,'C', True);
     $this->CellFitSpace(30,8,'TIPO',1,0,'C', True);
-    $this->CellFitSpace(90,8,'DESCRIPCIÓN DE MOVIMIENTO',1,0,'C', True);
+    $this->CellFitSpace(90,8,'DESCRIPCIï¿½N DE MOVIMIENTO',1,0,'C', True);
     $this->CellFitSpace(25,8,'MONTO',1,1,'C', True);
     
     $a=1;
@@ -4256,7 +4276,7 @@ $TotalEgresos+=$egresos = ( $reg[$i]['tipomovimientocaja'] == 'EGRESO' ? $reg[$i
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -4295,7 +4315,7 @@ $TotalEgresos+=$egresos = ( $reg[$i]['tipomovimientocaja'] == 'EGRESO' ? $reg[$i
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -4327,7 +4347,7 @@ $TotalEgresos+=$egresos = ( $reg[$i]['tipomovimientocaja'] == 'EGRESO' ? $reg[$i
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -4359,7 +4379,7 @@ $TotalEgresos+=$egresos = ( $reg[$i]['tipomovimientocaja'] == 'EGRESO' ? $reg[$i
     $this->Ln();
 
 
-    $this->Cell(100,8,'ABONOS A CRÉDITOS',1,0,'C', false);
+    $this->Cell(100,8,'ABONOS A CRï¿½DITOS',1,0,'C', false);
     $this->Cell(90,8,utf8_decode($con[0]['simbolo'].number_format($abo[0]['totalabonos'], 2, '.', ',')),1,1,'C');
     $this->Ln();
    
@@ -4376,7 +4396,7 @@ $TotalEgresos+=$egresos = ( $reg[$i]['tipomovimientocaja'] == 'EGRESO' ? $reg[$i
     $this->Cell(90,8,utf8_decode($con[0]['simbolo'].number_format($car[0]['totaldebe']-$car[0]['totalabono'], 2, '.', ',')),1,1,'C');
     $this->Ln();
   
-    $this->Cell(100,8,'TOTAL DE IMPUESTOS VENTAS IVA '.$con[0]['ivav'].'%',1,0,'C', false);
+    $this->Cell(100,8,'TOTAL DE IMPUESTOS VENTAS IGV '.$con[0]['ivav'].'%',1,0,'C', false);
     $this->Cell(90,8,utf8_decode($con[0]['simbolo'].number_format($venta[0]['totaliva'], 2, '.', ',')),1,1,'C');
     $this->Ln();
 
@@ -4396,7 +4416,7 @@ $TotalEgresos+=$egresos = ( $reg[$i]['tipomovimientocaja'] == 'EGRESO' ? $reg[$i
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -4434,7 +4454,7 @@ $TotalEgresos+=$egresos = ( $reg[$i]['tipomovimientocaja'] == 'EGRESO' ? $reg[$i
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -4466,7 +4486,7 @@ $TotalEgresos+=$egresos = ( $reg[$i]['tipomovimientocaja'] == 'EGRESO' ? $reg[$i
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -4499,7 +4519,7 @@ $ganancias = $balance-$egr[0]['totalegresos'];
     $this->Cell(80,8,utf8_decode($con[0]['simbolo'].number_format($ing[0]['totalingresos'], 2, '.', ',')),1,0,'C');
     $this->Ln();
 
-    $this->Cell(100,8,'ABONOS A CRÉDITOS',1,0,'C', false);
+    $this->Cell(100,8,'ABONOS A CRï¿½DITOS',1,0,'C', false);
     $this->Cell(80,8,utf8_decode($con[0]['simbolo'].number_format($abo[0]['totalabonos'], 2, '.', ',')),1,1,'C');
     $this->Ln();
    
@@ -4508,11 +4528,11 @@ $ganancias = $balance-$egr[0]['totalegresos'];
     $this->Cell(80,8,utf8_decode($con[0]['simbolo'].number_format($egr[0]['totalegresos'], 2, '.', ',')),1,1,'C');
     $this->Ln();
   
-    $this->Cell(100,8,'TOTAL DE IMPUESTOS VENTAS IVA '.$con[0]['ivav'].'%',1,0,'C', false);
+    $this->Cell(100,8,'TOTAL DE IMPUESTOS VENTAS IGV '.$con[0]['ivav'].'%',1,0,'C', false);
     $this->Cell(80,8,utf8_decode($con[0]['simbolo'].number_format($venta[0]['totaliva'], 2, '.', ',')),1,1,'C');
     $this->Ln();
 
-    $this->Cell(100,8,'EFECTIVO EN CAJA SIN IVA ',1,0,'C', false);
+    $this->Cell(100,8,'EFECTIVO EN CAJA SIN IGV ',1,0,'C', false);
     $this->Cell(80,8,utf8_decode($con[0]['simbolo'].number_format($ganancias, 2, '.', ',')),1,0,'C');
     $this->Ln();
 
@@ -4524,7 +4544,7 @@ $ganancias = $balance-$egr[0]['totalegresos'];
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -4546,7 +4566,7 @@ $ganancias = $balance-$egr[0]['totalegresos'];
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -4578,7 +4598,7 @@ $ganancias = $balance-$egr[0]['totalegresos'];
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -4600,9 +4620,9 @@ $ganancias = $balance-$egr[0]['totalegresos'];
     $this->SetFont('courier','B',10);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->Cell(10,8,'N°',1,0,'C', True);
+    $this->Cell(10,8,'Nï¿½',1,0,'C', True);
     $this->Cell(65,8,'NOMBRES DE CLIENTES',1,0,'C', True);
-    $this->Cell(80,8,'DIRECCIÓN DE CLIENTES',1,0,'C', True);
+    $this->Cell(80,8,'DIRECCIï¿½N DE CLIENTES',1,0,'C', True);
     $this->Cell(145,8,'PLATILLOS',1,0,'C', True);
     $this->Cell(35,8,'TOTAL FACTURA',1,1,'C', True);
     
@@ -4649,9 +4669,9 @@ $ganancias = $balance-$egr[0]['totalegresos'];
     $this->SetFont('courier','B',10);
     $this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es BLANCO)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-    $this->Cell(10,8,'N°',1,0,'C', True);
+    $this->Cell(10,8,'Nï¿½',1,0,'C', True);
     $this->Cell(65,8,'NOMBRES DE CLIENTES',1,0,'C', True);
-    $this->Cell(70,8,'DIRECCIÓN DE CLIENTES',1,0,'C', True);
+    $this->Cell(70,8,'DIRECCIï¿½N DE CLIENTES',1,0,'C', True);
     $this->Cell(125,8,'PLATILLOS',1,0,'C', True);
     $this->Cell(65,8,'REPARTIDOR',1,1,'C', True);
     
@@ -4688,7 +4708,7 @@ $ganancias = $balance-$egr[0]['totalegresos'];
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -4752,7 +4772,7 @@ $ve = $ve->VentasPorId();
 $this->SetFont('courier','B',14);
 $this->SetFillColor(2,157,116);
 $this->SetXY(4, 6);
-$this->Cell(66, 5, "TICKET DE CRÉDITO", 0 , 0, 'C');
+$this->Cell(66, 5, "TICKET DE CRï¿½DITO", 0 , 0, 'C');
 $this->Ln(5);
 
 $this->SetFont('courier','B',6.5);
@@ -4764,7 +4784,7 @@ $this->CellFitSpace(65,3,"Nit:".utf8_decode($con[0]['rifempresa']),0,1,'C');
 $this->SetXY(4, 16.5);
 $this->CellFitSpace(65,3,utf8_decode($con[0]['nomempresa']),0,1,'C');
 $this->SetXY(4, 19.5);
-$this->CellFitSpace(65,3,"Nº DE TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
+$this->CellFitSpace(65,3,"Nï¿½ DE TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
 
 $this->SetFont('courier','B',8);
 $this->SetX(2);
@@ -4775,11 +4795,11 @@ $this->SetFont('courier','B',6.5);
 $this->SetFillColor(2,157,116);
 $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
 $this->SetXY(3, 25);
-$this->Cell(3, 5, "N° DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
+$this->Cell(3, 5, "Nï¿½ DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
 $this->SetXY(3, 28);
 $this->Cell(3, 5, "FECHA DE VENTA: ".utf8_decode($ve[0]['fechaventa']), 0 , 0);
 $this->SetXY(3, 31);
-$this->Cell(3, 5, "FECHA DE IMPRESIÓN: ".date("Y-m-d h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(3, 5, "FECHA DE IMPRESIï¿½N: ".date("Y-m-d h:i:s A ",time()+1800), 0 , 0);
 
 $this->Ln(5);
 $this->SetFont('courier','B',8);
@@ -4814,7 +4834,7 @@ $this->SetFont('courier','B',7);
 $this->SetTextColor(3, 3, 3); // Establece el color del texto (en este caso es Negro)
 $this->SetFillColor(229, 229, 229); // establece el color del fondo de la celda (en este caso es GRIS)
 $this->Cell(6,3,'CANT',0,0,'C');
-$this->Cell(30,3,'DESCRIPCIÓN',0,0,'C');
+$this->Cell(30,3,'DESCRIPCIï¿½N',0,0,'C');
 $this->Cell(15,3,'PRECIO',0,0,'C');
 $this->Cell(15,3,'IMPORTE',0,1,'C');
 
@@ -4851,19 +4871,19 @@ $this->Ln(3);
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(40,3,"SUBTOTAL IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(40,3,"SUBTOTAL IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(25,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivasive"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(40,3,"SUBTOTAL IVA 0%:",0,0,'R');
+$this->CellFitSpace(40,3,"SUBTOTAL IGV 0%:",0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(25,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(40,3,"IVA ".$ve[0]["ivave"].'%:',0,0,'R');
+$this->CellFitSpace(40,3,"IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(25,3,utf8_decode($simbolo.number_format($ve[0]["totalivave"], 2, '.', ',')),0,1,'R');
 
@@ -4964,7 +4984,7 @@ $this->Ln(1);
 
   $this->SetFont('courier','B',8);
   $this->SetX(2);
-  $this->Cell(70,3,'-------- INFORMACIÓN ADICIONAL --------',0,1,'C');
+  $this->Cell(70,3,'-------- INFORMACIï¿½N ADICIONAL --------',0,1,'C');
   $this->Ln(1);
 
   $this->SetFont('courier','B',7);
@@ -5020,7 +5040,7 @@ $this->Ln(1);
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+24, $this->GetY()+4, 22),5,0,'L');
-    $this->Cell(105,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(105,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-2, $this->GetY()+6, 34),5,0,'L');
     
     $this->Ln();
@@ -5052,7 +5072,7 @@ $this->Ln(1);
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(105,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(105,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -5066,15 +5086,15 @@ $this->Ln(1);
     
     $this->SetFont('Courier','B',14);  
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
-$this->Cell(195,10,'CRÉDITOS DEL CLIENTE '.utf8_decode($reg[0]['cedcliente'].": ".$reg[0]['nomcliente']),0,0,'C');
+$this->Cell(195,10,'CRï¿½DITOS DEL CLIENTE '.utf8_decode($reg[0]['cedcliente'].": ".$reg[0]['nomcliente']),0,0,'C');
     
     $this->Ln();
 	$this->SetFont('courier','B',9);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->CellFitSpace(8,8,'N°',1,0,'C', True);
-	$this->CellFitSpace(30,8,'Nº DE VENTA',1,0,'C', True);
-	$this->CellFitSpace(18,8,'N° CAJA',1,0,'C', True);
+	$this->CellFitSpace(8,8,'Nï¿½',1,0,'C', True);
+	$this->CellFitSpace(30,8,'Nï¿½ DE VENTA',1,0,'C', True);
+	$this->CellFitSpace(18,8,'Nï¿½ CAJA',1,0,'C', True);
 	$this->CellFitSpace(17,8,'STATUS',1,0,'C', True);
 	$this->CellFitSpace(20,8,'DIAS VENC',1,0,'C', True);
 	$this->CellFitSpace(26,8,'FECHA VENTA',1,0,'C', True);
@@ -5143,7 +5163,7 @@ $this->Cell(195,10,'CRÉDITOS DEL CLIENTE '.utf8_decode($reg[0]['cedcliente'].": 
     $this->Cell(40,6,'RECIBIDO:_________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(120,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(120,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(40,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -5166,7 +5186,7 @@ $this->Cell(195,10,'CRÉDITOS DEL CLIENTE '.utf8_decode($reg[0]['cedcliente'].": 
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,22,$this->Image($logo, $this->GetX()+88, $this->GetY()+4, 24),5,0,'L');
-    $this->Cell(250,8,'SISTEMA DE GESTIÓN PARA RESTAURANTES',5,0,'C');
+    $this->Cell(250,8,'SISTEMA DE GESTIï¿½N PARA RESTAURANTES',5,0,'C');
     $this->Cell(45,22,$this->Image($logo2, $this->GetX()-72, $this->GetY()+6, 58),5,0,'L');
     
     $this->Ln();
@@ -5198,7 +5218,7 @@ $this->Cell(195,10,'CRÉDITOS DEL CLIENTE '.utf8_decode($reg[0]['cedcliente'].": 
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(5, 130, 275); // establece el color del fondo de la celda (en este caso es AZUL
     $this->Cell(45,0,'',5,0,'L');
-    $this->Cell(250,-4,'Nº DE TELÉFONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
+    $this->Cell(250,-4,'Nï¿½ DE TELï¿½FONO: '.utf8_decode($con[0]['tlfempresa']),5,0,'C');
     $this->Cell(45,0,'',5,0,'L');
     
     $this->Ln();
@@ -5212,19 +5232,19 @@ $this->Cell(195,10,'CRÉDITOS DEL CLIENTE '.utf8_decode($reg[0]['cedcliente'].": 
     
     $this->SetFont('Courier','B',14);  
     $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
-    $this->Cell(350,10,'LISTADO DE CRÉDITOS DESDE '.$_GET["desde"].' HASTA '.$_GET["hasta"],0,0,'C');
+    $this->Cell(350,10,'LISTADO DE CRï¿½DITOS DESDE '.$_GET["desde"].' HASTA '.$_GET["hasta"],0,0,'C');
     
     $this->Ln();
 	$this->SetFont('courier','B',9);
 	$this->SetTextColor(255,255,255);  // Establece el color del texto (en este caso es blanco)
     $this->SetFillColor(230, 126, 34); // establece el color del fondo de la celda (en este caso es NARANJA)
-	$this->CellFitSpace(8,8,'N°',1,0,'C', True);
+	$this->CellFitSpace(8,8,'Nï¿½',1,0,'C', True);
 	$this->CellFitSpace(30,8,'Nit',1,0,'C', True);
 	$this->CellFitSpace(75,8,'NOMBRE CLIENTE',1,0,'C', True);
-	$this->CellFitSpace(20,8,'N° CAJA',1,0,'C', True);
+	$this->CellFitSpace(20,8,'Nï¿½ CAJA',1,0,'C', True);
 	$this->CellFitSpace(20,8,'STATUS',1,0,'C', True);
 	$this->CellFitSpace(20,8,'DIAS VENC',1,0,'C', True);
-	$this->CellFitSpace(30,8,'Nº DE VENTA',1,0,'C', True);
+	$this->CellFitSpace(30,8,'Nï¿½ DE VENTA',1,0,'C', True);
 	$this->CellFitSpace(35,8,'FECHA VENTA',1,0,'C', True);
 	$this->CellFitSpace(30,8,'TOTAL FACTURA',1,0,'C', True);
 	$this->CellFitSpace(30,8,'TOTAL ABONO',1,0,'C', True);
@@ -5296,7 +5316,7 @@ $this->Cell(195,10,'CRÉDITOS DEL CLIENTE '.utf8_decode($reg[0]['cedcliente'].": 
     $this->Cell(120,6,'RECIBIDO:__________________________________',0,0,'');
     $this->Ln();
     $this->Cell(5,6,'',0,0,'');
-    $this->Cell(200,6,'FECHA/HORA ELABORACIÓN:  '.date('d-m-Y h:i:s A'),0,0,'');
+    $this->Cell(200,6,'FECHA/HORA ELABORACIï¿½N:  '.date('d-m-Y h:i:s A'),0,0,'');
     $this->Cell(120,6,'',0,0,'');
     $this->Ln(4);
      }
@@ -5511,7 +5531,7 @@ function encode_code39_ext($code) {
     $encode = array(
         chr(0) => '%U', chr(1) => '$A', chr(2) => '$B', chr(3) => '$C', 
         chr(4) => '$D', chr(5) => '$E', chr(6) => '$F', chr(7) => '$G', 
-        chr(8) => '$H', chr(9) => '$I', chr(10) => '$J', chr(11) => '£K', 
+        chr(8) => '$H', chr(9) => '$I', chr(10) => '$J', chr(11) => 'ï¿½K', 
         chr(12) => '$L', chr(13) => '$M', chr(14) => '$N', chr(15) => '$O', 
         chr(16) => '$P', chr(17) => '$Q', chr(18) => '$R', chr(19) => '$S', 
         chr(20) => '$T', chr(21) => '$U', chr(22) => '$V', chr(23) => '$W', 

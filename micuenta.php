@@ -22,6 +22,7 @@ include "db/core/app/model/ClientesData.php";
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
+<link rel="stylesheet" href="css/tienda-mejoras.css" type="text/css" media="all">
 
 </head>
 
@@ -79,7 +80,7 @@ include "db/core/app/model/ClientesData.php";
           <span>Moneda:</span>
           <ul class="link">
               <li>
-                <a title="Dop" rel="nofollow" href="#" class="dropdown-item">DOP</a>
+                <a title="Soles" rel="nofollow" href="#" class="dropdown-item">PEN</a>
               </li>
           </ul>
         </div>
@@ -154,7 +155,7 @@ include "db/core/app/model/ClientesData.php";
           
                 <nav data-megamenu-id="9770107693982036" class="leo-megamenu cavas_menu navbar navbar-default enable-canvas " role="navigation">
                   <div class="navbar-header">
-                    <button type="button" class="navbar-toggler hidden-lg-up" data-toggle="collapse" data-target=".megamenu-off-canvas-9770107693982036">
+                    <button type="button" class="navbar-toggler hidden-lg-up" data-toggle="collapse" data-target=".megamenu-off-canvas-9770107693982036" aria-expanded="false" aria-label="Abrir menú">
                         <span class="sr-only">Navegación de palanca</span>
                                             &#9776;                    
                     </button>
@@ -203,10 +204,10 @@ include "db/core/app/model/ClientesData.php";
                     <!-- @file modules\appagebuilder\views\templates\hook\ApModule -->
 <div id="_desktop_cart">
   <div class="blockcart cart-preview inactive" data-refresh-url="//prestashopdemosite.com/theme/at_galvatron/demo/es/module/ps_shoppingcart/ajax">
-    <div class="header btn-header btn-cart">
+    <a href="carrito.php" class="header btn-header btn-cart" title="Ir al checkout">
               <i class="icon-nqt-shopping-basket" aria-hidden="true"></i>
         <span class="cart-products-count"><?php echo @count(CarritoData::getAllTemporal($session_id));?></span>
-          </div>
+          </a>
    
      <?php $tpms = CarritoData::getAllTemporal($session_id); 
         $total=0;
@@ -219,7 +220,7 @@ include "db/core/app/model/ClientesData.php";
           endforeach; 
         }else{ $total=0; };?>
 
-    <span class="cart-count-items">$ <?php echo $total;?></span>
+    <span class="cart-count-items">S/ <?php echo $total;?></span>
   </div>
 </div>
 
@@ -575,7 +576,8 @@ include "db/core/app/model/ClientesData.php";
 
 </main>
 
-  <script src="css/jquery.js"></script>  
+  <script src="css/jquery.js"></script>
+<script src="js/tienda-nav.js"></script>  
 <script type="text/javascript">
       
     

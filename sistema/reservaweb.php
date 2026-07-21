@@ -270,9 +270,9 @@ $reg = $tra->ListarArqueoCaja();
 													<th>N°</th>
 													<th>Nombres cliente</th>
 													<th>Correo electrónico</th>
+													<th>Personas</th>
 													<th>Hora de llegada</th>
 													<th>Mensaje</th>
-													
 												 <th>Acciones</th>
 												 </tr>
 												 </thead>
@@ -280,27 +280,34 @@ $reg = $tra->ListarArqueoCaja();
 
 
 <?php  
-include "../db/core/autoload.php";
-include "../db/core/app/model/ClientesData.php";
-include "../db/core/app/model/ReservaData.php";
+include_once __DIR__ . "/../db/core/autoload.php";
+include_once __DIR__ . "/../db/core/app/model/ClientesData.php";
+include_once __DIR__ . "/../db/core/app/model/ReservaData.php";
 
 $reservas = ReservaData::getAll();
-      
-     
-        if(@count($reservas)>0){ ?>  
-        <?php foreach($reservas as $reserva):?>
+if (!is_array($reservas)) {
+    $reservas = array();
+}
+
+        if (count($reservas) > 0) { ?>  
+        <?php foreach ($reservas as $reserva):
+            $cli = $reserva->getCliente();
+            $nom = ($cli && isset($cli->nomcliente)) ? $cli->nomcliente : 'Cliente #' . (int) $reserva->id_cliente;
+            $mailCli = ($cli && isset($cli->emailcliente)) ? $cli->emailcliente : '—';
+        ?>
           
           <tr role="row" class="odd">
-                         <td class="sorting_1" tabindex="0"><?php echo $reserva->id; ?></td>
-                                               <td><?php echo $reserva->getCliente()->nomcliente; ?></td>
-                                               <td><?php echo $reserva->getCliente()->emailcliente; ?></td>
-                                               <td><?php echo $reserva->fecha; ?></td>
-                                               <td><?php echo $reserva->mensaje; ?></td>
+                         <td class="sorting_1" tabindex="0"><?php echo (int) $reserva->id; ?></td>
+                                               <td><?php echo htmlspecialchars($nom); ?></td>
+                                               <td><?php echo htmlspecialchars($mailCli); ?></td>
+                                               <td><?php echo (int) $reserva->cantidad; ?></td>
+                                               <td><?php echo htmlspecialchars($reserva->fecha); ?></td>
+                                               <td><?php echo htmlspecialchars($reserva->mensaje); ?></td>
                                                
                          <td>
  
 
-<a href="delreserva.php?id=<?php echo $reserva->id; ?>" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar reserva" ><i class="fa fa-archive"></i></a>
+<a href="delreserva.php?id=<?php echo (int) $reserva->id; ?>" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar reserva" ><i class="fa fa-archive"></i></a>
 
 
 
@@ -308,7 +315,9 @@ $reservas = ReservaData::getAll();
                          </tr>
 
         <?php endforeach; ?>
-    <?php }else{  }; ?>   
+    <?php } else { ?>
+          <tr><td colspan="7" class="text-center">No hay reservas web registradas.</td></tr>
+    <?php } ?>   
 
 
 

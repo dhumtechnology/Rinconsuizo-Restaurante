@@ -337,16 +337,16 @@ $(".phone").mask("999 999 9999");
 
                             <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
-                 <label class="control-label">Iva en Compras: <span class="symbol required"></span></label> 
- <input type="text" class="form-control number" name="ivac" id="ivac" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Iva de Compras" value="<?php echo $reg[0]['ivac']; ?>" required="" aria-required="true">
+                 <label class="control-label">IGV en Compras: <span class="symbol required"></span></label> 
+ <input type="text" class="form-control number" name="ivac" id="ivac" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese IGV de Compras" value="<?php echo $reg[0]['ivac']; ?>" required="" aria-required="true">
                         <i class="fa fa-usd form-control-feedback"></i>  
                                                                 </div> 
                                                             </div>  
 															
 							<div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
-              <label class="control-label">Iva en Ventas: <span class="symbol required"></span></label> 
- <input type="text" class="form-control number" name="ivav" id="ivav" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Iva de Ventas" value="<?php echo $reg[0]['ivav']; ?>" required="" aria-required="true">
+              <label class="control-label">IGV en Ventas: <span class="symbol required"></span></label> 
+ <input type="text" class="form-control number" name="ivav" id="ivav" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese IGV de Ventas" value="<?php echo $reg[0]['ivav']; ?>" required="" aria-required="true">
                         <i class="fa fa-usd form-control-feedback"></i>  
                                                                 </div> 
                                                             </div>	

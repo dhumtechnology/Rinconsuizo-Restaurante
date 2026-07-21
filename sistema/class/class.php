@@ -1135,7 +1135,8 @@ public function ListarMesas()
 	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
 		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS fechapedido,
 		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS pedidos_cocina,
-		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '0' AND v.statusventa = 'PENDIENTE') AS pedidos_activos
+		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '0' AND v.statusventa = 'PENDIENTE') AS pedidos_activos,
+		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS pedidos_pendientes
 		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala";
 	foreach ($this->dbh->query($sql) as $row)
 	{
@@ -1332,7 +1333,8 @@ public function LiberarMesasUnion($codmesa)
 		$stmt->execute(array($m));
 	}
 	if ($this->TablaMesasUnidasExiste()) {
-		$sqlDel = "DELETE FROM mesas_unidas WHERE codmesa_principal = ? AND activa = 1";
+		// Desactivar (no borrar) para que la boleta conserve "Mesa1 + Mesa2"
+		$sqlDel = "UPDATE mesas_unidas SET activa = 0 WHERE codmesa_principal = ? AND activa = 1";
 		$stmtDel = $this->dbh->prepare($sqlDel);
 		$stmtDel->execute(array($principal));
 	}
@@ -1340,10 +1342,9 @@ public function LiberarMesasUnion($codmesa)
 
 public function NombreMesaConUnion($codmesa)
 {
-	$principal = $this->ResolverMesaPrincipal($codmesa);
-	$mapa = $this->ObtenerMapaMesasUnidas();
-	if (isset($mapa['grupos'][$principal])) {
-		return implode(' + ', $mapa['grupos'][$principal]['nombres']);
+	$nombres = $this->NombresMesasGrupo($codmesa, true);
+	if (!empty($nombres)) {
+		return implode(' + ', $nombres);
 	}
 	self::SetNames();
 	$sql = "SELECT nombremesa FROM mesas WHERE codmesa = ? LIMIT 1";
@@ -1353,6 +1354,86 @@ public function NombreMesaConUnion($codmesa)
 		return $row['nombremesa'];
 	}
 	return '';
+}
+
+/**
+ * Nombre de mesas para boletas/tickets (incluye unión ya liberada).
+ */
+public function NombreMesaConUnionHistorial($codmesa)
+{
+	$nombres = $this->NombresMesasGrupo($codmesa, false);
+	if (!empty($nombres)) {
+		return implode(' + ', $nombres);
+	}
+	return $this->NombreMesaConUnion($codmesa);
+}
+
+/**
+ * @param bool $soloActivas true = pantalla de mesas; false = también historial para boleta
+ * @return string[]
+ */
+public function NombresMesasGrupo($codmesa, $soloActivas = true)
+{
+	if (!$this->TablaMesasUnidasExiste()) {
+		return array();
+	}
+	self::SetNames();
+	$codmesa = (string) $codmesa;
+	$principal = null;
+	$fechacreacion = null;
+
+	if ($soloActivas) {
+		$sql = "SELECT codmesa_principal FROM mesas_unidas WHERE codmesa = ? AND activa = 1 LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codmesa));
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$principal = (string) $row['codmesa_principal'];
+		}
+		if ($principal === null) {
+			return array();
+		}
+		$sqlN = "SELECT m.nombremesa FROM mesas_unidas mu
+			INNER JOIN mesas m ON m.codmesa = mu.codmesa
+			WHERE mu.codmesa_principal = ? AND mu.activa = 1
+			ORDER BY mu.codmesa ASC";
+		$stmtN = $this->dbh->prepare($sqlN);
+		$stmtN->execute(array($principal));
+	} else {
+		// Activa primero; si no, último grupo histórico de esa mesa
+		$sql = "SELECT codmesa_principal, fechacreacion, activa FROM mesas_unidas WHERE codmesa = ? ORDER BY activa DESC, idunion DESC LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codmesa));
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$principal = (string) $row['codmesa_principal'];
+			$fechacreacion = $row['fechacreacion'];
+			$activa = (int) $row['activa'];
+		} else {
+			return array();
+		}
+		if ($activa === 1) {
+			$sqlN = "SELECT m.nombremesa FROM mesas_unidas mu
+				INNER JOIN mesas m ON m.codmesa = mu.codmesa
+				WHERE mu.codmesa_principal = ? AND mu.activa = 1
+				ORDER BY mu.codmesa ASC";
+			$stmtN = $this->dbh->prepare($sqlN);
+			$stmtN->execute(array($principal));
+		} else {
+			$sqlN = "SELECT m.nombremesa FROM mesas_unidas mu
+				INNER JOIN mesas m ON m.codmesa = mu.codmesa
+				WHERE mu.codmesa_principal = ? AND mu.fechacreacion = ?
+				ORDER BY mu.codmesa ASC";
+			$stmtN = $this->dbh->prepare($sqlN);
+			$stmtN->execute(array($principal, $fechacreacion));
+		}
+	}
+
+	$nombres = array();
+	while ($r = $stmtN->fetch(PDO::FETCH_ASSOC)) {
+		if (!empty($r['nombremesa'])) {
+			$nombres[] = $r['nombremesa'];
+		}
+	}
+	return $nombres;
 }
 
 public function MesaTieneUnionActiva($codmesa)
@@ -1395,8 +1476,8 @@ public function GrupoUnionTienePedidoActivo($codmesa)
 public function JuntarMesas()
 {
 	header('Content-Type: application/json; charset=UTF-8');
-	if (!isset($_SESSION['acceso']) || $_SESSION['acceso'] !== 'mesero') {
-		echo json_encode(array('ok' => false, 'msg' => 'Solo el mesero puede juntar mesas.'));
+	if (!isset($_SESSION['acceso']) || !in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true)) {
+		echo json_encode(array('ok' => false, 'msg' => 'No tiene permiso para juntar mesas.'));
 		exit;
 	}
 	if (!$this->TablaMesasUnidasExiste()) {
@@ -1460,8 +1541,8 @@ public function JuntarMesas()
 public function SepararMesasUnion()
 {
 	header('Content-Type: application/json; charset=UTF-8');
-	if (!isset($_SESSION['acceso']) || $_SESSION['acceso'] !== 'mesero') {
-		echo json_encode(array('ok' => false, 'msg' => 'Solo el mesero puede separar mesas.'));
+	if (!isset($_SESSION['acceso']) || !in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true)) {
+		echo json_encode(array('ok' => false, 'msg' => 'No tiene permiso para separar mesas.'));
 		exit;
 	}
 	$codmesa = isset($_POST['codmesa']) ? (int) $_POST['codmesa'] : 0;
@@ -1486,7 +1567,7 @@ public function SepararMesasUnion()
 			exit;
 		}
 	}
-	$sqlDel = "DELETE FROM mesas_unidas WHERE codmesa_principal = ? AND activa = 1";
+	$sqlDel = "UPDATE mesas_unidas SET activa = 0 WHERE codmesa_principal = ? AND activa = 1";
 	$stmtDel = $this->dbh->prepare($sqlDel);
 	$stmtDel->execute(array($principal));
 	echo json_encode(array('ok' => true, 'msg' => 'Mesas separadas correctamente.'));
@@ -6013,20 +6094,23 @@ if(base64_decode($_GET["tipomovimientocaja"])=="INGRESO"){
 	public function ListarDelivery()
 	{
 		self::SetNames();
-	
-if($_SESSION["acceso"] == 'repartidor'){
+		$this->p = array();
 
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.totalpago, ventas.entregado, ventas.delivery, ventas.repartidor, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.direccliente, usuarios.nombres, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '. ') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo WHERE ventas.repartidor = '".$_SESSION["codigo"]."' AND ventas.entregado = 1 GROUP BY detalleventas.codventa";
-        foreach ($this->dbh->query($sql) as $row)
-		{
-			$this->p[] = $row;
-		}
-		return $this->p;
-		$this->dbh=null;
+if($_SESSION["acceso"] == 'repartidor'){
+	// Asignados a mí + nuevos sin repartidor (repartidor 0 / vacío)
+	$codigo = isset($_SESSION["codigo"]) ? (string) $_SESSION["codigo"] : '0';
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.totalpago, ventas.entregado, ventas.delivery, ventas.repartidor, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.direccliente, usuarios.nombres, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo WHERE ventas.delivery = 1 AND ventas.entregado = 1 AND (ventas.repartidor = ? OR ventas.repartidor = '0' OR ventas.repartidor = '' OR ventas.repartidor IS NULL) GROUP BY detalleventas.codventa ORDER BY CASE WHEN ventas.repartidor = ? THEN 1 ELSE 0 END ASC, ventas.idventa ASC";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute(array($codigo, $codigo));
+	while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+	}
+	return $this->p;
 
 	} else {
 
-	$filtroUsuario = ($_SESSION["acceso"] == 'administrador')
+	// Admin y cajero ven todos los delivery (incl. pedidos web con codigo=0)
+	$filtroUsuario = (in_array($_SESSION["acceso"], array('administrador', 'cajero'), true))
 		? ""
 		: " AND ventas.codigo = '".$_SESSION["codigo"]."'";
 
@@ -6041,31 +6125,62 @@ if($_SESSION["acceso"] == 'repartidor'){
 }
 ############################## FUNCION LISTAR PEDIDOS EN DELIVERY ##################################
 
+############################# FUNCION TOMAR PEDIDO DELIVERY (REPARTIDOR) #########################
+	public function TomarDelivery()
+	{
+		self::SetNames();
+		if (!isset($_SESSION['acceso']) || $_SESSION['acceso'] !== 'repartidor') {
+			echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center>No tiene permiso para tomar pedidos.</center></div>";
+			exit;
+		}
+		$codventa = strip_tags(base64_decode($_GET["codventa"]));
+		$codigo = (string) $_SESSION["codigo"];
+		// Solo si sigue sin asignar (evita carrera entre repartidores)
+		$sql = "UPDATE ventas SET repartidor = ? WHERE codventa = ? AND delivery = 1 AND entregado = 1 AND (repartidor = '0' OR repartidor = '' OR repartidor IS NULL)";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codigo, $codventa));
+		if ($stmt->rowCount() > 0) {
+			echo "<div class='alert alert-success'>";
+			echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+			echo "<center><span class='fa fa-check-square-o'></span> PEDIDO ASIGNADO A USTED. YA PUEDE ENTREGARLO.</center>";
+			echo "</div>";
+		} else {
+			echo "<div class='alert alert-warning'>";
+			echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+			echo "<center><span class='fa fa-info-circle'></span> ESTE PEDIDO YA FUE TOMADO POR OTRO REPARTIDOR O NO ESTÁ DISPONIBLE.</center>";
+			echo "</div>";
+		}
+		exit;
+	}
+############################# FUNCION TOMAR PEDIDO DELIVERY (REPARTIDOR) #########################
+
 ############################# FUNCION PARA ENTREGA DE PEDIDOS POR COCINERO #########################
 	public function EntregarDelivery()
 	{
 		self::SetNames();
-		
-		$sql = " update ventas set "
-			  ." entregado = ? "
-			  ." where "
-			  ." codventa = ?;
-			   ";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->bindParam(1, $entregado);
-		$stmt->bindParam(2, $codventa);
-		
-		$entregado = strip_tags("0");
 		$codventa = strip_tags(base64_decode($_GET["codventa"]));
-		$stmt->execute();
-		
-        echo "<div class='alert alert-info'>";
+		$entregado = "0";
+
+		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'repartidor') {
+			$sql = "UPDATE ventas SET entregado = ? WHERE codventa = ? AND repartidor = ? AND delivery = 1 AND entregado = 1";
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array($entregado, $codventa, (string) $_SESSION["codigo"]));
+			if ($stmt->rowCount() == 0) {
+				echo "<div class='alert alert-warning'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center>No puede entregar este pedido: no está asignado a usted o ya fue entregado.</center></div>";
+				exit;
+			}
+		} else {
+			$sql = "UPDATE ventas SET entregado = ? WHERE codventa = ?";
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array($entregado, $codventa));
+		}
+
+		echo "<div class='alert alert-info'>";
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
 		echo "<center><span class='fa fa-check-square-o'></span> EL PEDIDO EN DELIVERY FUE ENTREGADO EXITOSAMENTE </center>";
-		echo "</div>"; 
+		echo "</div>";
 		exit;
-	
-  }
+	}
 ############################# FUNCION PARA ENTREGA DE PEDIDOS POR COCINERO ##############################
 
 ############################# FUNCION VERIFICA CAJAS PARA DELIVERY ###################################
@@ -6123,8 +6238,9 @@ $config = $config->ConfiguracionPorId();
 
            			?>
 
-<div class="row">
-    <div class="col-sm-12">
+<form class="form" method="post" action="#" name="deliver" id="deliver">
+<div class="row delivery-layout">
+    <div class="col-sm-8 col-xs-12" id="delivery-productos">
        <div class="panel panel-primary">
         <div class="panel-heading"><h3 class="panel-title"><i class="fa fa-tasks"></i> Control de Productos<span class="pull-right"><a href="#" class="btn btn-default dropdown-toggle" onClick="CargaDelivery()" data-href="#" data-toggle="modal" data-target=".bs-example-modal-lg" data-placement="left" data-backdrop="static" data-keyboard="false" data-id="" rel="tooltip" data-original-title="Ver Producto"><span class="fa fa-motorcycle"></span> Delivery Pendientes</a></span></h3></div>
             <div class="panel-body">
@@ -6202,7 +6318,7 @@ echo "<img src='fotos/".$producto[$ii]['codproducto'].".jpg?' class='img-circle'
 } else {
 
 echo "<img src='fotos/producto.png' class='img-circle' style='width:60px;height:60px;'>";  } ?></p>
-    <h5>$ <?php echo $producto[$ii]['precioventa'];?></h5>
+    <h5><?php echo htmlspecialchars(isset($config[0]['simbolo']) ? $config[0]['simbolo'] : 'S/'); ?> <?php echo $producto[$ii]['precioventa'];?></h5>
 <h5><i class="fa fa-bars"></i> <?php echo $producto[$ii]['existencia'];?></h5><br>
                                         </div><br>
                                     </div>
@@ -6229,19 +6345,12 @@ echo "<img src='fotos/producto.png' class='img-circle' style='width:60px;height:
                 </div>
             </div>
         </div>
-    </div>
 
 
+    <div class="col-sm-4 col-xs-12" id="delivery-orden">
 
-
-<div class="row">
-    
-    <form class="form" method="post" action="#" name="deliver" id="deliver">
-
-
-<div class="col-sm-8">
     <div class="panel panel-primary">
-        <div class="panel-heading"><h3 class="panel-title"><i class="fa fa-cutlery"></i> Detalles de Productos</h3></div>
+        <div class="panel-heading"><h3 class="panel-title"><i class="fa fa-cutlery"></i> Orden Delivery</h3></div>
             <div class="panel-body">
                 <div class="row">
                     <div class="col-sm-12 col-xs-12">
@@ -6282,7 +6391,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 <span class="product-label ng-binding "><?php echo getSubString($favoritos[$i]['producto'], 8);?></span>
 </button>
 
-    <?php  if($x==8){ echo "<div class='clearfix'></div>"; $x=0; } $x++; } }
+    <?php  if($x==4){ echo "<div class='clearfix'></div>"; $x=0; } $x++; } }
 
     echo $status = ( $favoritos[0]["codproducto"] == '' ? '' : '<hr>');?></div>
 
@@ -6298,21 +6407,21 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 
 <input type="hidden" name="codproducto" id="codproducto" placeholder="Codigo">
 <input type="hidden" name="codcategoria" id="codcategoria" placeholder="Categoria">
-<input type="hidden" name="precioconiva" id="precioconiva" placeholder="Precio con Iva">
+<input type="hidden" name="precioconiva" id="precioconiva" placeholder="Precio con IGV">
 <input type="hidden" name="precio" id="precio" placeholder="Precio de Compra">
 <input type="hidden" name="precio2" id="precio2" placeholder="Precio de Venta">
-<input type="hidden" name="ivaproducto" id="ivaproducto" placeholder="Iva Producto">
+<input type="hidden" name="ivaproducto" id="ivaproducto" placeholder="IGV Producto">
 <input type="hidden" name="existencia" id="existencia" placeholder="Existencia">
 <input type="hidden" name="cantidad" id="cantidad" value="1" placeholder="Cantidad">
 
                 <div class="row"> 
                     <div class="col-md-12"> 
-                        <div class="table-responsive" data-pattern="priority-columns">
+                        <div class="table-responsive" data-pattern="priority-columns" style="max-height:280px;overflow-y:auto;">
                             <table  id="carrito" class="table table-small-font table-striped">
                                 <thead>
 <tr style="background:#01ba9a;">
-<th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Cantidad</div></h3></th>
-<th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Descripci&oacute;n de Producto</div></h3></th>
+<th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Cant.</div></h3></th>
+<th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Producto</div></h3></th>
 <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Precio</div></h3></th>
 <th style="color:#FFFFFF;"><h3 class="panel-title"><div align="center">Acci&oacute;n</div></h3></th>
 </tr>
@@ -6323,17 +6432,17 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
                                     </tr>
                                 </tbody>
                             </table>
-            <table width="250" id="carritototal">
+            <table width="100%" id="carritototal">
                         <tr>
-<td colspan=3><span class="Estilo9"><label>Subtotal Iva <?php echo $config[0]['ivav'] ?>%:</label></span></td>
+<td colspan=3><span class="Estilo9"><label>Subtotal IGV <?php echo $config[0]['ivav'] ?>%:</label></span></td>
 <td><div align="right" class="Estilo9"><?php echo "<strong>".$config[0]['simbolo']."</strong>"; ?><label id="lblsubtotal" name="lblsubtotal">0.00</label><input type="hidden" name="txtsubtotal" id="txtsubtotal" value="0.00"/></div></td>
                         </tr>
                         <tr>
-<td colspan=3><span class="Estilo9"><label>Subtotal Iva 0%:</label></span></td>
+<td colspan=3><span class="Estilo9"><label>Subtotal IGV 0%:</label></span></td>
 <td><div align="right" class="Estilo9"><?php echo "<strong>".$config[0]['simbolo']."</strong>"; ?><label id="lblsubtotal2" name="lblsubtotal2">0.00</label><input type="hidden" name="txtsubtotal2" id="txtsubtotal2" value="0.00"/></div></td>
                         </tr>
                         <tr>
-<td colspan=3><span class="Estilo9"><label>Iva <?php echo $config[0]['ivav'] ?>%<input name="iva" id="iva" type="hidden" value="<?php echo $config[0]['ivav'] ?>"/></label></span></td>
+<td colspan=3><span class="Estilo9"><label>IGV <?php echo $config[0]['ivav'] ?>%<input name="iva" id="iva" type="hidden" value="<?php echo $config[0]['ivav'] ?>"/></label></span></td>
 <td><div align="right" class="Estilo9"><?php echo "<strong>".$config[0]['simbolo']."</strong>"; ?><label id="lbliva" name="lbliva">0.00</label><input type="hidden" name="txtIva" id="txtIva" value="0.00"/></div></td>
                         </tr>
                         <tr>
@@ -6365,9 +6474,9 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
        </div> 
 </div><br>
 
-                    <div class="modal-footer"> 
-<button type="submit" name="btn-venta" id="btn-venta" class="btn btn-primary"><span class="fa fa-save"></span> Confirmar Pedido</button> 
-<button type="button" id="vaciard" class="btn btn-danger" title="Vaciar Carrito"><span class="fa fa-trash-o"></span> Limpiar</button>
+                    <div class="modal-footer" style="padding:8px 0;margin:0;border:0;"> 
+<button type="submit" name="btn-venta" id="btn-venta" class="btn btn-primary btn-block"><span class="fa fa-save"></span> Confirmar Pedido</button> 
+<button type="button" id="vaciard" class="btn btn-danger btn-block" title="Vaciar Carrito"><span class="fa fa-trash-o"></span> Limpiar</button>
                     </div>
 
                          </div><!-- /.box-body -->
@@ -6375,12 +6484,11 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
                 </div>
         </div>
     </div>
-</div>
 
 
 <div id="pedido">
 
-<div class="col-sm-4">
+<div class="col-sm-12">
 	<div class="panel panel-primary">
 		<div class="panel-heading"><h3 class="panel-title"><i class="fa fa-file-pdf-o"></i> Detalles de Factura</h3></div>
 		<div class="panel-body">
@@ -6537,13 +6645,11 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 		</div>
 	</div>
 
-</div> 
+</div><!-- fin de id pedido -->
 
-</div><!-- fin de id pedido -->                    
-
-       </form>
-   </div>
-</div>
+    </div><!-- #delivery-orden -->
+</div><!-- .row.delivery-layout -->
+</form>
 
 
 
@@ -8569,6 +8675,9 @@ public function VentasPorId()
 	{
 		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
 			{
+				if (!empty($row['codmesa']) && (string) $row['codmesa'] !== '0') {
+					$row['nombremesa'] = $this->NombreMesaConUnionHistorial($row['codmesa']);
+				}
 				$this->p[] = $row;
 			}
 			return $this->p;
@@ -8594,6 +8703,9 @@ public function VentasPorIdFa()
 	{
 		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
 			{
+				if (!empty($row['codmesa']) && (string) $row['codmesa'] !== '0') {
+					$row['nombremesa'] = $this->NombreMesaConUnionHistorial($row['codmesa']);
+				}
 				$this->p[] = $row;
 			}
 			return $this->p;

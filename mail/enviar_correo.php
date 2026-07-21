@@ -5,8 +5,45 @@
  *
  * @return array{ok: bool, error: string}
  */
+
+function cargar_env_smtp_si_falta()
+{
+    if (getenv('SMTP_HOST')) {
+        return;
+    }
+    $envFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env';
+    if (!is_readable($envFile)) {
+        return;
+    }
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) {
+        return;
+    }
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
+            continue;
+        }
+        list($key, $value) = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value, " \t\"'");
+        if ($key === '') {
+            continue;
+        }
+        $actual = getenv($key);
+        // Docker puede inyectar SMTP_* vacío; en ese caso sí leemos .env
+        if ($actual !== false && $actual !== '') {
+            continue;
+        }
+        putenv($key . '=' . $value);
+        $_ENV[$key] = $value;
+    }
+}
+
 function enviar_correo_web($para, $asunto, $html, $nombreDestino = '')
 {
+    cargar_env_smtp_si_falta();
+
     $host = getenv('SMTP_HOST') ?: '';
     $user = getenv('SMTP_USER') ?: '';
     $pass = getenv('SMTP_PASS') ?: '';
@@ -14,6 +51,13 @@ function enviar_correo_web($para, $asunto, $html, $nombreDestino = '')
     $fromEmail = getenv('SMTP_FROM_EMAIL') ?: $user;
     $fromName = getenv('SMTP_FROM_NAME') ?: 'Rincon Suizo';
     $secure = strtolower(getenv('SMTP_SECURE') ?: 'tls');
+
+    if ($para === '' || !filter_var($para, FILTER_VALIDATE_EMAIL)) {
+        return [
+            'ok' => false,
+            'error' => 'Correo destino inválido',
+        ];
+    }
 
     if ($host === '' || $user === '' || $pass === '') {
         return [

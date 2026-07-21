@@ -590,7 +590,7 @@ if (isset($_GET['BuscaDivProducto'])) {
   5. Precio Venta. (Digitos con 2 decimales).<br>
   6. Stock Actual. (Debe de ser solo numeros enteros).<br>
   7. Stock Minimo. (Debe de ser solo numeros enteros).<br>
-  8. Iva de Producto. (Ejem. SI o NO).<br>
+  8. IGV de Producto. (Ejem. SI o NO).<br>
   9. Descuento de Producto. (Digitos con 2 decimales).<br>
   10. Proveedor. (Debe de colocar el C&oacute;digo de Proveedor, consultarlos en el M&oacute;dulo de Proveedores).<br>
   11. Codigo de Barra. (En caso de no tener colocar Cero (0)).<br>
@@ -704,7 +704,7 @@ $reg = $tra->DetalleProductosPorId();
       <td><strong>Stock Minimo: </strong> <?php echo $reg[0]['stockminimo']; ?></td>
     </tr>
     <tr>
-      <td><strong>Tiene Iva: </strong> <?php echo $reg[0]['ivaproducto']; ?></td>
+      <td><strong>Tiene IGV: </strong> <?php echo $reg[0]['ivaproducto']; ?></td>
     </tr>
     <tr>
       <td><strong>Descuento %: </strong> <?php echo $reg[0]['descproducto']; ?></td>
@@ -1311,15 +1311,15 @@ $importe=$busq[$i]["precio1"]*$cantidad;
                               <?php } ?>
                                 <tr>
                               <td colspan="3" rowspan="5">&nbsp;</td>
-<td colspan="2"><div align="right"><strong>SubTotal Iva <?php echo $co[0]["ivac"]."(%)"; ?>:</strong></div></td>
+<td colspan="2"><div align="right"><strong>SubTotal IGV <?php echo $co[0]["ivac"]."(%)"; ?>:</strong></div></td>
 <td><div align="right"><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($co[0]["subtotalivasic"], 2, '.', ','); ?></div></td>
                                 </tr>
                                <tr>
-<td colspan="2"><div align="right"><strong>SubTotal Iva 0%:</strong></div></td>
+<td colspan="2"><div align="right"><strong>SubTotal IGV 0%:</strong></div></td>
 <td><div align="right"><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($co[0]["subtotalivanoc"], 2, '.', ','); ?></div></td>
                             </tr>
                               <tr>
-<td colspan="2"><div align="right"><strong>Iva <?php echo $co[0]["ivac"]."(%)"; ?>:</strong></div></td>
+<td colspan="2"><div align="right"><strong>IGV <?php echo $co[0]["ivac"]."(%)"; ?>:</strong></div></td>
 <td><div align="right"><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($co[0]["totalivac"], 2, '.', ','); ?></div></td>
                                 </tr>
                               <tr>
@@ -1363,7 +1363,7 @@ if(base64_decode($_GET['tipoentrada'])=="PRODUCTO"){
       <td><strong>Precio Venta: </strong> <?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($reg[0]['precio2'], 2, '.', ','); ?></td>
     </tr>
     <tr>
-      <td><strong>Tiene Iva: </strong> <?php echo $reg[0]['ivaproductoc']; ?></td>
+      <td><strong>Tiene IGV: </strong> <?php echo $reg[0]['ivaproductoc']; ?></td>
     </tr>
     <tr>
       <td><strong>Cantidad Compra: </strong> <?php echo $reg[0]['cantcompra']; ?></td>
@@ -1393,7 +1393,7 @@ if(base64_decode($_GET['tipoentrada'])=="PRODUCTO"){
       <td><strong>Precio Venta: </strong> <?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($reg[0]['precio2'], 2, '.', ','); ?></td>
     </tr>
     <tr>
-      <td><strong>Tiene Iva: </strong> <?php echo $reg[0]['ivaproductoc']; ?></td>
+      <td><strong>Tiene IGV: </strong> <?php echo $reg[0]['ivaproductoc']; ?></td>
     </tr>
     <tr>
       <td><strong>Cantidad Compra: </strong> <?php echo $reg[0]['cantcompra']." ".$reg[0]['categoria']; ?></td>
@@ -1450,9 +1450,9 @@ $pro = $pro->ProveedorPorId();
                                                     <th>N&deg;</th>
                           <th>N&deg; de Compra</th>
                           <th>Fecha Registro</th>
-                          <th>Subtotal Con Iva</th>
-                          <th>Subtotal Iva 0%</th>
-                          <th>Total Iva</th>
+                          <th>Subtotal Con IGV</th>
+                          <th>Subtotal IGV 0%</th>
+                          <th>Total IGV</th>
                           <th>Total Desc</th>
                           <th>Total</th>
                           <th>Imprimir</th>
@@ -1564,9 +1564,9 @@ if($desde=="") {
                           <th>N&deg; de Compra</th>
                           <th>Proveedor</th>
                           <th>Fecha Registro</th>
-                          <th>Subtotal Con Iva</th>
-                          <th>Subtotal Iva 0%</th>
-                          <th>Total Iva</th>
+                          <th>Subtotal Con IGV</th>
+                          <th>Subtotal IGV 0%</th>
+                          <th>Total IGV</th>
                           <th>Total Desc</th>
                           <th>Total</th>
                           <th>Imprimir</th>
@@ -2165,15 +2165,15 @@ for($i=0;$i<sizeof($arqueo);$i++){
 
       <table width="250">
                         <tr>
-<td colspan=3><span class="Estilo9"><label>Subtotal Iva <?php echo $con[0]['ivav'] ?>%:</label></span></td>
+<td colspan=3><span class="Estilo9"><label>Subtotal IGV <?php echo $con[0]['ivav'] ?>%:</label></span></td>
 <td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label><?php echo $arqueo[0]['subtotalivasive'] ?></label><input type="hidden" name="txtsubtotall" id="txtsubtotall" value="<?php echo $arqueo[0]['subtotalivasive'] ?>"/></div></td>
                         </tr>
                         <tr>
-<td colspan=3><span class="Estilo9"><label>Subtotal Iva 0%:</label></span></td>
+<td colspan=3><span class="Estilo9"><label>Subtotal IGV 0%:</label></span></td>
 <td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label><?php echo $arqueo[0]['subtotalivanove'] ?></label><input type="hidden" name="txtsubtotall2" id="txtsubtotall2" value="<?php echo $arqueo[0]['subtotalivanove'] ?>"/></div></td>
                         </tr>
                         <tr>
-<td colspan=3><span class="Estilo9"><label>Iva <?php echo $arqueo[0]['ivave'] ?>%<input name="iva" id="iva" type="hidden" value="<?php echo $arqueo[0]['ivave'] ?>"  /></label></span></td>
+<td colspan=3><span class="Estilo9"><label>IGV <?php echo $arqueo[0]['ivave'] ?>%<input name="iva" id="iva" type="hidden" value="<?php echo $arqueo[0]['ivave'] ?>"  /></label></span></td>
 <td><div align="right" class="Estilo9"><?php echo "<strong>".$con[0]['simbolo']."</strong>"; ?><label><?php echo $arqueo[0]['totalivave'] ?></label><input type="hidden" name="txtIvaa" id="txtIvaa" value="<?php echo $arqueo[0]['totalivave'] ?>"/></div></td>
                         </tr>
                         <tr>
@@ -2258,9 +2258,9 @@ if (isset($_GET['BuscarVentas']) && isset($_GET['tipobusqueda']) && isset($_GET[
                                   <th>N&deg; de Venta</th>
                                   <th>N&deg; Caja</th>
                                   <th>Clientes</th>
-                                  <th>Subtotal Con IVA %</th>
-                                  <th>Subtotal IVA 0%</th>
-                                  <th>IVA</th>
+                                  <th>Subtotal Con IGV %</th>
+                                  <th>Subtotal IGV 0%</th>
+                                  <th>IGV</th>
                                   <th>Total</th>
                                   <th>Acciones</th>
                               </tr>
@@ -2390,15 +2390,15 @@ $importe=$busq[$i]["precioventa"]*$cantidad;
                               <?php } ?>
                              <tr>
                                <td colspan="3" rowspan="5">&nbsp;</td>
-<td colspan="2"><div align="right"><strong>SubTotal Iva <?php echo $ve[0]["ivave"]."(%)"; ?>:</strong></div></td>
+<td colspan="2"><div align="right"><strong>SubTotal IGV <?php echo $ve[0]["ivave"]."(%)"; ?>:</strong></div></td>
 <td><div align="right"><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($ve[0]["subtotalivasive"], 2, '.', ','); ?></div></td>
                             </tr>
                                <tr>
-<td colspan="2"><div align="right"><strong>SubTotal Iva 0%:</strong></div></td>
+<td colspan="2"><div align="right"><strong>SubTotal IGV 0%:</strong></div></td>
 <td><div align="right"><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($ve[0]["subtotalivanove"], 2, '.', ','); ?></div></td>
                             </tr>
                               <tr>
-<td colspan="2"><div align="right"><strong>Iva <?php echo $ve[0]["ivave"]."(%)"; ?>:</strong></div></td>
+<td colspan="2"><div align="right"><strong>IGV <?php echo $ve[0]["ivave"]."(%)"; ?>:</strong></div></td>
 <td><div align="right"><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($ve[0]["totalivave"], 2, '.', ','); ?></div></td>
                                 </tr>
                               <tr>
@@ -2580,7 +2580,7 @@ $reg = $tra->DetallesVentasPorId();
       <td><strong>Cantidad Venta: </strong> <?php echo $reg[0]['cantventa']; ?></td>
     </tr>
     <tr>
-      <td><strong>Tiene Iva: </strong> <?php echo $reg[0]['ivaproducto']; ?></td>
+      <td><strong>Tiene IGV: </strong> <?php echo $reg[0]['ivaproducto']; ?></td>
     </tr>
     <tr>
       <td><strong>Importe: </strong> <?php echo number_format($reg[0]['cantventa'] * $reg[0]['precioventa'], 2, '.', ','); ?></td>
@@ -2650,9 +2650,9 @@ $ca = $tra->CajerosPorId();
                           <th>N&deg; de Venta</th>
                           <th>Clientes</th>
                           <th>Fecha Venta</th>
-                          <th>Subtotal Con Iva</th>
-                          <th>Subtotal Iva 0%</th>
-                          <th>Total Iva</th>
+                          <th>Subtotal Con IGV</th>
+                          <th>Subtotal IGV 0%</th>
+                          <th>Total IGV</th>
                           <th>Total Desc</th>
                           <th>Total</th>
                           <th>Articulos</th>
@@ -2772,9 +2772,9 @@ if($desde=="") {
                           <th>N&deg; de Venta</th>
                           <th>N&deg; de Caja</th>
                           <th>Fecha Venta</th>
-                          <th>Subtotal Con Iva</th>
-                          <th>Subtotal Iva 0%</th>
-                          <th>Total Iva</th>
+                          <th>Subtotal Con IGV</th>
+                          <th>Subtotal IGV 0%</th>
+                          <th>Total IGV</th>
                           <th>Total Desc</th>
                           <th>Total</th>
                           <th>Articulos</th>
@@ -3307,7 +3307,7 @@ $balancegeneral = $balance - $balance2;
         <th><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($car[0]['totaldebe']-$car[0]['totalabono'], 2, '.', ','); ?></th>
                          </tr>
                          <tr role="row" class="odd">
-                          <th>Total de Impuestos de Ventas Iva <?php echo $con[0]['ivav'] ; ?>%</th>
+                          <th>Total de Impuestos de Ventas IGV <?php echo $con[0]['ivav'] ; ?>%</th>
         <th><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($venta[0]['totaliva'], 2, '.', ','); ?></th>
                          </tr>
                          <tr role="row" class="odd">
@@ -3426,11 +3426,11 @@ $ganancias = $balance-$egr[0]['totalegresos'];
         <th><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($egr[0]['totalegresos'], 2, '.', ','); ?></th>
                          </tr>
                          <tr role="row" class="odd">
-                          <th>Total de Impuestos de Ventas Iva <?php echo $con[0]['ivav'] ; ?>%</th>
+                          <th>Total de Impuestos de Ventas IGV <?php echo $con[0]['ivav'] ; ?>%</th>
         <th><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($venta[0]['totaliva'], 2, '.', ','); ?></th>
                          </tr>
                          <tr role="row" class="odd">
-                          <th>Efectivo en Caja sin IVA</th>
+                          <th>Efectivo en Caja sin IGV</th>
          <th><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($ganancias, 2, '.', ','); ?></th>
                          </tr>
                          </thead>

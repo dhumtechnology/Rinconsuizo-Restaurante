@@ -239,7 +239,7 @@ CREATE TABLE `configuracion` (
 --
 
 INSERT INTO `configuracion` (`id`, `rifempresa`, `nomempresa`, `direcempresa`, `tlfempresa`, `correoempresa`, `cedresponsable`, `nomresponsable`, `correoresponsable`, `tlfresponsable`, `ivac`, `ivav`, `simbolo`, `fac_ele`, `clave`, `usuariosol`, `clavesol`) VALUES
-(1, '20607320986', 'EL RINCON SUIZO', 'PANAMERICANA NORTE 790 URB', '323 352 4016', 'DONEBAREST@GMAIL.COM', '15539294358', 'DORAINE NEGRETE BARRIOS', 'DORAINEGRETE1998@HOTMAIL.COM', '323 352 4016', 18.00, 18.00, '$', 3, '123654', 'MODDATOS', 'moddatos');
+(1, '20607320986', 'EL RINCON SUIZO', 'PANAMERICANA NORTE 790 URB', '323 352 4016', 'DONEBAREST@GMAIL.COM', '15539294358', 'DORAINE NEGRETE BARRIOS', 'DORAINEGRETE1998@HOTMAIL.COM', '323 352 4016', 18.00, 18.00, 'S/', 3, '123654', 'MODDATOS', 'moddatos');
 
 -- --------------------------------------------------------
 

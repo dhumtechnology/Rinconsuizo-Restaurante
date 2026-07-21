@@ -22,6 +22,7 @@ include "db/core/app/model/ClientesData.php";
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
+<link rel="stylesheet" href="css/tienda-mejoras.css?v=3" type="text/css" media="all">
 
 </head>
 
@@ -79,7 +80,7 @@ include "db/core/app/model/ClientesData.php";
           <span>Moneda:</span>
           <ul class="link">
               <li>
-                <a title="Dop" rel="nofollow" href="#" class="dropdown-item">DOP</a>
+                <a title="Soles" rel="nofollow" href="#" class="dropdown-item">PEN</a>
               </li>
           </ul>
         </div>
@@ -154,12 +155,12 @@ include "db/core/app/model/ClientesData.php";
               <div id="memgamenu-form_9770107693982036" class="ApMegamenu">
                 <nav data-megamenu-id="9770107693982036" class="leo-megamenu cavas_menu navbar navbar-default enable-canvas " role="navigation">
                   <div class="navbar-header">
-                    <button type="button" class="navbar-toggler hidden-lg-up" data-toggle="collapse" data-target=".megamenu-off-canvas-9770107693982036">
-                        <span class="sr-only">Navegación de palanca</span>
+                    <button type="button" class="navbar-toggler hidden-lg-up" data-toggle="collapse" data-target=".megamenu-off-canvas-9770107693982036" aria-controls="leo-mobile-menu" aria-expanded="false" aria-label="Abrir menú">
+                        <span class="sr-only">Abrir menú</span>
                                             &#9776;                    
                     </button>
                   </div>
-                  <div class="leo-top-menu collapse navbar-toggleable-md megamenu-off-canvas megamenu-off-canvas-9770107693982036">
+                  <div id="leo-mobile-menu" class="leo-top-menu collapse navbar-toggleable-md megamenu-off-canvas megamenu-off-canvas-9770107693982036">
                     <ul class="nav navbar-nav megamenu horizontal">
 
                         <li data-menu-type="url" class="nav-item" >
@@ -203,10 +204,10 @@ include "db/core/app/model/ClientesData.php";
                     <!-- @file modules\appagebuilder\views\templates\hook\ApModule -->
 <div id="_desktop_cart">
   <div class="blockcart cart-preview inactive" data-refresh-url="">
-    <div class="header btn-header btn-cart">
+    <a href="carrito.php" class="header btn-header btn-cart" title="Ir al checkout">
               <i class="icon-nqt-shopping-basket" aria-hidden="true"></i>
         <span class="cart-products-count"><?php echo @count(CarritoData::getAllTemporal($session_id));?></span>
-          </div>
+          </a>
 
      <?php $tpms = CarritoData::getAllTemporal($session_id); 
         $total=0;
@@ -217,7 +218,7 @@ include "db/core/app/model/ClientesData.php";
           endforeach; 
         }else{ $total=0; };?>
 
-    <span class="cart-count-items">$ <?php echo $total;?></span>
+    <span class="cart-count-items">S/ <?php echo $total;?></span>
   </div>
 </div>
 
@@ -247,7 +248,7 @@ include "db/core/app/model/ClientesData.php";
                 
             <nav data-depth="2" class="breadcrumb hidden-sm-down">
   <!--page name-->
-      <p class="breadcrumb-page-name hidden-sm-down">Menú</p>
+      <p class="breadcrumb-page-name">Menú</p>
     <!--end page name-->
   <ol itemscope itemtype="">
     
@@ -312,7 +313,7 @@ include "db/core/app/model/ClientesData.php";
     
   <div id="js-product-list-header">
             <div class="block-category card card-block">
-            <h1 class="h1">Inicio</h1>
+            <h1 class="h1">Nuestra carta</h1>
             <div class="block-category-inner">
                                             </div>
         </div>
@@ -383,7 +384,7 @@ include "db/core/app/model/ClientesData.php";
      
         if(@count($productos)>0){ ?>  
         <?php foreach($productos as $productoc):?>
-          <div class="ajax_block_product col-sp-12 col-xs-6 col-sm-6 col-md-6 col-lg-4 col-xl-4 last-item-of-tablet-line last-item-of-mobile-line ">    
+          <div class="ajax_block_product col-sp-12 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 last-item-of-tablet-line last-item-of-mobile-line ">    
                   <article class="product-miniature js-product-miniature" data-id-product="1" data-id-product-attribute="0" itemscope itemtype="">
                     <div class="thumbnail-container">
                       <div class="product-image">
@@ -391,7 +392,7 @@ include "db/core/app/model/ClientesData.php";
                          <img class="img-fluid" src="sistema/fotos/<?php echo $productoc->codproducto; ?>.jpg" alt = "" data-full-size-image-url = "img/platos/pina1.jpg">
                          <span class="product-additional" data-idproduct="1"></span>
                          </a>
-                          <span class="discount-percentage">RD$ 
+                          <span class="discount-percentage">S/ 
                             <?php echo number_format($productoc->precioventa,0,'.',',');?>   
                           </span>
                       </div>
@@ -421,10 +422,9 @@ include "db/core/app/model/ClientesData.php";
                 <input type="hidden" class="form-control"  id="cantidad_<?php echo $productoc->codalmacen; ?>"  value="1" min="1" >
                 <input type="hidden" class="form-control" id="precio_venta_<?php echo $productoc->codalmacen; ?>"  value="<?php echo $productoc->precioventa;?>" >
 
-                  <a class="btn btn-product add-to-cart leo-bt-cart leo-bt-cart_1" href="#" onclick="return agregar('<?php echo $productoc->codalmacen; ?>', event);">
+                  <a class="btn btn-product add-to-cart leo-bt-cart leo-bt-cart_1" href="javascript:void(0)" onclick="return agregar('<?php echo $productoc->codalmacen; ?>', event);">
                     <i class="icon-nqt-shopping-basket"></i>
                     <span class="name-btn-product">Agregar a carrito</span>
-                  </span>
                   </a>
              
             </div>
@@ -449,8 +449,8 @@ include "db/core/app/model/ClientesData.php";
                           </div>
                           <div class="col-md-6" style="text-align: left;">
                             <h6 class="h6 product-name" style="color: #f79a34; font-size: 1.125rem;margin-bottom: 0.625rem;"><?php echo $productoc->producto;?></h6>
-                            <p class="product-price" style="color: #142332;text-align: left;font-size: 24px;font-weight: 600;">RD$ <?php echo number_format($productoc->precioventa,0,'.',',');?></p>
-                            <span >Cantidad: <b>1</b></span>
+                            <p class="product-price" style="color: #142332;text-align: left;font-size: 24px;font-weight: 600;">S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></p>
+                            <span class="js-modal-qty">Cantidad: <b>1</b></span>
                           </div>
                         </div>
                       </div>
@@ -458,10 +458,10 @@ include "db/core/app/model/ClientesData.php";
                       <div class="col-md-7" style="border-left: solid 1px #bcbcbc;">
                         <div class="cart-content">
                           <p class="cart-products-count" style="text-align: left;">Hay <?php echo @count(CarritoData::getAllTemporal($session_id));?> artículos en su carrito.</p>
-                          <p class="js-cart-subtotal" style="text-align: left;">Subtotal: <b>$ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
-                          <p style="text-align: left;">Transporte: <b>$ 0</b></p>
-                          <p style="text-align: left;">IVA: <b>$ 20</b></p>
-                          <p class="js-cart-total" style="text-align: left;">Total: <b>$ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
+                          <p class="js-cart-subtotal" style="text-align: left;">Subtotal: <b>S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
+                          <p style="text-align: left;">Transporte: <b>S/ 0</b></p>
+                          <p style="text-align: left;">IGV: <b>S/ 0</b></p>
+                          <p class="js-cart-total" style="text-align: left;">Total: <b>S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
                           <div class="">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">CONTINUAR COMPRANDO</button>
                             <a  href="carrito.php" type="button" class="btn btn-primary">PASAR POR LA CAJA</a>
@@ -614,7 +614,8 @@ include "db/core/app/model/ClientesData.php";
 
 
 <script src="css/jquery.js"></script>
-<script src="js/carrito-home.js"></script>
+<script src="js/tienda-nav.js"></script>
+<script src="js/carrito-home.js?v=3"></script>
 
 
 

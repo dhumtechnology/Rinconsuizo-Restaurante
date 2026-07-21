@@ -112,7 +112,7 @@ $(document).ready(function() {
             } else if(ivgprod==""){
                 $("#ivaproducto").focus();
                 $('#ivaproducto').css('border-color','#01ba9a');
-                alert("Seleccione Si tiene Iva el Producto");
+                alert("Seleccione Si tiene IGV el Producto");
                 return false;
 
             } else {
