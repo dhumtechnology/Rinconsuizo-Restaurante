@@ -350,7 +350,7 @@ include "db/core/app/model/ClientesData.php";
         <div class="form-group row">
           <label class="col-md-3 form-control-label">Mensaje</label>
           <div class="col-md-9">
-            <textarea class="form-control" name="mensaje" placeholder="Algún dato que dejar" required rows="3"></textarea>
+            <textarea class="form-control" name="mensaje" placeholder="Algún dato que dejar (opcional)" rows="3"></textarea>
           </div>
         </div>
 

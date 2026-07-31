@@ -1,8 +1,15 @@
-// FUNCION AUTOCOMPLETE PARA PRODUCTOS, SERVICIOS Y CLIENTES
-$(function() {
-    $("#busquedaproducto").autocomplete({
+// Autocomplete y filtro en vivo de productos / clientes / ingredientes
+function initAutocompleteBusquedaProducto($input) {
+    if (!$input || !$input.length || typeof $.fn.autocomplete !== 'function') {
+        return;
+    }
+    if ($input.data('ui-autocomplete')) {
+        $input.autocomplete('destroy');
+    }
+    $input.autocomplete({
         source: "class/buscaproductos.php",
         minLength: 1,
+        delay: 100,
         select: function(event, ui) {
             $('#codproducto').val(ui.item.codproducto);
             $('#codcategoria').val(ui.item.codcategoria);
@@ -17,32 +24,61 @@ $(function() {
                 var e = jQuery.Event("keypress");
                 e.which = 13;
                 e.keyCode = 13;
-                $("#busquedaproducto").trigger(e);
+                $input.trigger(e);
             }, 100);
         }
     });
-});
+}
 
+function filtrarTilesProductos(texto) {
+    var q = $.trim(String(texto || '')).toLowerCase();
+    var $tiles = $('.rs-prod-tile, #productos-categorias .col-md-2.mb, #delivery-productos .col-md-2.mb');
+    if (!$tiles.length) {
+        return;
+    }
+    if (q === '') {
+        $tiles.show();
+        return;
+    }
+    $tiles.each(function() {
+        var $t = $(this);
+        var nombre = String($t.data('nombre') || $t.find('[title]').attr('title') || $t.attr('title') || $t.text() || '').toLowerCase();
+        $t.toggle(nombre.indexOf(q) !== -1);
+    });
+}
+
+function bindFiltroLiveBusquedaProducto(selector) {
+    var $el = $(selector);
+    if (!$el.length) {
+        return;
+    }
+    $el.off('input.rsLive keyup.rsLive').on('input.rsLive keyup.rsLive', function() {
+        filtrarTilesProductos(this.value);
+    });
+}
+
+function initBusquedasProductoUI() {
+    initAutocompleteBusquedaProducto($("#busquedaproducto"));
+    bindFiltroLiveBusquedaProducto("#busquedaproducto");
+    initAutocompleteBusquedaProducto($("#productoventas"));
+}
 
 $(function() {
+    initBusquedasProductoUI();
 
     $("#producto").keyup(function() {
-
         var tipoentrada = $('select#tipoentrada').val();
-
         if (tipoentrada == "") {
-
             $("#tipoentrada").focus();
             $('#tipoentrada').css('border-color', '#01ba9a');
             $("#producto").val("");
             alert("Por favor seleccione primero el Tipo de Gasto");
             return false;
-
         } else if (tipoentrada == "PRODUCTO") {
-
             $("#producto").autocomplete({
                 source: "class/buscaproductos.php",
                 minLength: 1,
+                delay: 100,
                 select: function(event, ui) {
                     $('#codproducto').val(ui.item.codproducto);
                     $('#codcategoria').val(ui.item.codcategoria);
@@ -54,12 +90,11 @@ $(function() {
                 }
             });
             return false;
-
         } else if (tipoentrada == "INGREDIENTE") {
-
             $("#producto").autocomplete({
                 source: "class/buscaingredientes.php",
                 minLength: 1,
+                delay: 100,
                 select: function(event, ui) {
                     $('#codproducto').val(ui.item.codingrediente);
                     $('#codcategoria').val(ui.item.unidadingrediente);
@@ -69,52 +104,37 @@ $(function() {
                     $('#precioconiva').val("0.00");
                 }
             });
-
         }
     });
-});
 
-
-$(function() {
-    $("#productoventas").autocomplete({
-        source: "class/buscaproductos.php",
-        minLength: 1,
-        select: function(event, ui) {
-            $('#codproducto').val(ui.item.codproducto);
-            $('#codcategoria').val(ui.item.codcategoria);
-            $('#precio').val(ui.item.preciocompra);
-            $('#precio2').val(ui.item.precioventa);
-            $('#precioconiva').val((ui.item.ivaproducto == "SI") ? ui.item.precioventa : "0.00");
-            $('#ivaproducto').val(ui.item.ivaproducto);
-            $('#existencia').val(ui.item.existencia);
-        }
-    });
-});
-
-$(function() {
     $("#busquedacliente").autocomplete({
         source: "class/buscacliente.php",
         minLength: 1,
+        delay: 100,
         select: function(event, ui) {
             $('#codcliente').val(ui.item.codcliente);
             $('#cliente').val(ui.item.codcliente);
         }
     });
-});
 
-
-$(function autocompletar() {
     $("#busqueda").autocomplete({
         source: "class/buscaingredientes.php",
         minLength: 1,
+        delay: 100,
         select: function(event, ui) {
             $('#codingrediente').val(ui.item.codingrediente);
-            //$('#nomingrediente').val(ui.item.nomingrediente);
             $('#unidadingrediente').val(ui.item.unidadingrediente);
-            //$('#existencia1').val(ui.item.cantidad);
         }
     });
 
+    $("#codventa").autocomplete({
+        source: "class/buscacodventa.php",
+        minLength: 1,
+        delay: 100,
+        select: function(event, ui) {
+            $('#codventa').val(ui.item.codventa);
+        }
+    });
 });
 
 function autocompletar(contador) {
@@ -122,22 +142,10 @@ function autocompletar(contador) {
     $("#busqueda" + contador).autocomplete({
         source: "class/buscaingredientes.php",
         minLength: 1,
+        delay: 100,
         select: function(event, ui) {
             $('#codingrediente' + contador).val(ui.item.codingrediente);
-            //$('#nomingrediente'+contador).val(ui.item.nomingrediente);
             $('#unidadingrediente' + contador).val(ui.item.unidadingrediente);
-            //$('#existencia1'+contador).val(ui.item.cantidad);
         }
     });
 }
-
-
-$(function() {
-    $("#codventa").autocomplete({
-        source: "class/buscacodventa.php",
-        minLength: 1,
-        select: function(event, ui) {
-            $('#codventa').val(ui.item.codventa);
-        }
-    });
-});

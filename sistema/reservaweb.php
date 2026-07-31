@@ -411,7 +411,7 @@ if (!is_array($reservas)) {
             $(document).ready(function() {
                 $('#datatable').dataTable();
                 $('#datatable-keytable').DataTable( { keys: true } );
-                $('#datatable-responsive').DataTable();
+                $('#datatable-responsive').DataTable({ order: [[0, 'desc']] });
                 $('#datatable-scroller').DataTable( { ajax: "assets/plugins/datatables/json/scroller-demo.json", deferRender: true, scrollY: 380, scrollCollapse: true, scroller: true } );
                 var table = $('#datatable-fixed-header').DataTable( { fixedHeader: true } );
             } );

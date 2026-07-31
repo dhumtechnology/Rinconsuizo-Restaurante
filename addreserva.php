@@ -31,12 +31,50 @@ $telefono = preg_replace('/[^\d\+\-\s\(\)]/', '', $telefono);
 $emailForm = isset($_POST['email']) ? trim($_POST['email']) : '';
 $nombreForm = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
 
-if ($cantidad < 1 || $fecha === '' || $hora === '' || $telefono === '') {
-    echo "<script>alert('Complete teléfono, cantidad, fecha y hora de la reserva.');window.location='reserva.php';</script>";
+// Teléfono: formulario o el guardado en la cuenta
+if ($telefono === '' && !empty($cliente->tlfcliente)) {
+    $telefono = trim((string) $cliente->tlfcliente);
+}
+
+if ($cantidad < 1 || $fecha === '' || $hora === '') {
+    echo "<script>alert('Complete cantidad, fecha y hora de la reserva.');window.location='reserva.php';</script>";
     exit;
 }
 
-// Correo de confirmación: priorizar el del formulario
+if ($telefono === '') {
+    echo "<script>alert('Ingrese un teléfono de contacto para la reserva.');window.location='reserva.php';</script>";
+    exit;
+}
+
+// Normalizar fecha/hora a datetime MySQL
+$horaNorm = strlen($hora) === 5 ? ($hora . ':00') : $hora;
+$fechaHora = $fecha . ' ' . $horaNorm;
+$ts = strtotime($fechaHora);
+if ($ts === false) {
+    echo "<script>alert('Fecha u hora inválida. Verifique e intente de nuevo.');window.location='reserva.php';</script>";
+    exit;
+}
+$fechaHora = date('Y-m-d H:i:s', $ts);
+
+$reserva = new ReservaData();
+$reserva->id_cliente = $id_cliente;
+$reserva->cantidad = $cantidad;
+$reserva->fecha = $fechaHora;
+$reserva->mensaje = $mensajeTxt;
+$reserva->telefono = $telefono;
+$okAdd = $reserva->add();
+
+if (!$okAdd) {
+    echo "<script>alert('No se pudo registrar la reserva. Intente de nuevo o contacte al restaurante.');window.location='reserva.php';</script>";
+    exit;
+}
+
+// Actualizar datos del cliente si cambiaron
+if ($telefono !== '' && (string) $cliente->tlfcliente !== (string) $telefono) {
+    $cliente->tlfcliente = $telefono;
+    $cliente->updateTelefono();
+}
+
 $para = '';
 if ($emailForm !== '' && filter_var($emailForm, FILTER_VALIDATE_EMAIL)) {
     $para = $emailForm;
@@ -44,51 +82,40 @@ if ($emailForm !== '' && filter_var($emailForm, FILTER_VALIDATE_EMAIL)) {
     $para = $cliente->emailcliente;
 }
 
-if ($para === '') {
-    echo "<script>alert('Ingrese un correo electrónico válido para recibir la confirmación.');window.location='reserva.php';</script>";
-    exit;
-}
-
-$reserva = new ReservaData();
-$reserva->id_cliente = $id_cliente;
-$reserva->cantidad = $cantidad;
-$reserva->fecha = $fecha . ' ' . $hora;
-$reserva->mensaje = $mensajeTxt;
-$reserva->telefono = $telefono;
-$reserva->add();
-
-// Mantener datos del cliente al día
-if ($telefono !== '' && (string) $cliente->tlfcliente !== (string) $telefono) {
-    $cliente->tlfcliente = $telefono;
-    $cliente->updateTelefono();
-}
 if ($para !== '' && (string) $cliente->emailcliente !== (string) $para) {
     $cliente->emailcliente = $para;
     $cliente->updateEmail();
 }
 
 $nombreDestino = $nombreForm !== '' ? $nombreForm : $cliente->nomcliente;
-$titulo = 'Confirmación de reserva - Rincon Suizo';
 
-$reserva_email = array(
-    'nombre' => $nombreDestino,
-    'email' => $para,
-    'telefono' => $telefono,
-    'cantidad' => $cantidad,
-    'fecha' => $fecha,
-    'hora' => $hora,
-    'mensaje' => $mensajeTxt,
-);
+// Enviar correo solo si hay destino válido (la reserva ya está guardada)
+if ($para !== '') {
+    $titulo = 'Confirmación de reserva - Rincon Suizo';
+    $reserva_email = array(
+        'nombre' => $nombreDestino,
+        'email' => $para,
+        'telefono' => $telefono,
+        'cantidad' => $cantidad,
+        'fecha' => $fecha,
+        'hora' => $hora,
+        'mensaje' => $mensajeTxt,
+    );
 
-ob_start();
-include "mail/reservamesa.php";
-$cuerpo = ob_get_clean();
+    ob_start();
+    include "mail/reservamesa.php";
+    $cuerpo = ob_get_clean();
 
-$envio = enviar_correo_web($para, $titulo, $cuerpo, $nombreDestino);
-if (!$envio['ok']) {
-    error_log('Reserva web: fallo envío correo a ' . $para . ' — ' . $envio['error']);
-    $msg = 'Su reserva fue registrada, pero no se pudo enviar el correo de confirmación. Revise spam o contacte al restaurante.';
-    echo "<script>alert(" . json_encode($msg) . ");window.location='gracias.php?tipo=reserva';</script>";
+    $envio = enviar_correo_web($para, $titulo, $cuerpo, $nombreDestino);
+    if (!$envio['ok']) {
+        error_log('Reserva web: fallo envío correo a ' . $para . ' — ' . $envio['error']);
+        $msg = 'Su reserva fue registrada correctamente, pero no se pudo enviar el correo de confirmación. Revise spam o contacte al restaurante.';
+        echo "<script>alert(" . json_encode($msg, JSON_UNESCAPED_UNICODE) . ");window.location='gracias.php?tipo=reserva';</script>";
+        exit;
+    }
+} else {
+    $msg = 'Su reserva fue registrada. No se envió correo porque no hay un email válido en su cuenta.';
+    echo "<script>alert(" . json_encode($msg, JSON_UNESCAPED_UNICODE) . ");window.location='gracias.php?tipo=reserva';</script>";
     exit;
 }
 

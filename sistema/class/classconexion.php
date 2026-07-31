@@ -17,7 +17,7 @@ class Db{
         if(!isset($this->dbh)){
             try{
 	
-	            date_default_timezone_set('America/Caracas');
+	            date_default_timezone_set('America/Lima');
                 setlocale(LC_ALL,"es_VE.UTF-8","es_VE","esp");
 	
                 $conn = new PDO("mysql:host=".$this->dbHost.";dbname=".$this->dbName, $this->dbUsername, $this->dbPassword,

@@ -16,8 +16,9 @@ class ReservaData {
 		$mensaje = addslashes($this->mensaje);
 		$telefono = isset($this->telefono) ? addslashes($this->telefono) : '';
 		$sql = "insert into reservas (id_cliente,cantidad,fecha,mensaje,telefono) ";
-		$sql .= "value (\"$id\",\"$cant\",\"$fecha\",\"$mensaje\",\"$telefono\")";
-		Executor::doit($sql);
+		$sql .= "values (\"$id\",\"$cant\",\"$fecha\",\"$mensaje\",\"$telefono\")";
+		$result = Executor::doit($sql);
+		return is_array($result) && $result[0] !== false;
 	}
 
 	public function del(){
@@ -36,7 +37,7 @@ class ReservaData {
 
 
 	public static function getAll(){
-		$sql = "select * from ".self::$tablename;
+		$sql = "select * from ".self::$tablename." ORDER BY id DESC";
 		$query = Executor::doit($sql);
 		return Model::many($query[0],new ReservaData());
 	} 

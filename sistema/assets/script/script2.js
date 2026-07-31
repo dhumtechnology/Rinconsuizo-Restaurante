@@ -1071,6 +1071,9 @@ $.ajax({
                     if (typeof initTabsProductos === 'function') {
                         initTabsProductos();
                     }
+                    if (typeof initBusquedasProductoUI === 'function') {
+                        initBusquedasProductoUI();
+                    }
                 });
                 $('#recibemesa').empty();
                 $('#recibemesa').append(html).fadeIn("slow");

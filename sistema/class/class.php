@@ -2,7 +2,7 @@
 ###### DORAINEGRETE - 29111988
 ini_set('memory_limit', '-1');
 ini_set('max_execution_time', 800);
-date_default_timezone_set('America/Caracas');
+date_default_timezone_set('America/Lima');
 require_once("classconexion.php");
 session_start();
 include_once('funciones_basicas.php');
@@ -1587,10 +1587,11 @@ public function SepararMesasUnion()
 public function ContarDeliveryCocina()
 {
 	self::SetNames();
+	// Delivery puede estar PAGADA (contado) y aun asi pendiente de cocina (cocinero=1)
 	$sql = "SELECT COUNT(DISTINCT v.codventa) AS total, MIN(v.fechaventa) AS fechapedido
 		FROM ventas v
 		INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
-		WHERE v.codmesa = '0' AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE'";
+		WHERE v.codmesa = '0' AND v.delivery = '1' AND v.cocinero = '1'";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		return $row;
@@ -2304,7 +2305,7 @@ public function CajerosSessionPorId()
 	{
 		self::SetNames();
 		$this->p = array();
-		// Preferir la caja del arqueo activo usable (admin puede usar arqueo de otro cajero)
+		// Preferir la caja del arqueo activo usable (cajero/mesero: cualquier arqueo abierto)
 		$arq = $this->ObtenerArqueoAbiertoParaVentas();
 		if ($arq && !empty($arq['codcaja'])) {
 			$sql = "SELECT * FROM cajas WHERE codcaja = ? LIMIT 1";
@@ -5502,7 +5503,7 @@ public function ListarArqueoCaja()
 	if($_SESSION["acceso"] == "cajero") {
 
 
-    $sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE cajas.codigo = '".$_SESSION["codigo"]."'";
+    $sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE cajas.codigo = '".$_SESSION["codigo"]."' ORDER BY arqueocaja.codarqueo DESC";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -5513,7 +5514,7 @@ public function ListarArqueoCaja()
 
 	} else {
 
-	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja";
+	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja ORDER BY arqueocaja.codarqueo DESC";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -6432,7 +6433,7 @@ $config = $config->ConfiguracionPorId();
 
 if ($producto[$ii]['codcategoria'] == $codigo_cate && $producto[$ii]['existencia'] > 0) {
                                 ?>
-<div class="col-md-2 mb" style="width:120px;cursor:pointer;" ng-click="afterClick()" ng-repeat="product in ::getFavouriteProducts()" OnClick="DoAction('<?php echo $producto[$ii]['codproducto']; ?>','<?php echo $producto[$ii]['producto']; ?>','<?php echo $producto[$ii]['codcategoria']; ?>','<?php echo $precioconiva = ( $producto[$ii]['ivaproducto'] == 'SI' ? $producto[$ii]['preciocompra'] : "0.00"); ?>','<?php echo $producto[$ii]['preciocompra']; ?>','<?php echo $producto[$ii]['precioventa']; ?>','<?php echo $producto[$ii]['ivaproducto']; ?>','<?php echo $producto[$ii]['existencia']; ?>');">
+<div class="col-md-2 mb rs-prod-tile" style="width:120px;cursor:pointer;" data-nombre="<?php echo htmlspecialchars(mb_strtolower($producto[$ii]['producto'], 'UTF-8')); ?>" ng-click="afterClick()" ng-repeat="product in ::getFavouriteProducts()" OnClick="DoAction('<?php echo $producto[$ii]['codproducto']; ?>','<?php echo $producto[$ii]['producto']; ?>','<?php echo $producto[$ii]['codcategoria']; ?>','<?php echo $precioconiva = ( $producto[$ii]['ivaproducto'] == 'SI' ? $producto[$ii]['preciocompra'] : "0.00"); ?>','<?php echo $producto[$ii]['preciocompra']; ?>','<?php echo $producto[$ii]['precioventa']; ?>','<?php echo $producto[$ii]['ivaproducto']; ?>','<?php echo $producto[$ii]['existencia']; ?>');">
 <div class="darkblue-panel pn" title="<?php echo $producto[$ii]['producto'];?>">
                                             <div class="darkblue-header">
 <h6 class="text-white"><?php echo getSubString($producto[$ii]['producto'],12);?></h6>
@@ -7138,27 +7139,11 @@ if($num>0) {
 
 
 #################### AQUI AGREGAMOS EL INGRESO A ARQUEO DE CAJA ####################
-	if ($_POST["tipopagove"]=="CONTADO"){
-
-		$sql = "select ingresos from arqueocaja where codcaja = '".$_POST["codcaja"]."' and statusarqueo = '1'";
-		foreach ($this->dbh->query($sql) as $row)
-		{
-			$this->p[] = $row;
-		}
-		$ingreso = $row['ingresos'];
-
-		$sql = " update arqueocaja set "
-		." ingresos = ? "
-		." where "
-		." codcaja = ? and statusarqueo = '1';
-		";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->bindParam(1, $txtTotal);
-		$stmt->bindParam(2, $codcaja);
-
-		$txtTotal = strip_tags($_POST["txtTotal"]+$ingreso);
-		$codcaja = strip_tags($_POST["codcaja"]);
-		$stmt->execute();
+	if (isset($_POST["tipopagove"]) && $_POST["tipopagove"] == "CONTADO") {
+		$this->SumarIngresoArqueo($codarqueocaja, isset($_POST["txtTotal"]) ? $_POST["txtTotal"] : 0);
+	} elseif (isset($_POST["tipopagove"]) && $_POST["tipopagove"] == "CREDITO"
+		&& isset($_POST["montoabono"]) && (float) $_POST["montoabono"] > 0) {
+		$this->SumarIngresoArqueo($codarqueocaja, $_POST["montoabono"]);
 	}
 #################### AQUI AGREGAMOS EL INGRESO A ARQUEO DE CAJA ####################
 
@@ -7178,7 +7163,7 @@ if($num>0) {
 		$montoabono = strip_tags($_POST["montoabono"]);
 		$fechaabono = strip_tags(date("Y-m-d h:i:s"));
 		$codigo = strip_tags($_SESSION["codigo"]);
-		$codcaja = strip_tags($_POST["codcaja"]);
+		$codcaja = $codcajaArqueo;
 		$stmt->execute();
 	}
 
@@ -7251,9 +7236,37 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 
 ################################# FUNCION VERIFICA CAJAS PARA VENTAS ###############################
 	/**
+	 * Suma un monto a los ingresos del arqueo abierto indicado.
+	 * @param int|string $codarqueo
+	 * @param float|string $monto
+	 * @return bool
+	 */
+	public function SumarIngresoArqueo($codarqueo, $monto)
+	{
+		self::SetNames();
+		$codarqueo = (int) $codarqueo;
+		$monto = (float) str_replace(',', '', (string) $monto);
+		if ($codarqueo <= 0 || $monto <= 0) {
+			return false;
+		}
+		$sql = "SELECT ingresos FROM arqueocaja WHERE codarqueo = ? AND statusarqueo = '1' LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codarqueo));
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		if (!$row) {
+			return false;
+		}
+		$ingresoActual = (float) str_replace(',', '', (string) (isset($row['ingresos']) ? $row['ingresos'] : 0));
+		$nuevo = number_format($ingresoActual + $monto, 2, '.', '');
+		$sql = "UPDATE arqueocaja SET ingresos = ? WHERE codarqueo = ? AND statusarqueo = '1'";
+		$stmt = $this->dbh->prepare($sql);
+		return $stmt->execute(array($nuevo, $codarqueo));
+	}
+
+	/**
 	 * ¿Hay arqueo abierto que permita ventas en mostrador?
-	 * Cajero: su propio arqueo.
-	 * Administrador y mesero: cualquier arqueo abierto del local.
+	 * Cajero y mesero: cualquier arqueo abierto del local (uno sirve para todos).
+	 * Administrador: solo si tiene su propio arqueo abierto (no hereda el de otro).
 	 */
 	public function TieneArqueoAbiertoParaVentas()
 	{
@@ -7262,7 +7275,8 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 
 	/**
 	 * Devuelve el arqueo abierto usable para ventas/delivery: array(codarqueo, codcaja) o null.
-	 * Cajero: solo el suyo. Admin: prefiere el suyo, si no hay usa cualquiera abierto. Mesero: cualquiera abierto.
+	 * Cajero/mesero: cualquier arqueo con statusarqueo=1.
+	 * Administrador: únicamente arqueo donde codigo = usuario logueado.
 	 */
 	public function ObtenerArqueoAbiertoParaVentas()
 	{
@@ -7274,27 +7288,16 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 			return null;
 		}
 
-		// Preferir arqueo del usuario logueado (admin/cajero)
-		if ($_SESSION['acceso'] == 'administrador' || $_SESSION['acceso'] == 'cajero') {
+		// Admin: no activar mesas/delivery con el arqueo de otro usuario
+		if ($_SESSION['acceso'] == 'administrador') {
 			$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE codigo = ? AND statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1";
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute(array($_SESSION['codigo']));
 			$row = $stmt->fetch(PDO::FETCH_ASSOC);
-			if ($row) {
-				return $row;
-			}
-			// Admin: puede operar con cualquier arqueo activo del local
-			if ($_SESSION['acceso'] == 'administrador') {
-				$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1";
-				$stmt = $this->dbh->prepare($sql);
-				$stmt->execute();
-				$row = $stmt->fetch(PDO::FETCH_ASSOC);
-				return $row ? $row : null;
-			}
-			return null;
+			return $row ? $row : null;
 		}
 
-		// Mesero: cualquier arqueo abierto
+		// Cajero y mesero: un arqueo abierto sirve para todos
 		$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute();
@@ -7305,10 +7308,10 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 	public function MensajeSinArqueoVentas()
 	{
 		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] == 'cajero') {
-			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS, DEBERA DE INICIARLO PARA CONTINUAR.<br> SI DESEA REALIZAR UN ARQUEO DE CAJA HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
+			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA ABIERTO PARA PROCESAR VENTAS.<br> DEBE HABER AL MENOS UN ARQUEO INICIADO EN EL LOCAL. SI DESEA REALIZARLO HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
 		}
 		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] == 'administrador') {
-			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA ACTIVO PARA PROCESAR VENTAS O DELIVERY.<br> DEBE HABER AL MENOS UN ARQUEO ABIERTO EN EL LOCAL. SI DESEA INICIAR UNO HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
+			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, PARA USAR EL MOSTRADOR COMO ADMINISTRADOR DEBE ABRIR SU PROPIO ARQUEO DE CAJA (EL ARQUEO DE OTRO USUARIO NO ACTIVA SUS MESAS).<br> SI DESEA INICIARLO HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
 		}
 		return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS.<br>EL MESERO NO PUEDE TOMAR PEDIDOS HASTA QUE EL CAJERO O ADMINISTRADOR INICIE EL ARQUEO DE CAJA.</center></div>";
 	}
@@ -8669,7 +8672,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 		$selectNum = $this->TieneNumerocomanda()
 			? "detalleventas.numerocomanda, MIN(detalleventas.fechadetalleventa) AS fechapedido,"
 			: "";
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, ".$selectNum." clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' | ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa AND detalleventas.comanda = '1' AND detalleventas.statusdetalle = '1'".$this->SqlFiltroDetallePorVenta()." LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' AND ventas.statusventa = 'PENDIENTE' GROUP BY ventas.idventa, ".$groupBy." HAVING detalles IS NOT NULL AND detalles != ''";
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, ".$selectNum." clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' | ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa AND detalleventas.comanda = '1' AND detalleventas.statusdetalle = '1'".$this->SqlFiltroDetallePorVenta()." LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' AND (ventas.statusventa = 'PENDIENTE' OR ventas.delivery = '1') GROUP BY ventas.idventa, ".$groupBy." HAVING detalles IS NOT NULL AND detalles != ''";
         foreach ($this->dbh->query($sql) as $row)
 		{
 			if (!empty($row['codmesa'])) {
@@ -8776,7 +8779,8 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 			LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente
 			LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa
 			LEFT JOIN salas ON mesas.codsala = salas.codsala
-			WHERE ventas.codmesa = ? AND ventas.cocinero = '1' AND ventas.statusventa = 'PENDIENTE'
+			WHERE ventas.codmesa = ? AND ventas.cocinero = '1'
+				AND (ventas.statusventa = 'PENDIENTE' OR (ventas.delivery = '1' AND ventas.codmesa = '0'))
 			GROUP BY ventas.idventa, ".$groupBy."
 			HAVING detalles IS NOT NULL AND detalles != ''
 			ORDER BY fechapedido ASC";
@@ -10323,7 +10327,7 @@ public function BuscarIngredientesVendidos()
 	public function BuscarArqueosCajasFechas() 
 	{
 		self::SetNames();
-		$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE DATE_FORMAT(arqueocaja.fechaapertura,'%Y-%m-%d') >= ? AND DATE_FORMAT(arqueocaja.fechaapertura,'%Y-%m-%d') <= ?";
+		$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE DATE_FORMAT(arqueocaja.fechaapertura,'%Y-%m-%d') >= ? AND DATE_FORMAT(arqueocaja.fechaapertura,'%Y-%m-%d') <= ? ORDER BY arqueocaja.codarqueo DESC";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindValue(1, trim(date("Y-m-d",strtotime($_GET['desde']))));
 		$stmt->bindValue(2, trim(date("Y-m-d",strtotime($_GET['hasta']))));
@@ -10683,30 +10687,18 @@ public function SumarAbonosCajas()
 public function VerificaArqueoCreditos()
 {
 	self::SetNames();
-	
-    $sql = "SELECT * FROM arqueocaja WHERE codigo = ? and statusarqueo = 1";
-        $stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array($_SESSION["codigo"]));
-		$num = $stmt->rowCount();
-		if($num==0)
-		{
+
+	$arq = $this->ObtenerArqueoAbiertoParaVentas();
+	if ($arq === null)
+	{
     echo "<div class='alert alert-danger'>";
     echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
     echo "<center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR COBROS DE CREDITOS, DEBERA DE INICIARLA PARA CONTINUAR.<br> SI DESEA REALIZAR UN ARQUEO DE CAJA HAZ CLIC <a href='forarqueo'>AQUI</a></center>";
     echo "</div>";
 
-		} else { 
+		} else {
 
-	$sql = "SELECT * FROM arqueocaja WHERE codigo = ? and statusarqueo = 1";
-	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array($_SESSION["codigo"]) );
-	$num = $stmt->rowCount();
-
-	if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-		{
-			$pae[] = $row;
-		}
-	$codcaja = $pae[0]['codcaja'];
+	$codcaja = $arq['codcaja'];
 		?>
 
 	<div class="row"> 

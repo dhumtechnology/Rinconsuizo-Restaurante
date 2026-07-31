@@ -49,6 +49,11 @@ if (!$envio['ok']) {
     error_log('Registro cliente: fallo envío correo a ' . $para . ' — ' . $envio['error']);
 }
 
+// Asegurar que el código quede disponible si el include falló por scope
+if (!isset($codigo) || $codigo === '') {
+    $codigo = isset($cliente->codigo) ? $cliente->codigo : '';
+}
+
 
 session_start();
 
@@ -77,7 +82,8 @@ if ($result->num_rows > 0) {
 
  
     if (!$envio['ok']) {
-        print "<script>alert('Su cuenta fue creada, pero no se pudo enviar el correo de verificación. Revise spam o contacte al administrador.');</script>";
+        $alerta = 'Su cuenta fue creada, pero no se pudo enviar el correo de verificación. Su código es: ' . $codigo . '. Revise spam o contacte al administrador.';
+        print "<script>alert(" . json_encode($alerta, JSON_UNESCAPED_UNICODE) . ");</script>";
     }
     print "<script>window.location='micuenta.php';</script>"; 
 

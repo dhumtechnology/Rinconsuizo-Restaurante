@@ -86,7 +86,7 @@
         <!-- Calendario -->
         <link rel="stylesheet" href="assets/calendario/jquery-ui.css" />
         <script src="assets/calendario/jquery-ui.js"></script>
-        <script src="assets/script/autocompleto.js"></script> 
+        <script src="assets/script/autocompleto.js?v=2"></script> 
         <!-- Calendario -->
 
     </head>

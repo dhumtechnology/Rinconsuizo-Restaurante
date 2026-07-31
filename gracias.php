@@ -306,6 +306,15 @@ include "db/core/app/model/ClientesData.php";
                           Gracias por su preferencia. Revisa tu correo electrónico para confirmar tu <strong>reserva</strong>.
                         <?php } else { ?>
                           Gracias por su preferencia. Revisa tu correo electrónico para confirmar tu pedido y ver tu comprobante.
+                          <?php if (!empty($_GET['cod'])) { ?>
+                            <br><br>
+                            <span style="display:inline-block;margin-top:8px;padding:10px 16px;border:2px solid #c45c26;border-radius:8px;font-size:1.25rem;letter-spacing:0.08em;color:#1a2a3a;">
+                              Código de confirmación: <strong><?php echo htmlspecialchars($_GET['cod']); ?></strong>
+                            </span>
+                          <?php } ?>
+                          <?php if (isset($_GET['mail']) && $_GET['mail'] === '0') { ?>
+                            <br><br><span style="color:#b00020;">No pudimos enviar el correo. Guarde el código de arriba y revise su email en la cuenta.</span>
+                          <?php } ?>
                         <?php } ?>
                       </h4>
                       

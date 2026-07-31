@@ -45,14 +45,14 @@ $this->Cell(4, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
 $this->SetXY(4, 31);
 $this->Cell(4, 5, "MESERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(4, 34);
-$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
 
 } else {
 
 $this->SetXY(4, 25);
 $this->Cell(4, 5, "CAJERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(4, 28);
-$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
   
 }
 

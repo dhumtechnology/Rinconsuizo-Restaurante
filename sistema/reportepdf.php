@@ -1,5 +1,6 @@
 <?php
 ob_start();
+date_default_timezone_set('America/Lima');
 include_once('fpdf/pdf.php');
 require_once("class/class.php");
 

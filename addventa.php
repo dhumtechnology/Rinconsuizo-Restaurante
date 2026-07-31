@@ -32,7 +32,7 @@ $id_cliente = $cliente->codcliente;
 $fechaventa = isset($_POST['fechaventa']) ? $_POST['fechaventa'] : date('Y-m-d H:i:s');
 $subtotal = isset($_POST['subtotalivanove']) ? $_POST['subtotalivanove'] : 0;
 
-// Siguiente código de venta (numérico)
+// Siguiente código de venta (numérico) = código de confirmación del pedido
 $base = new Database();
 $con = $base->connect();
 $rs = $con->query("SELECT COALESCE(MAX(CAST(codventa AS UNSIGNED)), 0) + 1 AS next_num FROM ventas");
@@ -40,21 +40,19 @@ $rowNext = $rs ? $rs->fetch_assoc() : null;
 $nextNum = $rowNext ? (int) $rowNext['next_num'] : 1;
 $codigo = str_pad((string) $nextNum, 7, '0', STR_PAD_LEFT);
 
-// Correo con el carrito actual (antes de vaciarlo)
-$para = $cliente->emailcliente;
-$titulo = 'Comprobante de pedido - Rincon Suizo';
-ob_start();
-include "mail/comprobante.php";
-$cuerpo = ob_get_clean();
-
-$envio = enviar_correo_web($para, $titulo, $cuerpo, $cliente->nomcliente);
-if (!$envio['ok']) {
-    error_log('Pedido web: fallo envío correo a ' . $para . ' — ' . $envio['error']);
-}
-
 $venta = new VentaData();
 $venta->codventa = $codigo;
-$venta->codcaja = 0;
+
+// Asociar al arqueo abierto del local (si existe) para que sume en caja
+$codcajaWeb = 0;
+$codarqueoWeb = 0;
+$rsArq = $con->query("SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1");
+if ($rsArq && ($rowArq = $rsArq->fetch_assoc())) {
+    $codcajaWeb = (int) $rowArq['codcaja'];
+    $codarqueoWeb = (int) $rowArq['codarqueo'];
+}
+
+$venta->codcaja = $codcajaWeb;
 $venta->codcliente = $id_cliente;
 $venta->codmesa = 0;
 $venta->subtotalivasive = '0.00';
@@ -80,12 +78,25 @@ $venta->delivery = '1';
 $venta->repartidor = '0';
 $venta->entregado = '1';
 $venta->observaciones = 'PEDIDO WEB';
-$venta->codarqueocaja = '0';
+$venta->codarqueocaja = $codarqueoWeb;
 $venta->comprobante = '1';
 $venta->serie_doc = '001';
 $venta->aceptado = 'no';
 $venta->enviado = '1';
 $venta->add();
+
+// Sumar el pedido web a los ingresos del arqueo abierto
+if ($codarqueoWeb > 0) {
+    $montoWeb = (float) str_replace(',', '', (string) $subtotal);
+    if ($montoWeb > 0) {
+        $stmtIng = $con->prepare('UPDATE arqueocaja SET ingresos = ingresos + ? WHERE codarqueo = ? AND statusarqueo = \'1\'');
+        if ($stmtIng) {
+            $stmtIng->bind_param('di', $montoWeb, $codarqueoWeb);
+            $stmtIng->execute();
+            $stmtIng->close();
+        }
+    }
+}
 
 foreach ($tmps as $p) {
     $prod = $p->getProducto();
@@ -111,6 +122,19 @@ foreach ($tmps as $p) {
     $procesoventa->add();
 }
 
+// Correo con código de confirmación + detalle (antes de vaciar el carrito en sesión DB)
+$para = trim((string) $cliente->emailcliente);
+$titulo = 'Código de confirmación de pedido - Rincon Suizo';
+ob_start();
+include "mail/comprobante.php";
+$cuerpo = ob_get_clean();
+
+$envio = enviar_correo_web($para, $titulo, $cuerpo, $cliente->nomcliente);
+$mailOk = !empty($envio['ok']);
+if (!$mailOk) {
+    error_log('Pedido web: fallo envío correo a ' . $para . ' — ' . (isset($envio['error']) ? $envio['error'] : 'desconocido'));
+}
+
 foreach (CarritoData::getAllTemporal($session_id) as $del) {
     $eliminar = CarritoData::getById($del->id);
     if ($eliminar) {
@@ -118,5 +142,15 @@ foreach (CarritoData::getAllTemporal($session_id) as $del) {
     }
 }
 
-header('Location: gracias.php?tipo=pedido');
+$qs = 'tipo=pedido&cod=' . rawurlencode($codigo);
+if (!$mailOk) {
+    $qs .= '&mail=0';
+}
+if (!$mailOk) {
+    $msg = 'Su pedido fue registrado con código ' . $codigo . ', pero no se pudo enviar el correo de confirmación. Revise spam o verifique su email en la cuenta.';
+    echo "<script>alert(" . json_encode($msg, JSON_UNESCAPED_UNICODE) . ");window.location='gracias.php?" . $qs . "';</script>";
+    exit;
+}
+
+header('Location: gracias.php?' . $qs);
 exit;

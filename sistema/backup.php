@@ -62,7 +62,7 @@ if (empty ($tablas) ) {
 
 /* Se crea la cabecera del archivo */
 $info['dumpversion'] = "2.15";
-date_default_timezone_set("America/Caracas");
+date_default_timezone_set("America/Lima");
 setlocale(LC_ALL,"es_ES@euro","es_ES","esp");
 $info['fecha'] = date ("d-m-Y");
 $info['hora'] = date('h:i:s A');

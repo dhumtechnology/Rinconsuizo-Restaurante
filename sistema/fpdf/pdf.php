@@ -2704,14 +2704,14 @@ $this->Cell(3, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
 $this->SetXY(3, 20);
 $this->Cell(3, 5, "MESERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(3, 23);
-$this->Cell(3, 5, "FECHA DE IMPRESI�N: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(3, 5, "FECHA DE IMPRESI�N: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
 
 } else {
 
 $this->SetXY(3, 14);
 $this->Cell(3, 5, "CAJERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(3, 17);
-$this->Cell(3, 5, "FECHA DE IMPRESI�N: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(3, 5, "FECHA DE IMPRESI�N: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
   
 }
 
@@ -2856,14 +2856,14 @@ $this->Cell(4, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
 $this->SetXY(4, 31);
 $this->Cell(4, 5, "MESERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(4, 34);
-$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
 
 } else {
 
 $this->SetXY(4, 25);
 $this->Cell(4, 5, "CAJERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
 $this->SetXY(4, 28);
-$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
   
 }
 
@@ -3025,7 +3025,7 @@ $this->Cell(4, 5, "N� DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
 $this->SetXY(4, 28);
 $this->Cell(4, 5, "FECHA DE VENTA: ".date("d-m-Y h:i:s",strtotime($ve[0]['fechaventa'])), 0 , 0);
 $this->SetXY(4, 31);
-$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
 if (isset($ve[0]['delivery']) && $ve[0]['delivery'] != "1" && !empty($ve[0]['nombremesa'])) {
 	$this->SetXY(4, 34);
 	$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "N� DE MESA: ";
@@ -3309,7 +3309,7 @@ $this->Cell(4, 5, "N� DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
 $this->SetXY(4, 28);
 $this->Cell(4, 5, "FECHA DE VENTA: ".date("d-m-Y h:i:s",strtotime($ve[0]['fechaventa'])), 0 , 0);
 $this->SetXY(4, 31);
-$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
 if (isset($ve[0]['delivery']) && $ve[0]['delivery'] != "1" && !empty($ve[0]['nombremesa'])) {
 	$this->SetXY(4, 34);
 	$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "N� DE MESA: ";
@@ -4799,7 +4799,7 @@ $this->Cell(3, 5, "N� DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
 $this->SetXY(3, 28);
 $this->Cell(3, 5, "FECHA DE VENTA: ".utf8_decode($ve[0]['fechaventa']), 0 , 0);
 $this->SetXY(3, 31);
-$this->Cell(3, 5, "FECHA DE IMPRESI�N: ".date("Y-m-d h:i:s A ",time()+1800), 0 , 0);
+$this->Cell(3, 5, "FECHA DE IMPRESI�N: ".date("Y-m-d h:i:s A ",time()), 0 , 0);
 
 $this->Ln(5);
 $this->SetFont('courier','B',8);

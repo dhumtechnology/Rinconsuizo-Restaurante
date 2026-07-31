@@ -5,7 +5,7 @@
 (function (window, document) {
   'use strict';
 
-  if (window.TecladoTactil && window.TecladoTactil.__v === 3) {
+  if (window.TecladoTactil && window.TecladoTactil.__v === 4) {
     return;
   }
 
@@ -47,6 +47,10 @@
   };
 
   var root = null;
+
+  function isVisible() {
+    return !!(root && root.classList && root.classList.contains('tt-visible') && root.style.display !== 'none');
+  }
 
   function isEditable(el) {
     if (!el || !el.tagName) return false;
@@ -282,8 +286,19 @@
   function onFocusIn(e) { openFor(e.target); }
 
   function onPointer(e) {
+    // Dentro del teclado: no cerrar (✕ y teclas siguen funcionando)
     if (root && root.contains(e.target)) return;
-    openFor(e.target);
+
+    // Otro input editable: cambiar al nuevo campo
+    if (isEditable(e.target)) {
+      openFor(e.target);
+      return;
+    }
+
+    // Clic/toque afuera del teclado: cerrar
+    if (isVisible()) {
+      hide();
+    }
   }
 
   function onFocusOut() {
@@ -307,9 +322,8 @@
       setTimeout(init, 50);
       return;
     }
-    // Reemplazar instancia vieja si existía
     var old = document.getElementById('teclado-tactil');
-    if (old && (!window.TecladoTactil || window.TecladoTactil.__v !== 3)) {
+    if (old && (!window.TecladoTactil || window.TecladoTactil.__v !== 4)) {
       old.parentNode.removeChild(old);
       root = null;
     }
@@ -319,19 +333,19 @@
 
     document.addEventListener('focusin', onFocusIn, true);
     document.addEventListener('focusout', onFocusOut, true);
-    document.addEventListener('click', onPointer, true);
+    document.addEventListener('mousedown', onPointer, true);
     document.addEventListener('touchstart', onPointer, true);
 
     window.TecladoTactil = {
       __ready: true,
-      __v: 3,
+      __v: 4,
       init: init,
       show: show,
       hide: hide
     };
   }
 
-  window.TecladoTactil = { __ready: false, __v: 3, init: init, show: show, hide: hide };
+  window.TecladoTactil = { __ready: false, __v: 4, init: init, show: show, hide: hide };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
