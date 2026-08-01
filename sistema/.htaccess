@@ -22,3 +22,14 @@
     RewriteRule ^(.+)$ $1.php [L,QSA]
 
 </IfModule>
+
+# Evitar caché del teclado táctil antiguo
+<IfModule mod_headers.c>
+  <FilesMatch "teclado-tactil\.(js|css)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+  </FilesMatch>
+  <FilesMatch "jquery\.app\.js$">
+    Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+  </FilesMatch>
+</IfModule>

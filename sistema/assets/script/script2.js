@@ -266,15 +266,41 @@ function mostrar(){
          return;
      }
 
+     function tecladoObs() {
+       return window.TecladoObservacionesPedido || window.TecladoTactil || null;
+     }
+
      if(div.style.display==='block'){
 
        div.style.display = "none";
        botonAccion.textContent = "Agregar Observaciones:";
+       var apiClose = tecladoObs();
+       if (apiClose && typeof apiClose.closeObservaciones === 'function') {
+         apiClose.closeObservaciones();
+       } else if (apiClose && typeof apiClose.hide === 'function') {
+         apiClose.hide();
+       }
 
     } else {
 
        div.style.display = "block";
        botonAccion.textContent = "Quitar Observaciones:";
+       var openKb = function () {
+         var api = tecladoObs();
+         if (api && typeof api.openForObservaciones === 'function') {
+           api.openForObservaciones();
+           return true;
+         }
+         if (api && typeof api.show === 'function') {
+           var el = document.getElementById('observaciones-pedido');
+           if (el) { api.show(el); return true; }
+         }
+         return false;
+       };
+       if (!openKb()) {
+         setTimeout(openKb, 80);
+         setTimeout(openKb, 250);
+       }
     }
 }
 
@@ -1235,6 +1261,120 @@ var url = 'funciones.php?BuscaFormaPagoVentas=si';
             }
       });	
 }
+
+// ---- Pago mixto (varios medios, misma cuenta) ----
+function TogglePagoMixto(el) {
+	var activo = el && el.checked;
+	if (activo) {
+		$('#pago-simple-wrap').hide();
+		$('#muestracambiospagos').hide().find('input,select').prop('disabled', true);
+		$('#pago-simple-wrap').find('input,select').prop('disabled', true);
+		$('#pago-mixto-wrap').show();
+		$('#formapagove_mix_hidden,#montopagado_mix_hidden,#montodevuelto_mix_hidden').prop('disabled', false);
+		if ($('#filas-pago-mixto .fila-pago-mixto').length === 0) {
+			AgregarFilaPagoMixto();
+			AgregarFilaPagoMixto();
+			var total = parseFloat(String($('#txtTotall').val() || '0').replace(',', '')) || 0;
+			var mitad = (Math.round((total / 2) * 100) / 100).toFixed(2);
+			var resto = (Math.round((total - parseFloat(mitad)) * 100) / 100).toFixed(2);
+			$('#filas-pago-mixto .montopago-mix').eq(0).val(mitad);
+			$('#filas-pago-mixto .montopago-mix').eq(1).val(resto);
+		}
+		ActualizarSumaPagoMixto();
+	} else {
+		$('#pago-mixto-wrap').hide();
+		$('#formapagove_mix_hidden,#montopagado_mix_hidden,#montodevuelto_mix_hidden').prop('disabled', true);
+		$('#pago-simple-wrap').show().find('input,select').prop('disabled', false);
+		$('#muestracambiospagos').show().find('input,select').prop('disabled', false);
+		if (typeof MuestraCambiosVentas === 'function' && $('#formapagove').length) {
+			MuestraCambiosVentas();
+		}
+	}
+}
+
+function AgregarFilaPagoMixto() {
+	var opts = ($('#html-opciones-medios-pago').length ? $('#html-opciones-medios-pago').val() : '') || window.htmlOpcionesMediosPago || '<option value="">SELECCIONE</option>';
+	var html = ''
+		+ '<div class="row fila-pago-mixto" style="margin-bottom:6px;">'
+		+ '  <div class="col-xs-6 col-md-6">'
+		+ '    <select name="formapagove_mix[]" class="form-control formapagove-mix" required>' + opts + '</select>'
+		+ '  </div>'
+		+ '  <div class="col-xs-4 col-md-4">'
+		+ '    <input type="text" name="montopago[]" class="form-control number montopago-mix" value="0.00" placeholder="Monto" onKeyPress="EvaluateText(\'%f\', this);" onBlur="this.value = NumberFormat(this.value, \'2\', \'.\', \'\'); ActualizarSumaPagoMixto();" onKeyUp="ActualizarSumaPagoMixto();" required>'
+		+ '  </div>'
+		+ '  <div class="col-xs-2 col-md-2">'
+		+ '    <button type="button" class="btn btn-danger btn-sm btn-block" onclick="QuitarFilaPagoMixto(this); return false;"><i class="fa fa-trash"></i></button>'
+		+ '  </div>'
+		+ '</div>';
+	$('#filas-pago-mixto').append(html);
+	ActualizarSumaPagoMixto();
+}
+
+function QuitarFilaPagoMixto(btn) {
+	var $filas = $('#filas-pago-mixto .fila-pago-mixto');
+	if ($filas.length <= 2) {
+		alert('El pago mixto requiere al menos 2 medios de pago.');
+		return;
+	}
+	$(btn).closest('.fila-pago-mixto').remove();
+	ActualizarSumaPagoMixto();
+}
+
+function ActualizarSumaPagoMixto() {
+	var suma = 0;
+	$('#filas-pago-mixto .montopago-mix').each(function() {
+		var v = parseFloat(String($(this).val() || '0').replace(',', '')) || 0;
+		suma += v;
+	});
+	var total = parseFloat(String($('#txtTotall').val() || '0').replace(',', '')) || 0;
+	var diff = Math.round((suma - total) * 100) / 100;
+	$('#suma-pago-mixto').text(suma.toFixed(2));
+	$('#total-cuenta-mixto').text(total.toFixed(2));
+	$('#diff-pago-mixto').text(diff.toFixed(2));
+	if (Math.abs(diff) < 0.05) {
+		$('#diff-pago-mixto').css('color', '#01ba9a');
+	} else {
+		$('#diff-pago-mixto').css('color', '#e74c3c');
+	}
+	var primerMedio = '';
+	$('#filas-pago-mixto .formapagove-mix').each(function() {
+		if (!primerMedio && $(this).val()) {
+			primerMedio = $(this).val();
+			return false;
+		}
+	});
+	$('#formapagove_mix_hidden').val(primerMedio || '');
+	$('#montopagado_mix_hidden').val(suma.toFixed(2));
+	$('#montodevuelto_mix_hidden').val('0.00');
+}
+
+function ValidarPagoMixtoAntesDeCerrar() {
+	if (!$('#pagomixto').is(':checked')) {
+		return true;
+	}
+	var filasOk = 0;
+	var suma = 0;
+	$('#filas-pago-mixto .fila-pago-mixto').each(function() {
+		var medio = $(this).find('.formapagove-mix').val();
+		var monto = parseFloat(String($(this).find('.montopago-mix').val() || '0').replace(',', '')) || 0;
+		if (medio && monto > 0) {
+			filasOk++;
+			suma += monto;
+		}
+	});
+	if (filasOk < 2) {
+		alert('En pago mixto debe indicar al menos 2 medios con monto.');
+		return false;
+	}
+	var total = parseFloat(String($('#txtTotall').val() || '0').replace(',', '')) || 0;
+	if (Math.abs(suma - total) > 0.05) {
+		alert('La suma de los medios (' + suma.toFixed(2) + ') debe ser igual al total de la cuenta (' + total.toFixed(2) + ').');
+		return false;
+	}
+	ActualizarSumaPagoMixto();
+	return true;
+}
+// ---- fin pago mixto ----
 
 // FUNCION PARA MOSTRAR FORMA DE PAGO PARA VENTAS
 function MuestraCambiosVentas(){

@@ -516,6 +516,59 @@ function esMeseroSesion()
     return isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'mesero';
 }
 
+function esSuperAdmin()
+{
+    return isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'superadministrador';
+}
+
+function tenantId()
+{
+    if (esSuperAdmin()) {
+        return 0;
+    }
+    if (!isset($_SESSION['id_restaurante']) || $_SESSION['id_restaurante'] === '' || $_SESSION['id_restaurante'] === null) {
+        return 0;
+    }
+    return (int) $_SESSION['id_restaurante'];
+}
+
+function requireSuperAdmin()
+{
+    if (!isset($_SESSION['acceso']) || $_SESSION['acceso'] !== 'superadministrador') {
+        header('Location: ../logout.php');
+        exit;
+    }
+}
+
+function requireTenant()
+{
+    if (esSuperAdmin()) {
+        header('Location: superadmin/panel.php');
+        exit;
+    }
+    if (tenantId() <= 0) {
+        $out = 'logout.php';
+        if (function_exists('restaurant_resolve_logout_slug')) {
+            $s = restaurant_resolve_logout_slug();
+            if ($s !== '') {
+                $out = '/' . $s . '/sistema/logout';
+            }
+        }
+        header('Location: ' . $out);
+        exit;
+    }
+}
+
+function tenantWhere($alias = '')
+{
+    $col = ($alias !== '') ? $alias . '.id_restaurante' : 'id_restaurante';
+    $id = tenantId();
+    if ($id <= 0) {
+        return ' 1=0 ';
+    }
+    return ' ' . $col . ' = ' . (int) $id . ' ';
+}
+
 function puedeGestionarUnionMesas()
 {
     if (!isset($_SESSION['acceso'])) {
@@ -1015,7 +1068,7 @@ function renderCarritoMesaPanel($config)
                 <label id="boton-observaciones" onClick="mostrar();" style="cursor:pointer;">Agregar Observaciones:</label>
                 <div id="panel-observaciones" style="display:none;">
                     <div class="form-group has-feedback">
-                        <textarea name="observaciones" class="form-control" id="observaciones-pedido" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Observaciones"></textarea>
+                        <textarea name="observaciones" class="form-control teclado-observaciones" id="observaciones-pedido" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Observaciones"></textarea>
                         <i class="fa fa-comments form-control-feedback"></i>
                     </div>
                 </div>

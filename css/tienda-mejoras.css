@@ -2,9 +2,12 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@700&display=swap");
 
 :root {
-  --rs-ink: #1a2a3a;
-  --rs-forest: #1e3d32;
-  --rs-accent: #c45c26;
+  --rs-ink: var(--brand-secondary, #1a2a3a);
+  --rs-forest: var(--brand-primary, #1e3d32);
+  --rs-accent: var(--brand-accent, #c45c26);
+  --brand-primary-rgb: 30, 61, 50;
+  --brand-secondary-rgb: 26, 42, 58;
+  --brand-accent-rgb: 196, 92, 38;
   --rs-cream: #f7f4ef;
   --rs-line: #e4ddd3;
   --rs-white: #fff;
@@ -15,7 +18,7 @@ body.lang-es {
   font-family: "DM Sans", system-ui, sans-serif;
   color: var(--rs-ink);
   background:
-    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(30, 61, 50, 0.06), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(var(--brand-primary-rgb), 0.06), transparent 55%),
     linear-gradient(180deg, #faf8f5 0%, #f3efe8 100%);
 }
 
@@ -87,7 +90,7 @@ body.lang-es {
     background: var(--rs-white);
     border: 1px solid var(--rs-line);
     border-radius: var(--rs-radius);
-    box-shadow: 0 12px 28px rgba(26, 42, 58, 0.12);
+    box-shadow: 0 12px 28px rgba(var(--brand-secondary-rgb), 0.12);
   }
 
   .leo-megamenu {
@@ -153,7 +156,7 @@ body.lang-es {
   margin: 0 !important;
   width: 100% !important;
   z-index: -1 !important;
-  background: linear-gradient(120deg, rgba(30, 61, 50, 0.92), rgba(26, 42, 58, 0.85)),
+  background: linear-gradient(120deg, rgba(var(--brand-primary-rgb), 0.92), rgba(var(--brand-secondary-rgb), 0.85)),
     url(../img/breadcrumb-bg.jpg) center/cover no-repeat !important;
   border-radius: var(--rs-radius);
 }
@@ -311,8 +314,8 @@ body.lang-es {
 
 #js-product-list .thumbnail-container:hover {
   transform: translateY(-3px);
-  border-color: rgba(196, 92, 38, 0.35);
-  box-shadow: 0 10px 24px rgba(26, 42, 58, 0.1);
+  border-color: rgba(var(--brand-accent-rgb), 0.35);
+  box-shadow: 0 10px 24px rgba(var(--brand-secondary-rgb), 0.1);
 }
 
 #js-product-list .product-image {
@@ -465,7 +468,7 @@ body.rs-modal-open {
 .rs-add-cart-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(20, 35, 50, 0.55);
+  background: rgba(var(--brand-secondary-rgb), 0.55);
 }
 
 .rs-add-cart-dialog {
@@ -485,7 +488,7 @@ body.rs-modal-open {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 18px;
-  background: #4cbb6c;
+  background: var(--rs-forest);
   color: #fff;
 }
 
@@ -528,13 +531,13 @@ body.rs-modal-open {
 }
 
 .rs-add-cart-name {
-  color: #f79a34;
+  color: var(--rs-accent);
   font-size: 1.125rem;
   margin: 0 0 8px;
 }
 
 .rs-add-cart-price {
-  color: #142332;
+  color: var(--rs-ink);
   font-size: 1.4rem;
   font-weight: 600;
   margin: 0 0 8px;
@@ -621,7 +624,7 @@ body.rs-modal-open {
 .rs-product-search .form-control:focus {
   border-color: var(--rs-forest);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(30, 61, 50, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.12);
 }
 
 .rs-btn-search {

@@ -41,7 +41,7 @@ exit;
 <script type="text/javascript" src="assets/script/titulos.js"></script>
 <script type="text/javascript" src="assets/script/script2.js"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
-<script type="text/javascript" src="assets/script/script.js?v=arqueo2"></script>
+<script type="text/javascript" src="assets/script/script.js?v=arqueo3"></script>
 <!-- script jquery -->	
 	
 
@@ -51,7 +51,7 @@ exit;
  <div class="topbar">
  <div class="topbar-left">
  <div class="text-center"> 
- <a href="panel" class="logo"><img src="assets/images/logo_white_2.png" height="50"></a> 
+ <a href="panel" class="logo"><img src="<?php echo htmlspecialchars(restaurant_logo_url()); ?>" height="50"></a> 
  <a href="panel" class="logo-sm"><img src="assets/images/logo_sm.png" height="50"></a>
  </div>
  </div>

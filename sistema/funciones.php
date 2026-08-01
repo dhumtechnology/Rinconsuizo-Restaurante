@@ -2000,23 +2000,46 @@ for($i=0;$i<sizeof($arqueo);$i++){
                         </div>
  </div>
 
-<div id="muestraformapagoventas"><div class="row"> 
+<div id="muestraformapagoventas"><?php
+      $pago = new Login();
+      $pago = $pago->ListarMediosPagos();
+      $optsMedios = '<option value="">SELECCIONE</option>';
+      for($i=0;$i<sizeof($pago);$i++){
+        $sel = (!(strcmp($pago[$i]['mediopago'], htmlentities("EFECTIVO")))) ? ' selected="selected"' : '';
+        $optsMedios .= '<option value="'.htmlspecialchars($pago[$i]['codmediopago']).'"'.$sel.'>'.htmlspecialchars($pago[$i]['mediopago']).'</option>';
+      }
+?>
+<div class="row">
+  <div class="col-md-12">
+    <div class="checkbox" style="margin-top:0;">
+      <label>
+        <input type="checkbox" name="pagomixto" id="pagomixto" value="1" onchange="TogglePagoMixto(this)">
+        Pago mixto (misma cuenta, varios medios)
+      </label>
+    </div>
+  </div>
+</div>
+<div id="pago-simple-wrap"><div class="row"> 
                            <div class="col-md-12"> 
                                <div class="form-group has-feedback"> 
        <label class="control-label">Medio de Pago: <span class="symbol required"></span></label>
             <i class="fa fa-bars form-control-feedback"></i>
 <select name="formapagove" id="formapagove" class="form-control" onChange="MuestraCambiosVentas()" required="" aria-required="true">
-                <option value="">SELECCIONE</option>
-      <?php
-      $pago = new Login();
-      $pago = $pago->ListarMediosPagos();
-      for($i=0;$i<sizeof($pago);$i++){
-                  ?>
-<option value="<?php echo $pago[$i]['codmediopago'] ?>"<?php if (!(strcmp($pago[$i]['mediopago'], htmlentities("EFECTIVO")))) {echo "selected=\"selected\"";} ?>><?php echo $pago[$i]['mediopago'] ?></option>        
-                      <?php } ?> </select> 
+                <?php echo $optsMedios; ?>
+ </select> 
                               </div> 
                         </div>
                     </div></div>
+<div id="pago-mixto-wrap" style="display:none;">
+  <div id="filas-pago-mixto"></div>
+  <button type="button" class="btn btn-info btn-sm btn-block" onclick="AgregarFilaPagoMixto(); return false;"><i class="fa fa-plus"></i> Agregar medio de pago</button>
+  <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
+  <input type="hidden" name="formapagove" id="formapagove_mix_hidden" value="" disabled>
+  <input type="hidden" name="montopagado" id="montopagado_mix_hidden" value="0.00" disabled>
+  <input type="hidden" name="montodevuelto" id="montodevuelto_mix_hidden" value="0.00" disabled>
+</div>
+<textarea id="html-opciones-medios-pago" style="display:none"><?php echo htmlspecialchars($optsMedios, ENT_QUOTES, 'UTF-8'); ?></textarea>
+</div>
  
  <div id="muestracambiospagos"><div class="row"> 
   <div class="col-md-12"> 
@@ -2063,25 +2086,46 @@ if (isset($_GET['BuscaFormaPagoVentas']) && isset($_GET['tipopagove'])) {
   
  if($_GET['tipopagove']==""){
  
- } elseif($_GET['tipopagove']=="CONTADO"){  ?>
- 
+ } elseif($_GET['tipopagove']=="CONTADO"){
+      $pago = new Login();
+      $pago = $pago->ListarMediosPagos();
+      $optsMedios = '<option value="">SELECCIONE</option>';
+      for($i=0;$i<sizeof($pago);$i++){
+        $optsMedios .= '<option value="'.htmlspecialchars($pago[$i]['codmediopago']).'">'.htmlspecialchars($pago[$i]['mediopago']).'</option>';
+      }
+?>
+<div class="row">
+  <div class="col-md-12">
+    <div class="checkbox" style="margin-top:0;">
+      <label>
+        <input type="checkbox" name="pagomixto" id="pagomixto" value="1" onchange="TogglePagoMixto(this)">
+        Pago mixto (misma cuenta, varios medios)
+      </label>
+    </div>
+  </div>
+</div>
+<div id="pago-simple-wrap">
      <div class="row"> 
                            <div class="col-md-12"> 
                                <div class="form-group has-feedback"> 
       <label class="control-label">Medio de Pago venta: <span class="symbol required"></span></label>
             <i class="fa fa-bars form-control-feedback"></i>
 <select name="formapagove" id="formapagove" class="form-control" onChange="MuestraCambiosVentas()" required="" aria-required="true">
-                <option value="">SELECCIONE</option>
-      <?php
-      $pago = new Login();
-      $pago = $pago->ListarMediosPagos();
-      for($i=0;$i<sizeof($pago);$i++){
-                  ?>
-            <option value="<?php echo $pago[$i]['codmediopago'] ?>"><?php echo $pago[$i]['mediopago'] ?></option>       
-                      <?php } ?> </select> 
+                <?php echo $optsMedios; ?>
+ </select> 
                               </div> 
                         </div>
                     </div>
+</div>
+<div id="pago-mixto-wrap" style="display:none;">
+  <div id="filas-pago-mixto"></div>
+  <button type="button" class="btn btn-info btn-sm btn-block" onclick="AgregarFilaPagoMixto(); return false;"><i class="fa fa-plus"></i> Agregar medio de pago</button>
+  <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
+  <input type="hidden" name="formapagove" id="formapagove_mix_hidden" value="" disabled>
+  <input type="hidden" name="montopagado" id="montopagado_mix_hidden" value="0.00" disabled>
+  <input type="hidden" name="montodevuelto" id="montodevuelto_mix_hidden" value="0.00" disabled>
+</div>
+<textarea id="html-opciones-medios-pago" style="display:none"><?php echo htmlspecialchars($optsMedios, ENT_QUOTES, 'UTF-8'); ?></textarea>
           
  <?php   } else if($_GET['tipopagove']=="CREDITO"){  ?>
  
@@ -2350,7 +2394,20 @@ $ve = $tra->VentasPorId();
 <?php } ?>
 <abbr title="Tipo de Pago"><strong>TIPO DE PAGO:</strong></abbr> <?php echo "<span class='label label-success'>".$ve[0]["tipopagove"]."</span>"; ?><br />
         
-<abbr title="Forma de Pago"><strong>MEDIO DE PAGO:</strong></abbr><?php if($ve[0]['tipopagove'] == 'CONTADO') { echo "<span class='label label-success'>".$ve[0]["mediopago"]."</span>"; } else { echo "<span class='label label-warning'>".$ve[0]["formapagove"]."</span>"; } ?><br />
+<abbr title="Forma de Pago"><strong>MEDIO DE PAGO:</strong></abbr><?php
+$pagosMixModal = $tra->ListarPagosVenta($ve[0]['codventa']);
+if ($ve[0]['tipopagove'] == 'CONTADO' && is_array($pagosMixModal) && count($pagosMixModal) > 1) {
+	echo " <span class='label label-info'>PAGO MIXTO</span><br />";
+	for ($pm = 0; $pm < count($pagosMixModal); $pm++) {
+		$nm = !empty($pagosMixModal[$pm]['mediopago']) ? $pagosMixModal[$pm]['mediopago'] : ('Medio '.$pagosMixModal[$pm]['codmediopago']);
+		echo htmlspecialchars($nm).": <strong>".number_format($pagosMixModal[$pm]['monto'], 2, '.', ',')."</strong><br />";
+	}
+} elseif($ve[0]['tipopagove'] == 'CONTADO') {
+	echo "<span class='label label-success'>".$ve[0]["mediopago"]."</span><br />";
+} else {
+	echo "<span class='label label-warning'>".$ve[0]["formapagove"]."</span><br />";
+}
+?>
 
 
 <abbr title="Fecha de Vencimiento de Cr&eacute;dito"><strong>FECHA DE VENCIMIENTO:</strong></abbr> <?php echo $vence = ( $ve[0]['fechavencecredito'] == '0000-00-00' ? "0" : date("d-m-Y",strtotime($ve[0]['fechavencecredito']))); ?><br />

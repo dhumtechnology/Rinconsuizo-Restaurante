@@ -3200,6 +3200,23 @@ $this->CellFitSpace(20,3,"TIPO PAGO:",0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($ve[0]["tipopagove"]),0,1,'R');
 
+$pagosMixLogin = new Login();
+$pagosMixRows = $pagosMixLogin->ListarPagosVenta($ve[0]['codventa']);
+if (is_array($pagosMixRows) && count($pagosMixRows) > 1) {
+	$this->SetX(4);
+	$this->SetFont('courier','B',8);
+	$this->CellFitSpace(45,3,"PAGO MIXTO:",0,1,'L');
+	for ($pm = 0; $pm < count($pagosMixRows); $pm++) {
+		$nomMedio = !empty($pagosMixRows[$pm]['mediopago']) ? $pagosMixRows[$pm]['mediopago'] : ('MEDIO '.$pagosMixRows[$pm]['codmediopago']);
+		$this->SetX(4);
+		$this->SetFont('courier','B',8);
+		$this->CellFitSpace(25,3,utf8_decode(substr($nomMedio, 0, 14).":"),0,0,'R');
+		$this->SetFont('courier','',8);
+		$this->CellFitSpace(20,3,utf8_decode($simbolo.number_format($pagosMixRows[$pm]["monto"], 2, '.', ',')),0,1,'R');
+	}
+	$this->Ln(1);
+} else {
+
 $this->SetX(4);
 $this->CellFitSpace(37,3,utf8_decode($ve[0]["mediopago"]),0,1,'R');
 
@@ -3215,6 +3232,8 @@ $this->CellFitSpace(20,3,"CAMBIO:",0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["montodevuelto"], 2, '.', ',')),0,1,'R');
 $this->Ln(1);
+
+}
 
 }
 
@@ -3484,6 +3503,23 @@ $this->CellFitSpace(20,3,"TIPO PAGO:",0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($ve[0]["tipopagove"]),0,1,'R');
 
+$pagosMixLogin = new Login();
+$pagosMixRows = $pagosMixLogin->ListarPagosVenta($ve[0]['codventa']);
+if (is_array($pagosMixRows) && count($pagosMixRows) > 1) {
+	$this->SetX(4);
+	$this->SetFont('courier','B',8);
+	$this->CellFitSpace(45,3,"PAGO MIXTO:",0,1,'L');
+	for ($pm = 0; $pm < count($pagosMixRows); $pm++) {
+		$nomMedio = !empty($pagosMixRows[$pm]['mediopago']) ? $pagosMixRows[$pm]['mediopago'] : ('MEDIO '.$pagosMixRows[$pm]['codmediopago']);
+		$this->SetX(4);
+		$this->SetFont('courier','B',8);
+		$this->CellFitSpace(25,3,utf8_decode(substr($nomMedio, 0, 14).":"),0,0,'R');
+		$this->SetFont('courier','',8);
+		$this->CellFitSpace(20,3,utf8_decode($simbolo.number_format($pagosMixRows[$pm]["monto"], 2, '.', ',')),0,1,'R');
+	}
+	$this->Ln(1);
+} else {
+
 $this->SetX(4);
 $this->CellFitSpace(37,3,utf8_decode($ve[0]["mediopago"]),0,1,'R');
 
@@ -3499,6 +3535,8 @@ $this->CellFitSpace(20,3,"CAMBIO:",0,0,'R');
 $this->SetFont('courier','',8);
 $this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["montodevuelto"], 2, '.', ',')),0,1,'R');
 $this->Ln(1);
+
+}
 
 }
 
@@ -4964,6 +5002,23 @@ $this->Ln(1);
   $this->SetFont('courier','',8);
   $this->CellFitSpace(25,3,utf8_decode($ve[0]["tipopagove"]),0,1,'R');
 
+  $pagosMixLogin = new Login();
+  $pagosMixRows = $pagosMixLogin->ListarPagosVenta($ve[0]['codventa']);
+  if (is_array($pagosMixRows) && count($pagosMixRows) > 1) {
+    $this->SetX(4);
+    $this->SetFont('courier','B',8);
+    $this->CellFitSpace(65,3,"PAGO MIXTO:",0,1,'L');
+    for ($pm = 0; $pm < count($pagosMixRows); $pm++) {
+      $nomMedio = !empty($pagosMixRows[$pm]['mediopago']) ? $pagosMixRows[$pm]['mediopago'] : ('MEDIO '.$pagosMixRows[$pm]['codmediopago']);
+      $this->SetX(4);
+      $this->SetFont('courier','B',8);
+      $this->CellFitSpace(40,3,utf8_decode(substr($nomMedio, 0, 18).":"),0,0,'R');
+      $this->SetFont('courier','',8);
+      $this->CellFitSpace(25,3,utf8_decode(number_format($pagosMixRows[$pm]["monto"], 2, '.', ',')),0,1,'R');
+    }
+    $this->Ln(1);
+  } else {
+
   $this->SetX(4);
   $this->CellFitSpace(65,3,utf8_decode($ve[0]["mediopago"]),0,1,'R');
 
@@ -4979,6 +5034,8 @@ $this->Ln(1);
   $this->SetFont('courier','',8);
   $this->CellFitSpace(25,3,utf8_decode(number_format($ve[0]["montodevuelto"], 2, '.', ',')),0,1,'R');
   $this->Ln(1);
+
+  }
 
 }
 

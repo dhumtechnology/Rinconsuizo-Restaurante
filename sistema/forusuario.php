@@ -59,7 +59,7 @@ exit;
  <div class="topbar">
  <div class="topbar-left">
  <div class="text-center"> 
- <a href="panel" class="logo"><img src="assets/images/logo_white_2.png" height="50"></a> 
+ <a href="panel" class="logo"><img src="<?php echo htmlspecialchars(restaurant_logo_url()); ?>" height="50"></a> 
  <a href="panel" class="logo-sm"><img src="assets/images/logo_sm.png" height="50"></a>
  </div>
  </div>
@@ -343,7 +343,6 @@ exit;
                               <?php if (isset($reg[0]['nivel'])) { ?>
 			 <select name="nivel" id="nivel" class="form-control" required="" aria-required="true">
 												<option value="">SELECCIONE</option>
-<option value="ADMINISTRADOR"<?php if (!(strcmp('ADMINISTRADOR', $reg[0]['nivel']))) {echo "selected=\"selected\"";} ?>>ADMINISTRADOR(A)</option>
 <option value="CAJERO"<?php if (!(strcmp('CAJERO', $reg[0]['nivel']))) {echo "selected=\"selected\"";} ?>>CAJERO(A)</option>
 <option value="REPARTIDOR"<?php if (!(strcmp('REPARTIDOR', $reg[0]['nivel']))) {echo "selected=\"selected\"";} ?>>REPARTIDOR(A)</option>
 <option value="COCINERO"<?php if (!(strcmp('COCINERO', $reg[0]['nivel']))) {echo "selected=\"selected\"";} ?>>COCINERO(A)</option>
@@ -352,7 +351,6 @@ exit;
                              <?php } else { ?>  
 							 <select name="nivel" id="nivel" class="form-control" required="" aria-required="true">
 												<option value="">SELECCIONE</option>
-												<option value="ADMINISTRADOR">ADMINISTRADOR(A)</option>
 												<option value="CAJERO">CAJERO(A)</option>
                         <option value="REPARTIDOR">REPARTIDOR(A)</option>
 												<option value="COCINERO">COCINERO(A)</option>

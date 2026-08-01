@@ -1,6 +1,10 @@
 <?php
     require_once("class/class.php");
     if (isset($_SESSION['acceso'])) {
+        if ($_SESSION['acceso'] === 'superadministrador') {
+            header('Location: superadmin/panel.php');
+            exit;
+        }
         if ($_SESSION['acceso'] == "administrador" || $_SESSION["acceso"] == "cocinero" || $_SESSION["acceso"] == "mesero" || $_SESSION["acceso"] == "cajero" || $_SESSION["acceso"]=="repartidor") {
             
             $con = new Login();
@@ -8,6 +12,19 @@
             
             $config = new Login();
             $config = $config->ConfiguracionPorId();
+
+            $brand = new Login();
+            $brandRest = $brand->RestauranteSesion();
+            if (!empty($brandRest[0]) && function_exists('restaurant_brand_apply_session')) {
+                restaurant_brand_apply_session($brandRest[0]);
+            }
+            $brandLogo = function_exists('restaurant_logo_url')
+                ? restaurant_logo_url(!empty($brandRest[0]['logo']) ? $brandRest[0]['logo'] : null)
+                : 'assets/images/logo_white_2.png';
+            $brandPrimary = !empty($brandRest[0]['color_primario']) ? $brandRest[0]['color_primario'] : '#2f353f';
+            $brandSecondary = !empty($brandRest[0]['color_secundario']) ? $brandRest[0]['color_secundario'] : '#3c4858';
+            $brandAccent = !empty($brandRest[0]['color_acento']) ? $brandRest[0]['color_acento'] : '#01ba9a';
+            $brandNombre = !empty($brandRest[0]['nombre']) ? $brandRest[0]['nombre'] : (!empty($config[0]['nomempresa']) ? $config[0]['nomempresa'] : 'Restaurant');
             
             $tra = new Login();
             $ses = $tra->ExpiraSession();
@@ -59,17 +76,21 @@
         <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
         <link href="assets/css/icons.css" rel="stylesheet" type="text/css">
         <link href="assets/css/style.css" rel="stylesheet" type="text/css">
+        <?php if (function_exists('sistema_brand_head_styles')) { sistema_brand_head_styles(); } ?>
         <!-- script jquery -->
         <script src="assets/js/jquery.min.js"></script> 
       <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
         <script type="text/javascript" src="assets/script/titulos.js"></script>
-        <script type="text/javascript" src="assets/script/script2.js?v=tomar2"></script>
+        <script type="text/javascript" src="assets/script/script2.js?v=obs2"></script>
         <script type="text/javascript" src="assets/script/jsventas.js"></script>
 <?php if (in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true)) { ?>
         <script type="text/javascript" src="assets/script/mesas-union.js"></script>
 <?php } ?>
         <script type="text/javascript" src="assets/script/validation.min.js"></script>
-        <script type="text/javascript" src="assets/script/script.js"></script>
+        <script type="text/javascript" src="assets/script/script.js?v=pagomixto1"></script>
+        <!-- Teclado observaciones: solo panel / crear orden -->
+        <link rel="stylesheet" href="assets/css/teclado-obs-pedido.css?v=3">
+        <script src="assets/script/teclado-obs-pedido.js?v=3"></script>
 <script type="text/javascript">
     jQuery.validator.addMethod("lettersonly", function(value, element) {
       return this.optional(element) || /^[a-zA-ZñÑáéíóúÁÉÍÓÚ,. ]+$/i.test(value);
@@ -204,8 +225,8 @@
             <div class="topbar">
                 <div class="topbar-left">
                     <div class="text-center"> 
-                        <a href="panel" class="logo"><img src="assets/images/logo_white_2.png" height="50"></a> 
-                        <a href="panel" class="logo-sm"><img src="assets/images/logo_sm.png" height="50"></a>
+                        <a href="panel" class="logo"><img src="<?php echo htmlspecialchars($brandLogo); ?>" height="50" alt="<?php echo htmlspecialchars($brandNombre); ?>" style="object-fit:contain;max-width:160px;"></a>
+                        <a href="panel" class="logo-sm"><img src="<?php echo htmlspecialchars($brandLogo); ?>" height="40" alt="" style="object-fit:contain;"></a>
                     </div>
                 </div>
                 <div class="navbar navbar-default" role="navigation">
@@ -610,7 +631,10 @@ $('document').ready(function() {
                                     </div>
                                     <div class="panel-body">
                                         <div class="row">
-                                            <div class="col-sm-8 col-xs-12" id="productos-categorias"></div>
+                                            <div class="col-sm-8 col-xs-12">
+                                                <div id="productos-categorias"></div>
+                                                <div id="teclado-obs-slot" class="teclado-obs-slot" aria-live="polite"></div>
+                                            </div>
                                             <div class="col-sm-4 col-xs-12" id="panel-carrito-orden">
                                                 <?php echo renderCarritoMesaPanel($config); ?>
                                                 <div id="recibemesa"></div>
@@ -663,7 +687,7 @@ $('document').ready(function() {
         <script src="assets/js/wow.min.js"></script>
         <script src="assets/js/jquery.nicescroll.js"></script>
         <script src="assets/js/jquery.scrollTo.min.js"></script>
-        <script src="assets/js/jquery.app.js"></script>
+        <script src="assets/js/jquery.app.js?v=killteclado2"></script>
         <!-- jQuery  -->
         <script src="assets/pages/jquery.dashboard.js"></script>
         <script src="assets/plugins/noty/packaged/jquery.noty.packaged.min.js"></script>

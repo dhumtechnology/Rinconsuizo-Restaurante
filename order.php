@@ -28,7 +28,8 @@ include "db/core/app/model/ClientesData.php";
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
-<link rel="stylesheet" href="css/tienda-mejoras.css" type="text/css" media="all">
+<link rel="stylesheet" href="css/tienda-mejoras.css?v=5" type="text/css" media="all">
+  <?php if (function_exists('web_brand_head_styles')) { web_brand_head_styles(); } ?>
 
 </head>
 
@@ -47,7 +48,7 @@ include "db/core/app/model/ClientesData.php";
           <div class="inner"></div>
         </div>
     </div>
-    <div class="bottomnav" style="background-color: #132332 !important;">
+    <div class="bottomnav" style="background-color: var(--brand-primary, #132332) !important;">
         <div class="container">
         <div class="inner">
     <div id="form_7278891982233858" class="row dpnav2 ApRow  has-bg bg-fullwidth" data-src="" style="" data-bg_data=" no-repeat center center">
@@ -151,7 +152,7 @@ include "db/core/app/model/ClientesData.php";
         <div class="inner">
           <div id="form_6256705932421997" class="row dptop ApRow  has-bg bg-fullwidth" style="" data-bg_data=" #fff no-repeat center center">
               <div class="col-xl-3 col-lg-12 col-md-4 col-sm-4 col-xs-4 col-sp-4  ApColumn " >
-                  <div class="logo-header"><a href="#"><img class="logo img-fluid" src="img/logo.jpg" alt="At Galvatron"></a></div>
+                  <div class="logo-header"><a href="<?php echo function_exists('web_url') ? htmlspecialchars(web_url()) : '#'; ?>"><img class="logo img-fluid" src="<?php echo htmlspecialchars(function_exists('restaurant_logo_url') ? restaurant_logo_url() : 'img/logo.jpg'); ?>" alt="<?php $__br = function_exists('web_tenant_row') ? web_tenant_row() : null; echo htmlspecialchars($__br ? $__br['nombre'] : 'Menu'); ?>" style="max-height:64px;width:auto;object-fit:contain;"></a></div>
 
               </div>
               <div    class="col-xl-6 col-lg-9 col-md-4 col-sm-4 col-xs-4 col-sp-4  ApColumn ">
@@ -321,7 +322,7 @@ include "db/core/app/model/ClientesData.php";
 
             <?php if(isset($_SESSION["id_cliente"]) ):?>  
 
-        <h4 style="background-color: #f79a34; padding: 10px 10px;border-radius: 30px; color: white;">HOLA, 
+        <h4 style="background-color: var(--brand-accent); padding: 10px 10px;border-radius: 30px; color: white;">HOLA, 
         <?php if(isset($_SESSION["id_cliente"]) ){ echo ClientesData::getById($_SESSION["id_cliente"])->nomcliente;  }?>
         </h4> 
         <?php $cliente = ClientesData::getById($_SESSION["id_cliente"]);?>

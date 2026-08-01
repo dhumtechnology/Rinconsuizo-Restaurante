@@ -19,6 +19,8 @@ if(isset($_POST['btn-login']))
 <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 <link href="assets/css/icons.css" rel="stylesheet" type="text/css">
 <link href="assets/css/style.css" rel="stylesheet" type="text/css"> 
+<style>#teclado-tactil{display:none!important;visibility:hidden!important;}</style>
+<script>window.__DISABLE_TECLADO_TACTIL=true;</script>
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
@@ -34,7 +36,7 @@ if(isset($_POST['btn-login']))
               <div class="wrapper-page">
                      <div class="panel panel-color panel-primary panel-pages">
                           <div class="panel-heading bg-img"> 
- <span class="text-center m-t-12 text-white"><img src="assets/images/logo_white_2.png" alt="Software Gestión para Restaurant" width="240" height="77" class='retina-ready'></span>                           </div>
+ <span class="text-center m-t-12 text-white"><img src="<?php echo htmlspecialchars(restaurant_logo_url()); ?>" alt="Software Gestión para Restaurant" width="240" height="77" class='retina-ready'></span>                           </div>
 
 <div class="panel-body">
 <form class="form-horizontal m-t-20" name="lockscreen" id="lockscreen" action="">
@@ -90,20 +92,6 @@ if (isset($_SESSION['cedula'])) {
 
         <!-- Main -->
         <script src="assets/js/bootstrap.min.js"></script>
-        <script src="assets/js/detect.js"></script>
-        <script src="assets/js/fastclick.js"></script>
-        <script src="assets/js/jquery.slimscroll.js"></script>
-        <script src="assets/js/jquery.blockUI.js"></script>
-        <script src="assets/js/waves.js"></script>
-        <script src="assets/js/wow.min.js"></script>
-        <script src="assets/js/jquery.nicescroll.js"></script>
-        <script src="assets/js/jquery.scrollTo.min.js"></script>
-        <script src="assets/js/jquery.app.js"></script>
-		
-        <!-- jQuery  -->
-        <script src="assets/pages/jquery.dashboard.js"></script>
-  
-
         <script src="assets/plugins/notifyjs/dist/notify.min.js"></script>
         <script src="assets/plugins/notifications/notify-metro.js"></script>
         <script src="assets/plugins/notifications/notifications.js"></script>

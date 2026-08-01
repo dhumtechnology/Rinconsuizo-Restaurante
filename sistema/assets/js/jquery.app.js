@@ -2,8 +2,29 @@
 * Theme: Montran Admin Template
 * Author: Coderthemes
 * Module/App: Main Js
+* v=killteclado2 — nunca inyectar teclado táctil
 */
 
+/* Bloqueo permanente del teclado legacy en todo el sistema */
+(function (window, document) {
+  'use strict';
+  function killLegacyTeclado() {
+    var n = document.getElementById('teclado-tactil');
+    if (n && n.parentNode) n.parentNode.removeChild(n);
+    // Nunca destruir el teclado de observaciones
+    if (window.__TECLADO_OBS_LOADED) return;
+    if (window.TecladoObservacionesPedido) return;
+    if (window.TecladoTactil && window.TecladoTactil.__v === 'obs-only-1') return;
+  }
+  killLegacyTeclado();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', killLegacyTeclado);
+  } else {
+    setTimeout(killLegacyTeclado, 0);
+  }
+  window.addEventListener('load', killLegacyTeclado);
+  window.__tecladoTactilAssets = true;
+})(window, document);
 
 !function($) {
     "use strict";
@@ -355,23 +376,6 @@ function toggle_slimscroll(item){
       $(item). siblings(".slimScrollBar").css("visibility","visible");
     }
 }
-
-/* Teclado táctil (español latino) — cargar ANTES de WOW por si falla */
-(function () {
-  if (window.__tecladoTactilAssets) {
-    return;
-  }
-  window.__tecladoTactilAssets = true;
-  var css = document.createElement('link');
-  css.rel = 'stylesheet';
-  css.href = 'assets/css/teclado-tactil.css?v=4';
-  (document.head || document.documentElement).appendChild(css);
-  var js = document.createElement('script');
-  js.async = false;
-  js.defer = false;
-  js.src = 'assets/script/teclado-tactil.js?v=4';
-  (document.body || document.documentElement).appendChild(js);
-})();
 
 try {
   var wow = new WOW(

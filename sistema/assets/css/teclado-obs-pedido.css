@@ -1,0 +1,126 @@
+/* Teclado observaciones de pedido — integrado en el layout del pedido */
+.teclado-obs-slot {
+  width: 100%;
+  margin-top: 12px;
+  clear: both;
+}
+
+#teclado-obs-pedido {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  right: auto;
+  top: auto;
+  z-index: 5;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  background: #1e2430;
+  border: 1px solid #3a4454;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  padding: 8px;
+  display: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+#teclado-obs-pedido.tt-visible {
+  display: block !important;
+}
+
+#teclado-obs-pedido .tt-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 0 2px 6px;
+  border-bottom: 1px solid #2f3848;
+}
+
+#teclado-obs-pedido .tt-tabs { display: flex; gap: 4px; }
+
+#teclado-obs-pedido .tt-tab {
+  border: 0;
+  border-radius: 5px;
+  background: #2c3545;
+  color: #c5ccd6;
+  font-size: 12px;
+  font-weight: 700;
+  height: 28px;
+  min-width: 44px;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+#teclado-obs-pedido .tt-tab.tt-tab-on {
+  background: var(--brand-accent, #01ba9a);
+  color: #fff;
+}
+
+#teclado-obs-pedido .tt-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+#teclado-obs-pedido .tt-key {
+  min-width: 0;
+  flex: 1 1 0;
+  height: 40px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  background: #2c3545;
+  color: #f4f6f8;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 40px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 1px 0 #12161e;
+}
+
+#teclado-obs-pedido .tt-key:active {
+  background: var(--brand-accent, #01ba9a);
+  color: #fff;
+}
+
+#teclado-obs-pedido .tt-key.tt-wide { flex: 1.35 1 0; font-size: 12px; }
+#teclado-obs-pedido .tt-key.tt-mode { background: #3a4a62; }
+#teclado-obs-pedido .tt-key.tt-space { flex: 3 1 0; min-width: 80px; }
+#teclado-obs-pedido .tt-key.tt-enter { flex: 1.5 1 0; background: #2563a8; }
+#teclado-obs-pedido .tt-key.tt-back { flex: 1.5 1 0; background: #5a3d3d; }
+#teclado-obs-pedido .tt-key.tt-close {
+  flex: 0 0 auto;
+  min-width: 32px;
+  height: 28px;
+  line-height: 28px;
+  background: #4a5568;
+  font-size: 13px;
+}
+#teclado-obs-pedido .tt-key.tt-shift.tt-on {
+  background: var(--brand-accent, #01ba9a);
+  color: #fff;
+}
+
+@media (max-width: 767px) {
+  #teclado-obs-pedido .tt-key {
+    height: 36px;
+    line-height: 36px;
+    font-size: 13px;
+  }
+}
+
+/* Legacy: siempre oculto en todo el sistema */
+#teclado-tactil {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}

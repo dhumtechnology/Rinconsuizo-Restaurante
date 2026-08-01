@@ -7,6 +7,37 @@ require_once("classconexion.php");
 session_start();
 include_once('funciones_basicas.php');
 
+$__tenantCtx = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'tenant_context.php';
+if (is_file($__tenantCtx)) {
+	require_once $__tenantCtx;
+	if (function_exists('tenant_resolve_request')) {
+		tenant_resolve_request();
+	}
+}
+
+// Inyectar colores de marca del restaurante en el <head> de cualquier página del POS
+if (!defined('RS_BRAND_OB') && PHP_SAPI !== 'cli') {
+	define('RS_BRAND_OB', 1);
+	ob_start(function ($html) {
+		if ($html === '' || strpos($html, 'id="sistema-brand-theme"') !== false) {
+			return $html;
+		}
+		if (strpos($html, '</head>') === false) {
+			return $html;
+		}
+		if (!function_exists('sistema_brand_head_styles')) {
+			return $html;
+		}
+		ob_start();
+		sistema_brand_head_styles();
+		$inject = ob_get_clean();
+		if ($inject === '') {
+			return $html;
+		}
+		return str_replace('</head>', $inject . '</head>', $html);
+	});
+}
+
 ####################################### CLASE LOGIN #######################################
 
 class Login extends Db
@@ -22,8 +53,19 @@ class Login extends Db
 	############  FUNCION PARA EXPIRAR SESSION POR INACTIVIDAD  ################
 	public function ExpiraSession(){
 
+	$logoutUrl = 'logout.php';
+	if (function_exists('restaurant_resolve_logout_slug')) {
+		$slugOut = restaurant_resolve_logout_slug();
+		if ($slugOut !== '') {
+			$logoutUrl = '/' . $slugOut . '/sistema/logout';
+		}
+	} elseif (!empty($_SESSION['url_slug'])) {
+		$logoutUrl = '/' . preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug'])) . '/sistema/logout';
+	}
+
 	if(!isset($_SESSION['usuario'])){// Esta logeado?.
-		header("Location: logout.php"); 
+		header("Location: " . $logoutUrl); 
+		exit;
 	}
 
 	//Verifico el tiempo si esta seteado, caso contrario lo seteo.
@@ -41,9 +83,10 @@ class Login extends Db
 		?>					
 		<script type='text/javascript' language='javascript'>
 			alert('SU SESSION A EXPIRADO \nPOR FAVOR LOGUEESE DE NUEVO PARA ACCEDER AL SISTEMA') 
-			document.location.href='logout.php'	 
+			document.location.href=<?php echo json_encode($logoutUrl); ?>	 
 		</script> 
 		<?php
+		exit;
 
 	}else{
 
@@ -95,32 +138,105 @@ else
 		$_SESSION["usuario"] = $p[0]["usuario"];
 		$_SESSION["nivel"] = $p[0]["nivel"];
 		$_SESSION["status"] = $p[0]["status"];
+		$_SESSION["id_restaurante"] = isset($p[0]["id_restaurante"]) && $p[0]["id_restaurante"] !== null && $p[0]["id_restaurante"] !== ''
+			? (int) $p[0]["id_restaurante"]
+			: 0;
+
+		$loginMode = isset($_POST['login_mode']) ? $_POST['login_mode'] : '';
+		$urlTenant = function_exists('url_tenant_id') ? url_tenant_id() : 0;
+		if ($urlTenant <= 0 && !empty($_POST['r_slug']) && function_exists('tenant_find_restaurante')) {
+			$slugPost = preg_replace('/[^a-z0-9\-]/', '', strtolower($_POST['r_slug']));
+			$restPost = tenant_find_restaurante($slugPost, null);
+			if ($restPost) {
+				$urlTenant = (int) $restPost['id_restaurante'];
+				$_SESSION['url_slug'] = $slugPost;
+				$_SESSION['web_restaurante'] = $restPost;
+			}
+		}
+
+		// Login SuperAdmin: solo nivel SUPERADMINISTRADOR
+		if ($loginMode === 'superadmin') {
+			if ($_SESSION["nivel"] !== 'SUPERADMINISTRADOR') {
+				session_unset();
+				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> ESTE ACCESO ES SOLO PARA SUPERADMINISTRADOR. USE LA URL DE SU RESTAURANTE.</div>";
+				exit;
+			}
+		} else {
+			// Login de restaurante (/{slug}/sistema/): no admite SuperAdmin
+			if ($_SESSION["nivel"] === 'SUPERADMINISTRADOR') {
+				session_unset();
+				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> EL SUPERADMINISTRADOR DEBE ENTRAR EN /sistema/superadmin/login</div>";
+				exit;
+			}
+			if ($urlTenant <= 0) {
+				session_unset();
+				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> USE LA URL DE SU RESTAURANTE PARA INICIAR SESIÓN.</div>";
+				exit;
+			}
+			if ((int) $_SESSION["id_restaurante"] !== (int) $urlTenant) {
+				session_unset();
+				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> ESTE USUARIO NO PERTENECE A ESTE RESTAURANTE. USE LA URL CORRECTA.</div>";
+				exit;
+			}
+		}
+
+		if ($_SESSION["nivel"] !== 'SUPERADMINISTRADOR' && $_SESSION["id_restaurante"] > 0) {
+			$stRest = $this->dbh->prepare("SELECT * FROM restaurantes WHERE id_restaurante = ?");
+			$stRest->execute(array($_SESSION["id_restaurante"]));
+			$rStatus = $stRest->fetch(PDO::FETCH_ASSOC);
+			if (!$rStatus || $rStatus['status'] !== 'ACTIVO') {
+				session_destroy();
+				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> EL RESTAURANTE ESTÁ INACTIVO. CONTACTE AL SUPERADMINISTRADOR.</div>";
+				exit;
+			}
+			if (function_exists('restaurant_brand_apply_session')) {
+				restaurant_brand_apply_session($rStatus);
+			}
+		}
 		
-		$query = " insert into log values (null, ?, ?, ?, ?, ?); ";
+		$query = " INSERT INTO log (ip, tiempo, detalles, paginas, usuario, id_restaurante) VALUES (?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1,$a);
 		$stmt->bindParam(2,$b);
 		$stmt->bindParam(3,$c);
 		$stmt->bindParam(4,$d);
 		$stmt->bindParam(5,$e);
+		$stmt->bindParam(6,$f);
 		
 		$a = strip_tags($_SERVER['REMOTE_ADDR']);
 		$b = strip_tags(date("Y-m-d h:i:s"));
-		$c = strip_tags($_SERVER['HTTP_USER_AGENT']);
+		$c = strip_tags(isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '');
 		$d = strip_tags($_SERVER['PHP_SELF']);
 		$e = strip_tags($_POST["usuario"]);
+		$f = ($_SESSION["id_restaurante"] > 0) ? $_SESSION["id_restaurante"] : null;
 		$stmt->execute();
 
 		
+		$panelUrl = 'panel';
+		if (!empty($_SESSION['url_slug'])) {
+			$panelUrl = '/' . preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug'])) . '/sistema/panel';
+		} elseif (function_exists('sistema_url')) {
+			$panelUrl = sistema_url('panel');
+		}
+
 		switch($_SESSION["nivel"])
 		{
+			case 'SUPERADMINISTRADOR':
+			$_SESSION["acceso"]="superadministrador";
+			$_SESSION["id_restaurante"] = 0;
+			?>
+			<script type="text/javascript">
+				window.location="/sistema/superadmin/panel";
+			</script>
+			<?php
+			break;
 			case 'ADMINISTRADOR':
 			$_SESSION["acceso"]="administrador";
 
 			?>
 
 			<script type="text/javascript">
-				window.location="panel";
+				window.location=<?php echo json_encode($panelUrl); ?>;
 			</script>
 
 			<?php
@@ -130,7 +246,7 @@ else
 			?>
 
 			<script type="text/javascript">
-				window.location="panel";
+				window.location=<?php echo json_encode($panelUrl); ?>;
 			</script>
 
 			<?php
@@ -140,7 +256,7 @@ else
 			?>
 
 			<script type="text/javascript">
-				window.location="panel";
+				window.location=<?php echo json_encode($panelUrl); ?>;
 			</script>
 
 			<?php
@@ -150,7 +266,7 @@ else
 			?>
 
 			<script type="text/javascript">
-				window.location="panel";
+				window.location=<?php echo json_encode($panelUrl); ?>;
 			</script>
 
 			<?php
@@ -160,15 +276,13 @@ else
 			?>
 
 			<script type="text/javascript">
-				window.location="panel";
+				window.location=<?php echo json_encode($panelUrl); ?>;
 			</script>
 
 			<?php
 			break;
-		//}
+		}
 	}
-}
-	//print_r($_POST);
 	exit;
 }
 ############################# FUNCION PARA ACCEDER AL SISTEMA DE VENTA ############################
@@ -277,10 +391,17 @@ public function RecuperarPassword()
 		echo "<div class='alert alert-info'>";
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
 		echo "<span class='fa fa-check-square-o'></span> SU CLAVE DE ACCESO FUE ACTUALIZADA EXITOSAMENTE, SER&Aacute; EXPULSADO DE SU SESI&Oacute;N Y DEBER&Aacute; DE ACCEDER NUEVAMENTE";
-		echo "</div>";		
+		echo "</div>";
+		$logoutJs = 'logout.php';
+		if (function_exists('restaurant_resolve_logout_slug')) {
+			$sOut = restaurant_resolve_logout_slug();
+			if ($sOut !== '') {
+				$logoutJs = '/' . $sOut . '/sistema/logout';
+			}
+		}
 		?>
 		<script>
-			function redireccionar(){location.href="logout.php";}
+			function redireccionar(){location.href=<?php echo json_encode($logoutJs); ?>;}
 			setTimeout ("redireccionar()", 3000);
 		</script>
 		<?php
@@ -324,24 +445,27 @@ public function RecuperarPassword()
 	public function ConfiguracionPorId()
 	{
 		self::SetNames();
-		$sql = " select * from configuracion where id = ? ";
+		$this->p = array();
+		$idRest = tenantId();
+		if ($idRest <= 0 && isset($_GET['id_restaurante'])) {
+			$idRest = (int) $_GET['id_restaurante'];
+		}
+		if ($idRest <= 0) {
+			$idRest = 1;
+		}
+		$sql = "SELECT * FROM configuracion WHERE id_restaurante = ? LIMIT 1";
 		$stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array('1') );
-		$num = $stmt->rowCount();
-		if($num==0)
-		{
-			echo "";
+		$stmt->execute(array($idRest));
+		if ($stmt->rowCount() == 0) {
+			$sql = "SELECT * FROM configuracion WHERE id = ? LIMIT 1";
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array('1'));
 		}
-		else
-		{
-			if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-				{
-					$this->p[] = $row;
-				}
-				return $this->p;
-				$this->dbh=null;
-			}
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
 		}
+		return $this->p;
+	}
 ############################ FUNCION ID CONFIGURACION DE EMPRESA ####################
 
 ###################### FUNCION PARA ACTUALIZAR CONFIGURACION DE EMPRESA  ########################
@@ -367,7 +491,7 @@ public function RecuperarPassword()
 			." ivav = ?, "
 			." simbolo = ? "
 			." where "
-			." id = ?;
+			." id_restaurante = ?;
 			";
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->bindParam(1, $rifempresa);
@@ -396,7 +520,7 @@ public function RecuperarPassword()
 			$ivac = strip_tags($_POST["ivac"]);
 			$ivav = strip_tags($_POST["ivav"]);
 			$simbolo = strip_tags($_POST["simbolo"]);
-			$id = strip_tags($_POST["id"]);
+			$id = tenantId() > 0 ? tenantId() : (int) strip_tags(isset($_POST["id"]) ? $_POST["id"] : '1');
 			$stmt->execute();
 
 			echo "<div class='alert alert-info'>";
@@ -548,7 +672,25 @@ public function RegistrarUsuarios()
 			$num = $stmt->rowCount();
 			if($num == 0)
 			{
-				$query = " insert into usuarios values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+				$nivel = strip_tags($_POST["nivel"]);
+				$nivel = strtoupper($nivel);
+				if (esSuperAdmin()) {
+					echo "1";
+					exit;
+				}
+				$allowed = array('CAJERO', 'MESERO', 'COCINERO', 'REPARTIDOR');
+				if ($_SESSION['acceso'] === 'administrador') {
+					if (!in_array($nivel, $allowed, true)) {
+						echo "1";
+						exit;
+					}
+				}
+				$idRest = tenantId();
+				if ($idRest <= 0) {
+					echo "1";
+					exit;
+				}
+				$query = " INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, nivel, status, id_restaurante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 				$stmt = $this->dbh->prepare($query);
 				$stmt->bindParam(1, $cedula);
 				$stmt->bindParam(2, $nombres);
@@ -559,6 +701,7 @@ public function RegistrarUsuarios()
 				$stmt->bindParam(7, $password);
 				$stmt->bindParam(8, $nivel);
 				$stmt->bindParam(9, $status);
+				$stmt->bindParam(10, $idRest);
 
 				$cedula = strip_tags($_POST["cedula"]);
 				$nombres = strip_tags($_POST["nombres"]);
@@ -567,7 +710,6 @@ public function RegistrarUsuarios()
 				$email = strip_tags($_POST["email"]);
 				$usuario = strip_tags($_POST["usuario"]);
 				$password = sha1(md5($_POST["password"]));
-				$nivel = strip_tags($_POST["nivel"]);
 				$status = strip_tags(strtoupper($_POST["status"]));
 				$stmt->execute();
 
@@ -607,7 +749,8 @@ public function RegistrarUsuarios()
 public function ListarUsuarios()
 {
 	self::SetNames();
-	$sql = " select * from usuarios ";
+	$this->p = array();
+	$sql = " select * from usuarios WHERE ".tenantWhere()." AND nivel <> 'SUPERADMINISTRADOR' ";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -741,7 +884,15 @@ public function UsuariosPorId()
 					$email = strip_tags($_POST["email"]);
 					$usuario = strip_tags($_POST["usuario"]);
 					$password = sha1(md5($_POST["password"]));
-					$nivel = strip_tags($_POST["nivel"]);
+					$nivel = strip_tags(strtoupper($_POST["nivel"]));
+					$allowed = array('CAJERO', 'MESERO', 'COCINERO', 'REPARTIDOR', 'ADMINISTRADOR');
+					if ($_SESSION['acceso'] === 'administrador') {
+						$allowed = array('CAJERO', 'MESERO', 'COCINERO', 'REPARTIDOR');
+					}
+					if (!in_array($nivel, $allowed, true)) {
+						echo "1";
+						exit;
+					}
 					$status = strip_tags(strtoupper($_POST["status"]));
 					$codigo = strip_tags(strtoupper($_POST["codigo"]));
 					$stmt->execute();
@@ -863,13 +1014,15 @@ public function RegistrarSalas()
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
-		$query = " insert into salas values (null, ?, ?); ";
+		$query = " insert into salas values (null, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $nombresala);
 		$stmt->bindParam(2, $salacreada);
+		$stmt->bindParam(3, $id_restaurante);
 
 		$nombresala = strip_tags($_POST["nombresala"]);
 		$salacreada = strip_tags(date("Y-m-d h:i:s"));
+		$id_restaurante = tenantId();
 		$stmt->execute();
 
 
@@ -891,7 +1044,8 @@ public function RegistrarSalas()
 public function ListarSalas()
 {
 	self::SetNames();
-	$sql = " select * from salas";
+	$this->p = array();
+	$sql = " select * from salas WHERE ".tenantWhere();
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -1097,17 +1251,19 @@ public function RegistrarMesas()
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
-		$query = " insert into mesas values (null, ?, ?, ?, ?); ";
+		$query = " insert into mesas values (null, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $codsala);
 		$stmt->bindParam(2, $nombremesa);
 		$stmt->bindParam(3, $mesacreada);
 		$stmt->bindParam(4, $statusmesa);
+		$stmt->bindParam(5, $id_restaurante);
 
 		$codsala = strip_tags($_POST["codsala"]);
 		$nombremesa = strip_tags($_POST["nombremesa"]);
 		$mesacreada = strip_tags(date("Y-m-d h:i:s"));
 		$statusmesa = strip_tags("0");
+		$id_restaurante = tenantId();
 		$stmt->execute();
 
 
@@ -1130,14 +1286,14 @@ public function ListarMesas()
 {
 	self::SetNames();
 	$this->p = array();
-	$sqlSync = "UPDATE mesas m SET m.statusmesa = '0' WHERE m.statusmesa = '1' AND NOT EXISTS (SELECT 1 FROM ventas v WHERE v.codmesa = m.codmesa AND v.statusventa = 'PENDIENTE')";
+	$sqlSync = "UPDATE mesas m SET m.statusmesa = '0' WHERE m.statusmesa = '1' AND ".tenantWhere('m')." AND NOT EXISTS (SELECT 1 FROM ventas v WHERE v.codmesa = m.codmesa AND v.statusventa = 'PENDIENTE')";
 	$this->dbh->exec($sqlSync);
 	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
 		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS fechapedido,
 		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS pedidos_cocina,
 		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '0' AND v.statusventa = 'PENDIENTE') AS pedidos_activos,
 		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS pedidos_pendientes
-		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala";
+		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ".tenantWhere('mesas');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -1766,11 +1922,13 @@ public function RegistrarMediosPagos()
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
-		$query = " insert into mediospagos values (null, ?); ";
+		$query = " insert into mediospagos values (null, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $mediopago);
+		$stmt->bindParam(2, $id_restaurante);
 
 		$mediopago = strip_tags(strtoupper($_POST["mediopago"]));
+		$id_restaurante = tenantId();
 		$stmt->execute();
 
 
@@ -1792,7 +1950,8 @@ public function RegistrarMediosPagos()
 public function ListarMediosPagos()
 {
 	self::SetNames();
-	$sql = " select * from mediospagos";
+	$this->p = array();
+	$sql = " select * from mediospagos WHERE ".tenantWhere();
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -1800,6 +1959,65 @@ public function ListarMediosPagos()
 	return $this->p;
 	$this->dbh=null;
 }
+
+	/** Crea tabla de pagos mixtos si no existe */
+	public function AsegurarTablaPagosVenta()
+	{
+		self::SetNames();
+		$this->dbh->exec("CREATE TABLE IF NOT EXISTS pagosventa (
+			idpago INT AUTO_INCREMENT PRIMARY KEY,
+			codventa VARCHAR(30) NOT NULL,
+			codmediopago INT NOT NULL,
+			monto DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+			INDEX idx_pagosventa_codventa (codventa)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+	}
+
+	/** Guarda líneas de pago mixto para una venta */
+	public function GuardarPagosVenta($codventa, $medios, $montos)
+	{
+		self::SetNames();
+		$this->AsegurarTablaPagosVenta();
+		$codventa = strip_tags((string) $codventa);
+		$stmtDel = $this->dbh->prepare("DELETE FROM pagosventa WHERE codventa = ?");
+		$stmtDel->execute(array($codventa));
+		if (!is_array($medios) || !is_array($montos)) {
+			return array();
+		}
+		$guardados = array();
+		$stmt = $this->dbh->prepare("INSERT INTO pagosventa (codventa, codmediopago, monto) VALUES (?, ?, ?)");
+		$n = max(count($medios), count($montos));
+		for ($i = 0; $i < $n; $i++) {
+			$medio = isset($medios[$i]) ? (int) $medios[$i] : 0;
+			$monto = isset($montos[$i]) ? (float) str_replace(',', '', (string) $montos[$i]) : 0;
+			if ($medio <= 0 || $monto <= 0) {
+				continue;
+			}
+			$montoFmt = number_format($monto, 2, '.', '');
+			$stmt->execute(array($codventa, $medio, $montoFmt));
+			$guardados[] = array('codmediopago' => $medio, 'monto' => $montoFmt);
+		}
+		return $guardados;
+	}
+
+	/** Lista pagos mixtos de una venta (con nombre de medio) */
+	public function ListarPagosVenta($codventa)
+	{
+		self::SetNames();
+		$this->AsegurarTablaPagosVenta();
+		$sql = "SELECT p.codmediopago, p.monto, m.mediopago
+			FROM pagosventa p
+			LEFT JOIN mediospagos m ON m.codmediopago = p.codmediopago
+			WHERE p.codventa = ?
+			ORDER BY p.idpago ASC";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codventa));
+		$rows = array();
+		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$rows[] = $row;
+		}
+		return $rows;
+	}
 ############################### FUNCION PARA LISTAR MEDIOS DE PAGO ############################
 
 
@@ -1986,11 +2204,13 @@ public function RegistrarCategorias()
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
-		$query = " insert into categorias values (null, ?); ";
+		$query = " insert into categorias values (null, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $nomcategoria);
+		$stmt->bindParam(2, $id_restaurante);
 
 		$nomcategoria = strip_tags(strtoupper($_POST["nomcategoria"]));
+		$id_restaurante = tenantId();
 		$stmt->execute();
 
 
@@ -2012,7 +2232,7 @@ public function RegistrarCategorias()
 public function ListarCategorias()
 {
 	self::SetNames();
-	$sql = " select * from categorias";
+	$sql = " select * from categorias WHERE ".tenantWhere();
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -2187,15 +2407,17 @@ public function RegistrarCajas()
 		$num = $stmt->rowCount();
 		if($num == 0)
 		{
-			$query = " insert into cajas values (null, ?, ?, ?); ";
+			$query = " insert into cajas values (null, ?, ?, ?, ?); ";
 			$stmt = $this->dbh->prepare($query);
 			$stmt->bindParam(1, $nrocaja);
 			$stmt->bindParam(2, $nombrecaja);
 			$stmt->bindParam(3, $codigo);
+			$stmt->bindParam(4, $id_restaurante);
 
 			$nrocaja = strip_tags($_POST["nrocaja"]);
 			$nombrecaja = strip_tags($_POST["nombrecaja"]);
 			$codigo = strip_tags($_POST["codigo"]);
+			$id_restaurante = tenantId();
 			$stmt->execute();
 
 			echo "<div class='alert alert-success'>";
@@ -2220,7 +2442,7 @@ public function ListarCajas()
 	$this->p = array();
 	// Cajero: solo cajas asignadas a su usuario. Admin (y demás): todas.
 	if (isset($_SESSION["acceso"]) && $_SESSION["acceso"] == "cajero") {
-		$sql = "SELECT * FROM cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE cajas.codigo = ? ORDER BY cajas.nrocaja ASC";
+		$sql = "SELECT * FROM cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE cajas.codigo = ? AND ".tenantWhere('cajas')." ORDER BY cajas.nrocaja ASC";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute(array($_SESSION["codigo"]));
 		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -2228,7 +2450,7 @@ public function ListarCajas()
 		}
 		return $this->p;
 	}
-	$sql = "SELECT * FROM cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo ORDER BY cajas.nrocaja ASC";
+	$sql = "SELECT * FROM cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE ".tenantWhere('cajas')." ORDER BY cajas.nrocaja ASC";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -2518,7 +2740,7 @@ public function RegistrarClientes()
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
-		$query = " insert into clientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+		$query = " insert into clientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $cedcliente);
 		$stmt->bindParam(2, $nomcliente);
@@ -2529,11 +2751,13 @@ public function RegistrarClientes()
 		$stmt->bindParam(7, $nrodocumento);
 		$stmt->bindParam(8, $estado);
 		$stmt->bindParam(9, $codigo);
+		$stmt->bindParam(10, $id_restaurante);
 
 		$password1 = "1200000";
 		$nrodocumento = 1;
 		$estado = 1;
 		$codigo = "NULL";
+		$id_restaurante = tenantId();
 
 		$documento = strip_tags($_POST["documento"]);
 		$cedcliente = strip_tags($_POST["cedcliente"]);
@@ -2561,7 +2785,7 @@ public function RegistrarClientes()
 public function ListarClientes()
 {
 	self::SetNames();
-	$sql = " select * from clientes ";
+	$sql = " select * from clientes WHERE ".tenantWhere();
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -2739,7 +2963,7 @@ public function RegistrarProveedores()
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
-		$query = " insert into proveedores values (null, ?, ?, ?, ?, ?, ?); ";
+		$query = " insert into proveedores values (null, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $ritproveedor);
 		$stmt->bindParam(2, $nomproveedor);
@@ -2747,6 +2971,7 @@ public function RegistrarProveedores()
 		$stmt->bindParam(4, $tlfproveedor);
 		$stmt->bindParam(5, $emailproveedor);
 		$stmt->bindParam(6, $contactoproveedor);
+		$stmt->bindParam(7, $id_restaurante);
 
 		$ritproveedor = strip_tags($_POST["ritproveedor"]);
 		$nomproveedor = strip_tags($_POST["nomproveedor"]);
@@ -2754,6 +2979,7 @@ public function RegistrarProveedores()
 		$tlfproveedor = strip_tags($_POST["tlfproveedor"]);
 		$emailproveedor = strip_tags($_POST["emailproveedor"]);
 		$contactoproveedor = strip_tags($_POST["contactoproveedor"]);
+		$id_restaurante = tenantId();
 		$stmt->execute();
 
 		echo "<div class='alert alert-success'>";
@@ -2774,7 +3000,7 @@ public function RegistrarProveedores()
 public function ListarProveedores()
 {
 	self::SetNames();
-	$sql = " select * from proveedores ";
+	$sql = " select * from proveedores WHERE ".tenantWhere();
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -2995,7 +3221,7 @@ public function ProveedoresPorId()
         {
                //Insertamos los datos con los valores...
 			   
-$query = " insert into ingredientes values (null, ?, ?, ?, ?, ?, ?, ?); ";
+$query = " insert into ingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $data[0]);
 		$stmt->bindParam(2, $data[1]);
@@ -3004,6 +3230,8 @@ $query = " insert into ingredientes values (null, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt->bindParam(5, $data[4]);
 		$stmt->bindParam(6, $data[5]);
 		$stmt->bindParam(7, $data[6]);
+		$id_restaurante_csv = tenantId();
+		$stmt->bindParam(8, $id_restaurante_csv);
 		$stmt->execute();
 
 		$query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
@@ -3102,7 +3330,7 @@ public function RegistrarIngredientes()
 		$num = $stmt->rowCount();
 		if($num == 0)
 		{
-			$query = " insert into ingredientes values (null, ?, ?, ?, ?, ?, ?, ?); ";
+			$query = " insert into ingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?); ";
 			$stmt = $this->dbh->prepare($query);
 			$stmt->bindParam(1, $codingrediente);
 			$stmt->bindParam(2, $nomingrediente);
@@ -3111,6 +3339,7 @@ public function RegistrarIngredientes()
 			$stmt->bindParam(5, $unidadingrediente);
 			$stmt->bindParam(6, $codproveedor);
 			$stmt->bindParam(7, $stockminimoingrediente);
+			$stmt->bindParam(8, $id_restaurante);
 
 			//$codingrediente = strip_tags($_POST["codingrediente"]);
 			$nomingrediente = strip_tags($_POST["nomingrediente"]);
@@ -3119,6 +3348,7 @@ public function RegistrarIngredientes()
 			$unidadingrediente = strip_tags($_POST["unidadingrediente"]);
 			$codproveedor = strip_tags($_POST["codproveedor"]);
 			$stockminimoingrediente = strip_tags($_POST["stockminimoingrediente"]);
+			$id_restaurante = tenantId();
 			$stmt->execute();
 
 			$query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
@@ -3169,7 +3399,7 @@ public function RegistrarIngredientes()
 public function ListarIngredientes()
 {
 	self::SetNames();
-	$sql = " SELECT * FROM ingredientes LEFT JOIN proveedores ON ingredientes.codproveedor = proveedores.codproveedor";
+	$sql = " SELECT * FROM ingredientes LEFT JOIN proveedores ON ingredientes.codproveedor = proveedores.codproveedor WHERE ".tenantWhere('ingredientes');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -3431,7 +3661,7 @@ public function BuscarKardexIngrediente()
         {
                //Insertamos los datos con los valores...
 			   
-$query = " insert into productos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+$query = " insert into productos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $data[0]);
 		$stmt->bindParam(2, $data[1]);
@@ -3446,6 +3676,8 @@ $query = " insert into productos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
 		$stmt->bindParam(11, $data[10]);
 		$stmt->bindParam(12, $data[11]);
 		$stmt->bindParam(13, $data[12]);
+		$id_restaurante_csv = tenantId();
+		$stmt->bindParam(14, $id_restaurante_csv);
 		$stmt->execute();
 
 		$query = " insert into kardexproductos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
@@ -3596,7 +3828,7 @@ exit;
 		if($num == 0)
 		{
 ##################### REGISTRAMOS LOS NUEVOS PRODUCTOS ####################################
-			$query = " insert into productos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+			$query = " insert into productos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 			$stmt = $this->dbh->prepare($query);
 			$stmt->bindParam(1, $codproducto);
 			$stmt->bindParam(2, $producto);
@@ -3611,6 +3843,7 @@ exit;
 			$stmt->bindParam(11, $codigobarra);
 			$stmt->bindParam(12, $favorito);
 			$stmt->bindParam(13, $statusproducto);
+		$stmt->bindParam(14, $id_restaurante);
 
 			$codproducto = strip_tags($_POST["codproducto"]);
 			$producto = strip_tags($_POST["producto"]);
@@ -3634,6 +3867,7 @@ exit;
 			}
 			$favorito = strip_tags($_POST["favorito"]);
 			$statusproducto = strip_tags($_POST["statusproducto"]);
+			$id_restaurante = tenantId();
 			$stmt->execute();
 
 			$query = " insert into kardexproductos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
@@ -3780,7 +4014,7 @@ exit;
 public function ListarProductos()
 {
 	self::SetNames();
-	$sql = " SELECT * FROM productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria LEFT JOIN proveedores ON productos.codproveedor=proveedores.codproveedor";
+	$sql = " SELECT * FROM productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria LEFT JOIN proveedores ON productos.codproveedor=proveedores.codproveedor WHERE ".tenantWhere('productos');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -3794,7 +4028,7 @@ public function ListarProductos()
 public function ListarProductosFavoritos()
 {
 	self::SetNames();
-	$sql = " SELECT * FROM productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria LEFT JOIN proveedores ON productos.codproveedor=proveedores.codproveedor WHERE productos.favorito = 'SI' and productos.existencia > '0'";
+	$sql = " SELECT * FROM productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria LEFT JOIN proveedores ON productos.codproveedor=proveedores.codproveedor WHERE productos.favorito = 'SI' and productos.existencia > '0' AND ".tenantWhere('productos');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -4318,7 +4552,7 @@ public function RegistrarCompras()
 				if($num == 0)
 				{
 	##################### REGISTRAMOS LOS NUEVOS INGREDIENTES COMPRADOS ##################
-					$query = " insert into ingredientes values (null, ?, ?, ?, ?, ?, ?, ?); ";
+					$query = " insert into ingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?); ";
 					$stmt = $this->dbh->prepare($query);
 					$stmt->bindParam(1, $codingrediente);
 					$stmt->bindParam(2, $nomingrediente);
@@ -4327,6 +4561,7 @@ public function RegistrarCompras()
 					$stmt->bindParam(5, $codcategoria);
 					$stmt->bindParam(6, $codproveedor);
 					$stmt->bindParam(7, $stockminimoingrediente);
+					$stmt->bindParam(8, $id_restaurante);
 
 					$codingrediente = strip_tags($compra[$i]['txtCodigo']);
 					$nomingrediente = strip_tags($compra[$i]['producto']);
@@ -4335,6 +4570,7 @@ public function RegistrarCompras()
 					$codcategoria = strip_tags($compra[$i]['presentacion']);
 		            $codproveedor = strip_tags($_POST["codproveedor"]);
 					$stockminimoingrediente = strip_tags('0');
+					$id_restaurante = tenantId();
 					$stmt->execute();
 	##################### REGISTRAMOS LOS NUEVOS INGREDIENTES COMPRADOS ###################
 
@@ -4442,7 +4678,7 @@ public function RegistrarCompras()
 				if($num == 0)
 				{
 	##################### REGISTRAMOS LOS NUEVOS PRODUCTOS COMPRADOS ####################
-					$query = " insert into productos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+					$query = " insert into productos values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 					$stmt = $this->dbh->prepare($query);
 					$stmt->bindParam(1, $codproducto);
 					$stmt->bindParam(2, $producto);
@@ -4457,6 +4693,7 @@ public function RegistrarCompras()
 					$stmt->bindParam(11, $codigobarra);
 					$stmt->bindParam(12, $favorito);
 					$stmt->bindParam(13, $statusproducto);
+		$stmt->bindParam(14, $id_restaurante);
 
 					$codproducto = strip_tags($compra[$i]['txtCodigo']);
 					$producto = strip_tags($compra[$i]['producto']);
@@ -4471,6 +4708,7 @@ public function RegistrarCompras()
 					$codigobarra = strip_tags("00000000000");
 					$favorito = strip_tags('NO');
 					$statusproducto = strip_tags('ACTIVO');
+					$id_restaurante = tenantId();
 					$stmt->execute();
 	##################### REGISTRAMOS LOS NUEVOS PRODUCTOS COMPRADOS ####################
 
@@ -5439,59 +5677,61 @@ public function RegistrarArqueoCaja()
 		exit;
 	}
 	$codigo = $row['codigo'];
+	$id_restaurante = tenantId();
 
-	$sql = " select codcaja from arqueocaja where codcaja = ? and statusarqueo = '1'";
+	// Solo un arqueo abierto por restaurante (cualquier caja)
+	$sql = "SELECT a.codarqueo, a.codcaja FROM arqueocaja a
+		WHERE a.statusarqueo = '1' AND a.id_restaurante = ?
+		LIMIT 1";
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array($_POST["codcaja"]) );
-	$num = $stmt->rowCount();
-	if($num == 0)
-	{
-		$query = " insert into arqueocaja values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
-		$stmt = $this->dbh->prepare($query);
-		$stmt->bindParam(1, $codcaja);
-		$stmt->bindParam(2, $montoinicial);
-		$stmt->bindParam(3, $ingresos);
-		$stmt->bindParam(4, $egresos);
-		$stmt->bindParam(5, $dineroefectivo);
-		$stmt->bindParam(6, $diferencia);
-		$stmt->bindParam(7, $comentarios);
-		$stmt->bindParam(8, $fechaapertura);
-		$stmt->bindParam(9, $fechacierre);
-		$stmt->bindParam(10, $statusarqueo);
-		$stmt->bindParam(11, $codigo);
-
-		$codcaja = strip_tags($_POST["codcaja"]);
-		$montoinicial = strip_tags($_POST["montoinicial"]);
-		$ingresos = '0.00';
-		$egresos = '0.00';
-		$dineroefectivo = '0.00';
-		$diferencia = '0.00';
-		$comentarios = isset($_POST['comentarios']) ? strip_tags($_POST['comentarios']) : '';
-		$ts = strtotime($_POST['fecharegistro']);
-		$fechaapertura = $ts ? date("Y-m-d H:i:s", $ts) : date("Y-m-d H:i:s");
-		$fechacierre = '0000-00-00 00:00:00';
-		$statusarqueo = "1";
-		$ok = $stmt->execute();
-		if (!$ok) {
-			$fechacierre = '1970-01-01 00:00:00';
-			$ok = $stmt->execute();
-		}
-		if (!$ok) {
-			echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>No se pudo registrar el arqueo. Verifique los datos.</div>";
-			exit;
-		}
-
-		echo "<div class='alert alert-success'>";
-		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-		echo "<span class='fa fa-check-square-o'></span> EL ARQUEO DE CAJA FUE REALIZADO EXITOSAMENTE";
-		echo "</div>";		
-		exit;
-	}
-	else
-	{
+	$stmt->execute(array($id_restaurante));
+	$abierto = $stmt->fetch(PDO::FETCH_ASSOC);
+	if ($abierto) {
 		echo "2";
 		exit;
 	}
+
+	$query = " insert into arqueocaja values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+	$stmt = $this->dbh->prepare($query);
+	$stmt->bindParam(1, $codcaja);
+	$stmt->bindParam(2, $montoinicial);
+	$stmt->bindParam(3, $ingresos);
+	$stmt->bindParam(4, $egresos);
+	$stmt->bindParam(5, $dineroefectivo);
+	$stmt->bindParam(6, $diferencia);
+	$stmt->bindParam(7, $comentarios);
+	$stmt->bindParam(8, $fechaapertura);
+	$stmt->bindParam(9, $fechacierre);
+	$stmt->bindParam(10, $statusarqueo);
+	$stmt->bindParam(11, $codigo);
+	$stmt->bindParam(12, $id_restaurante);
+
+	$codcaja = strip_tags($_POST["codcaja"]);
+	$montoinicial = strip_tags($_POST["montoinicial"]);
+	$ingresos = '0.00';
+	$egresos = '0.00';
+	$dineroefectivo = '0.00';
+	$diferencia = '0.00';
+	$comentarios = isset($_POST['comentarios']) ? strip_tags($_POST['comentarios']) : '';
+	$ts = strtotime($_POST['fecharegistro']);
+	$fechaapertura = $ts ? date("Y-m-d H:i:s", $ts) : date("Y-m-d H:i:s");
+	$fechacierre = '0000-00-00 00:00:00';
+	$statusarqueo = "1";
+	$ok = $stmt->execute();
+	if (!$ok) {
+		$fechacierre = '1970-01-01 00:00:00';
+		$ok = $stmt->execute();
+	}
+	if (!$ok) {
+		echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>No se pudo registrar el arqueo. Verifique los datos.</div>";
+		exit;
+	}
+
+	echo "<div class='alert alert-success'>";
+	echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+	echo "<span class='fa fa-check-square-o'></span> EL ARQUEO DE CAJA FUE REALIZADO EXITOSAMENTE";
+	echo "</div>";		
+	exit;
 }
 ########################## FUNCION PARA REGISTRAR ARQUEO DE CAJA #############################
 
@@ -5560,9 +5800,9 @@ public function ActualizarArqueoCaja()
 		echo "1";
 		exit;
 	}
-	$sql = " select codcaja from arqueocaja where codarqueo != ? and codcaja = ? and statusarqueo = '1' ";
+	$sql = " select codcaja from arqueocaja where codarqueo != ? and statusarqueo = '1' and id_restaurante = ? ";
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array($_POST["codarqueo"], $_POST["codcaja"]) );
+	$stmt->execute( array($_POST["codarqueo"], tenantId()) );
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
@@ -6859,7 +7099,7 @@ public function RegistrarDelivery()
 	$codventa = $this->GenerarSiguienteCodventa();
 	$numeroComandaLote = $this->ObtenerSiguienteNumeroComanda($codventa);
 
-		$query = " insert into ventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+		$query = " insert into ventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $codventa);
 		$stmt->bindParam(2, $codcaja);
@@ -6893,6 +7133,7 @@ public function RegistrarDelivery()
 		$stmt->bindParam(29, $serie_doc);
 		$stmt->bindParam(30, $aceptado);
 		$stmt->bindParam(31, $enviado);
+		$stmt->bindParam(32, $id_restaurante);
 
 
 		
@@ -6905,6 +7146,7 @@ public function RegistrarDelivery()
 		$serie_doc = strip_tags('001');
 		$aceptado = strip_tags('no');
 		$enviado = strip_tags('1');
+		$id_restaurante = tenantId();
 
 		$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
 		if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
@@ -7522,7 +7764,7 @@ public function RegistrarVentas()
 
 	$codventa = $this->GenerarSiguienteCodventa();
 
-		$query = " insert into ventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+		$query = " insert into ventas values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $codventa);
 		$stmt->bindParam(2, $codcaja);
@@ -7556,6 +7798,7 @@ public function RegistrarVentas()
 		$stmt->bindParam(29, $serie_doc);
 		$stmt->bindParam(30, $aceptado);
 		$stmt->bindParam(31, $enviado);
+		$stmt->bindParam(32, $id_restaurante);
 
 
 		
@@ -7565,6 +7808,7 @@ public function RegistrarVentas()
 		$serie_doc = strip_tags('001');
 		$aceptado = strip_tags('no');
 		$enviado = strip_tags('1');
+		$id_restaurante = tenantId();
 
 		$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
 		if ($codcliente === '' || !is_numeric($codcliente)) { $codcliente = 0; }
@@ -8403,17 +8647,55 @@ public function CerrarMesa()
 	$tipopagove = strip_tags($_POST['tipopagove']); 
 	$comprobante = strip_tags($_POST['comprobante']); 
 
+	$esPagoMixto = isset($_POST['pagomixto']) && (string)$_POST['pagomixto'] === '1' && $tipopagove === 'CONTADO';
+	$mediosMix = array();
+	$montosMix = array();
 
-	if (strip_tags($_POST["tipopagove"]=="CONTADO")) { $formapagove = strip_tags($_POST["formapagove"]); } else { $formapagove = "CREDITO"; }
-
-	if (strip_tags(isset($_POST['montopagado']))) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado =''; }
-	if (strip_tags(isset($_POST['montodevuelto']))) { $montodevuelto = strip_tags($_POST['montodevuelto']); } else { $montodevuelto =''; }
-	if (strip_tags($_POST["tipopagove"]=="CONTADO")) { $statusventa = strip_tags("PAGADA"); } else { $statusventa = "PENDIENTE"; }
+	if ($esPagoMixto) {
+		$mediosMix = (isset($_POST['formapagove_mix']) && is_array($_POST['formapagove_mix'])) ? $_POST['formapagove_mix'] : array();
+		$montosMix = (isset($_POST['montopago']) && is_array($_POST['montopago'])) ? $_POST['montopago'] : array();
+		$sumaMix = 0.0;
+		$nValidos = 0;
+		$primerMedio = '';
+		$n = max(count($mediosMix), count($montosMix));
+		for ($i = 0; $i < $n; $i++) {
+			$m = isset($mediosMix[$i]) ? (int) $mediosMix[$i] : 0;
+			$mo = isset($montosMix[$i]) ? (float) str_replace(',', '', (string) $montosMix[$i]) : 0;
+			if ($m > 0 && $mo > 0) {
+				$nValidos++;
+				$sumaMix += $mo;
+				if ($primerMedio === '') {
+					$primerMedio = (string) $m;
+				}
+			}
+		}
+		if ($nValidos < 2) {
+			echo "10";
+			exit;
+		}
+		$totalEsperado = (float) str_replace(',', '', (string) $totalpago);
+		if (abs($sumaMix - $totalEsperado) > 0.05) {
+			echo "11";
+			exit;
+		}
+		$formapagove = $primerMedio;
+		$montopagado = number_format($sumaMix, 2, '.', '');
+		$montodevuelto = '0.00';
+	} else {
+		if ($tipopagove === "CONTADO") { $formapagove = strip_tags(isset($_POST["formapagove"]) ? $_POST["formapagove"] : ''); } else { $formapagove = "CREDITO"; }
+		if (isset($_POST['montopagado'])) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado =''; }
+		if (isset($_POST['montodevuelto'])) { $montodevuelto = strip_tags($_POST['montodevuelto']); } else { $montodevuelto =''; }
+	}
+	if ($tipopagove === "CONTADO") { $statusventa = strip_tags("PAGADA"); } else { $statusventa = "PENDIENTE"; }
 	$statuspago = "0";
 	$codigo = strip_tags($_SESSION["codigo"]);
 	$cocinero = "0";
 	$codventa = strip_tags($_POST["codventa"]);
-	$stmt->execute();	
+	$stmt->execute();
+
+	if ($esPagoMixto) {
+		$this->GuardarPagosVenta($codventa, $mediosMix, $montosMix);
+	}
 
 #################### AQUI LIBERAMOS MESA Y GRUPO UNIDO ####################
 	$this->LiberarMesasUnion(strip_tags($_POST["codmesa"]));
@@ -11007,11 +11289,12 @@ public function BuscarCreditosFechas()
 ############################## FUNCION PARA CONTAR REGISTROS ############################
 public function ContarRegistros()
 	{
+		$tw = tenantWhere();
 $sql = "select
-(select count(*) from productos where existencia <= stockminimo) as stockproductos,
-(select count(*) from ingredientes where CAST(cantingrediente AS DECIMAL(10,5)) <= CAST(stockminimoingrediente AS DECIMAL(10,5))) as stockingredientes,
-(select count(*) from ventas where tipopagove = 'CREDITO' AND formapagove = '' AND fechavencecredito <= '".date("Y-m-d")."') as creditosventasvencidos,
-(select count(*) from compras where tipocompra = 'CREDITO' AND statuscompra = 'PENDIENTE' AND fechavencecredito <= '".date("Y-m-d")."') as creditoscomprasvencidos";
+(select count(*) from productos where existencia <= stockminimo AND ".$tw.") as stockproductos,
+(select count(*) from ingredientes where CAST(cantingrediente AS DECIMAL(10,5)) <= CAST(stockminimoingrediente AS DECIMAL(10,5)) AND ".$tw.") as stockingredientes,
+(select count(*) from ventas where tipopagove = 'CREDITO' AND formapagove = '' AND fechavencecredito <= '".date("Y-m-d")."' AND ".$tw.") as creditosventasvencidos,
+(select count(*) from compras where tipocompra = 'CREDITO' AND statuscompra = 'PENDIENTE' AND fechavencecredito <= '".date("Y-m-d")."' AND ".$tw.") as creditoscomprasvencidos";
 
 		foreach ($this->dbh->query($sql) as $row)
 		{
@@ -11022,9 +11305,428 @@ $sql = "select
 	}
 ############################## FUNCION PARA CONTAR REGISTROS ############################
 
+############################## MULTI-TENANT / SUPERADMIN ############################
+	public function ListarRestaurantes()
+	{
+		self::SetNames();
+		$this->p = array();
+		$sql = "SELECT * FROM restaurantes ORDER BY id_restaurante ASC";
+		foreach ($this->dbh->query($sql) as $row) {
+			$this->p[] = $row;
+		}
+		return $this->p;
+	}
 
+	public function RestaurantePorId($id = null)
+	{
+		self::SetNames();
+		$this->p = array();
+		if ($id === null) {
+			if (isset($_GET['id_restaurante'])) {
+				$raw = $_GET['id_restaurante'];
+				$decoded = @base64_decode($raw, true);
+				if ($decoded !== false && ctype_digit((string)$decoded)) {
+					$id = (int) $decoded;
+				} elseif (is_numeric($raw)) {
+					$id = (int) $raw;
+				}
+			}
+		}
+		$id = (int) $id;
+		if ($id <= 0) {
+			return $this->p;
+		}
+		$stmt = $this->dbh->prepare("SELECT * FROM restaurantes WHERE id_restaurante = ?");
+		$stmt->execute(array($id));
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
+		}
+		return $this->p;
+	}
+
+	public function RestauranteSesion()
+	{
+		self::SetNames();
+		$this->p = array();
+		$id = tenantId();
+		if ($id <= 0) {
+			return $this->p;
+		}
+		$stmt = $this->dbh->prepare("SELECT * FROM restaurantes WHERE id_restaurante = ?");
+		$stmt->execute(array($id));
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
+		}
+		return $this->p;
+	}
+
+	private function slugifyNombre($nombre)
+	{
+		$s = strtolower(trim($nombre));
+		$s = preg_replace('/[^a-z0-9]+/', '-', $s);
+		$s = trim($s, '-');
+		if ($s === '') {
+			$s = 'restaurante-' . time();
+		}
+		return substr($s, 0, 80);
+	}
+
+	public function RegistrarRestaurante()
+	{
+		self::SetNames();
+		if (empty($_POST['nombre'])) {
+			echo "1";
+			exit;
+		}
+		$nombre = strip_tags($_POST['nombre']);
+		$slug = !empty($_POST['slug']) ? $this->slugifyNombre($_POST['slug']) : $this->slugifyNombre($nombre);
+		$dominio = isset($_POST['dominio']) ? strtolower(trim(strip_tags($_POST['dominio']))) : '';
+		$dominio = preg_replace('#^https?://#', '', $dominio);
+		$dominio = rtrim($dominio, '/');
+		if ($dominio === '') {
+			$dominio = null;
+		}
+		$ruc = isset($_POST['ruc']) ? strip_tags($_POST['ruc']) : '';
+		$telefono = isset($_POST['telefono']) ? strip_tags($_POST['telefono']) : '';
+		$email = isset($_POST['email']) ? strip_tags($_POST['email']) : '';
+		$direccion = isset($_POST['direccion']) ? strip_tags($_POST['direccion']) : '';
+		$color_primario = !empty($_POST['color_primario']) ? strip_tags($_POST['color_primario']) : '#1a1a2e';
+		$color_secundario = !empty($_POST['color_secundario']) ? strip_tags($_POST['color_secundario']) : '#16213e';
+		$color_acento = !empty($_POST['color_acento']) ? strip_tags($_POST['color_acento']) : '#e94560';
+		if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color_primario)) {
+			$color_primario = '#1a1a2e';
+		}
+		if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color_secundario)) {
+			$color_secundario = '#16213e';
+		}
+		if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color_acento)) {
+			$color_acento = '#e94560';
+		}
+		$status = !empty($_POST['status']) ? strtoupper(strip_tags($_POST['status'])) : 'ACTIVO';
+
+		$chk = $this->dbh->prepare("SELECT id_restaurante FROM restaurantes WHERE slug = ?");
+		$chk->execute(array($slug));
+		if ($chk->rowCount() > 0) {
+			$slug = $slug . '-' . substr((string) time(), -4);
+		}
+		if ($dominio) {
+			$chkD = $this->dbh->prepare("SELECT id_restaurante FROM restaurantes WHERE dominio = ?");
+			$chkD->execute(array($dominio));
+			if ($chkD->rowCount() > 0) {
+				echo "<div class='alert alert-warning'>EL DOMINIO YA ESTÁ EN USO POR OTRO RESTAURANTE</div>";
+				exit;
+			}
+		}
+
+		$logo = null;
+		if (isset($_FILES['logo']['name']) && $_FILES['logo']['name'] !== '') {
+			$logo = $this->guardarLogoRestaurante($_FILES['logo'], $slug);
+		}
+
+		$stmt = $this->dbh->prepare("INSERT INTO restaurantes (nombre, slug, dominio, ruc, telefono, email, direccion, logo, color_primario, color_secundario, color_acento, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+		$stmt->execute(array($nombre, $slug, $dominio, $ruc, $telefono, $email, $direccion, $logo, $color_primario, $color_secundario, $color_acento, $status));
+		$idNuevo = (int) $this->dbh->lastInsertId();
+
+		$this->sembrarConfiguracionRestaurante($idNuevo, $nombre, $ruc, $telefono, $email, $direccion);
+		$this->sembrarMediosPagoRestaurante($idNuevo);
+
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> RESTAURANTE REGISTRADO (#".$idNuevo.") — Menú: /".$slug."/ — POS: /".$slug."/sistema/</div>";
+		exit;
+	}
+
+	public function ActualizarRestaurante()
+	{
+		self::SetNames();
+		if (empty($_POST['id_restaurante']) || empty($_POST['nombre'])) {
+			echo "1";
+			exit;
+		}
+		$id = (int) $_POST['id_restaurante'];
+		$nombre = strip_tags($_POST['nombre']);
+		$slug = !empty($_POST['slug']) ? $this->slugifyNombre($_POST['slug']) : $this->slugifyNombre($nombre);
+		$dominio = isset($_POST['dominio']) ? strtolower(trim(strip_tags($_POST['dominio']))) : '';
+		$dominio = preg_replace('#^https?://#', '', $dominio);
+		$dominio = rtrim($dominio, '/');
+		if ($dominio === '') {
+			$dominio = null;
+		}
+		$ruc = isset($_POST['ruc']) ? strip_tags($_POST['ruc']) : '';
+		$telefono = isset($_POST['telefono']) ? strip_tags($_POST['telefono']) : '';
+		$email = isset($_POST['email']) ? strip_tags($_POST['email']) : '';
+		$direccion = isset($_POST['direccion']) ? strip_tags($_POST['direccion']) : '';
+		$color_primario = !empty($_POST['color_primario']) ? strip_tags($_POST['color_primario']) : '#1a1a2e';
+		$color_secundario = !empty($_POST['color_secundario']) ? strip_tags($_POST['color_secundario']) : '#16213e';
+		$color_acento = !empty($_POST['color_acento']) ? strip_tags($_POST['color_acento']) : '#e94560';
+		if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color_primario)) {
+			$color_primario = '#1a1a2e';
+		}
+		if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color_secundario)) {
+			$color_secundario = '#16213e';
+		}
+		if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color_acento)) {
+			$color_acento = '#e94560';
+		}
+		$status = !empty($_POST['status']) ? strtoupper(strip_tags($_POST['status'])) : 'ACTIVO';
+
+		$chk = $this->dbh->prepare("SELECT id_restaurante FROM restaurantes WHERE slug = ? AND id_restaurante != ?");
+		$chk->execute(array($slug, $id));
+		if ($chk->rowCount() > 0) {
+			$slug = $slug . '-' . substr((string) time(), -4);
+		}
+		if ($dominio) {
+			$chkD = $this->dbh->prepare("SELECT id_restaurante FROM restaurantes WHERE dominio = ? AND id_restaurante != ?");
+			$chkD->execute(array($dominio, $id));
+			if ($chkD->rowCount() > 0) {
+				echo "<div class='alert alert-warning'>EL DOMINIO YA ESTÁ EN USO POR OTRO RESTAURANTE</div>";
+				exit;
+			}
+		}
+
+		$actual = $this->RestaurantePorId($id);
+		$logo = !empty($actual[0]['logo']) ? $actual[0]['logo'] : null;
+		if (isset($_FILES['logo']['name']) && $_FILES['logo']['name'] !== '') {
+			$nuevoLogo = $this->guardarLogoRestaurante($_FILES['logo'], $slug);
+			if ($nuevoLogo) {
+				$logo = $nuevoLogo;
+			}
+		}
+
+		$stmt = $this->dbh->prepare("UPDATE restaurantes SET nombre=?, slug=?, dominio=?, ruc=?, telefono=?, email=?, direccion=?, logo=?, color_primario=?, color_secundario=?, color_acento=?, status=? WHERE id_restaurante=?");
+		$stmt->execute(array($nombre, $slug, $dominio, $ruc, $telefono, $email, $direccion, $logo, $color_primario, $color_secundario, $color_acento, $status, $id));
+
+		$cfg = $this->dbh->prepare("UPDATE configuracion SET nomempresa=?, rifempresa=?, tlfempresa=?, correoempresa=?, direcempresa=? WHERE id_restaurante=?");
+		$cfg->execute(array($nombre, $ruc, $telefono, $email, $direccion, $id));
+
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> RESTAURANTE ACTUALIZADO — Menú: /".$slug."/ — POS: /".$slug."/sistema/ — Colores aplicados</div>";
+		exit;
+	}
+
+	private function guardarLogoRestaurante($file, $slug)
+	{
+		$dir = dirname(__DIR__) . '/uploads/restaurantes';
+		if (!is_dir($dir)) {
+			@mkdir($dir, 0755, true);
+		}
+		$tipo = isset($file['type']) ? $file['type'] : '';
+		$ext = 'png';
+		if (strpos($tipo, 'jpeg') !== false || strpos($tipo, 'jpg') !== false) {
+			$ext = 'jpg';
+		} elseif (strpos($tipo, 'png') !== false) {
+			$ext = 'png';
+		} elseif (strpos($tipo, 'webp') !== false) {
+			$ext = 'webp';
+		} else {
+			return null;
+		}
+		$nombre = preg_replace('/[^a-z0-9\-]/', '', $slug) . '-' . time() . '.' . $ext;
+		$dest = $dir . '/' . $nombre;
+		if (move_uploaded_file($file['tmp_name'], $dest)) {
+			return 'uploads/restaurantes/' . $nombre;
+		}
+		return null;
+	}
+
+	private function sembrarConfiguracionRestaurante($idRest, $nombre, $ruc, $telefono, $email, $direccion)
+	{
+		$chk = $this->dbh->prepare("SELECT id FROM configuracion WHERE id_restaurante = ?");
+		$chk->execute(array($idRest));
+		if ($chk->rowCount() > 0) {
+			return;
+		}
+		$base = $this->dbh->query("SELECT * FROM configuracion WHERE id_restaurante = 1 OR id = 1 LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+		$ivac = $base ? $base['ivac'] : 18;
+		$ivav = $base ? $base['ivav'] : 18;
+		$simbolo = $base ? $base['simbolo'] : 'S/';
+		$maxId = (int) $this->dbh->query("SELECT COALESCE(MAX(id),0)+1 AS n FROM configuracion")->fetch(PDO::FETCH_ASSOC)['n'];
+		$stmt = $this->dbh->prepare("INSERT INTO configuracion (id, rifempresa, nomempresa, direcempresa, tlfempresa, correoempresa, cedresponsable, nomresponsable, correoresponsable, tlfresponsable, ivac, ivav, simbolo, fac_ele, clave, usuariosol, clavesol, id_restaurante) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+		$stmt->execute(array(
+			$maxId,
+			$ruc !== '' ? $ruc : '00000000000',
+			$nombre,
+			$direccion !== '' ? $direccion : '-',
+			$telefono !== '' ? $telefono : '000',
+			$email !== '' ? $email : 'info@local',
+			'00000000',
+			'RESPONSABLE',
+			$email !== '' ? $email : 'info@local',
+			$telefono !== '' ? $telefono : '000',
+			$ivac,
+			$ivav,
+			$simbolo,
+			3,
+			'',
+			'',
+			'',
+			$idRest
+		));
+	}
+
+	private function sembrarMediosPagoRestaurante($idRest)
+	{
+		$chk = $this->dbh->prepare("SELECT COUNT(*) AS c FROM mediospagos WHERE id_restaurante = ?");
+		$chk->execute(array($idRest));
+		$row = $chk->fetch(PDO::FETCH_ASSOC);
+		if ($row && (int) $row['c'] > 0) {
+			return;
+		}
+		$base = $this->dbh->query("SELECT mediopago FROM mediospagos WHERE id_restaurante = 1")->fetchAll(PDO::FETCH_ASSOC);
+		if (!$base) {
+			$base = array(
+				array('mediopago' => 'EFECTIVO'),
+				array('mediopago' => 'TRANSFERENCIA'),
+				array('mediopago' => 'TARJETA'),
+				array('mediopago' => 'YAPE'),
+				array('mediopago' => 'PLIN'),
+			);
+		}
+		$stmt = $this->dbh->prepare("INSERT INTO mediospagos (mediopago, id_restaurante) VALUES (?, ?)");
+		foreach ($base as $m) {
+			$stmt->execute(array($m['mediopago'], $idRest));
+		}
+	}
+
+	public function ConfiguracionPorRestaurante($idRest)
+	{
+		self::SetNames();
+		$this->p = array();
+		$stmt = $this->dbh->prepare("SELECT * FROM configuracion WHERE id_restaurante = ? LIMIT 1");
+		$stmt->execute(array((int) $idRest));
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
+		}
+		return $this->p;
+	}
+
+	public function ActualizarConfiguracionRestaurante()
+	{
+		self::SetNames();
+		if (empty($_POST['id_restaurante']) || empty($_POST['nomempresa'])) {
+			echo "1";
+			exit;
+		}
+		$idRest = (int) $_POST['id_restaurante'];
+		$sql = "UPDATE configuracion SET rifempresa=?, nomempresa=?, direcempresa=?, tlfempresa=?, correoempresa=?, cedresponsable=?, nomresponsable=?, correoresponsable=?, tlfresponsable=?, ivac=?, ivav=?, simbolo=? WHERE id_restaurante=?";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array(
+			strip_tags($_POST['rifempresa']),
+			strip_tags($_POST['nomempresa']),
+			strip_tags($_POST['direcempresa']),
+			strip_tags($_POST['tlfempresa']),
+			strip_tags($_POST['correoempresa']),
+			strip_tags($_POST['cedresponsable']),
+			strip_tags($_POST['nomresponsable']),
+			strip_tags($_POST['correoresponsable']),
+			strip_tags($_POST['tlfresponsable']),
+			strip_tags($_POST['ivac']),
+			strip_tags($_POST['ivav']),
+			strip_tags($_POST['simbolo']),
+			$idRest
+		));
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> CONFIGURACIÓN ACTUALIZADA</div>";
+		exit;
+	}
+
+	public function RegistrarAdminRestaurante()
+	{
+		self::SetNames();
+		if (empty($_POST['nombres']) || empty($_POST['usuario']) || empty($_POST['password']) || empty($_POST['id_restaurante'])) {
+			echo "1";
+			exit;
+		}
+		$idRest = (int) $_POST['id_restaurante'];
+		$nivel = 'ADMINISTRADOR';
+		$chk = $this->dbh->prepare("SELECT codigo FROM usuarios WHERE usuario = ?");
+		$chk->execute(array(strip_tags($_POST['usuario'])));
+		if ($chk->rowCount() > 0) {
+			echo "4";
+			exit;
+		}
+		$stmt = $this->dbh->prepare("INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, nivel, status, id_restaurante) VALUES (?,?,?,?,?,?,?,?,?,?)");
+		$stmt->execute(array(
+			strip_tags($_POST['cedula']),
+			strip_tags($_POST['nombres']),
+			strip_tags(isset($_POST['nrotelefono']) ? $_POST['nrotelefono'] : ''),
+			strip_tags(isset($_POST['cargo']) ? $_POST['cargo'] : 'ADMINISTRADOR'),
+			strip_tags(isset($_POST['email']) ? $_POST['email'] : ''),
+			strip_tags($_POST['usuario']),
+			sha1(md5($_POST['password'])),
+			$nivel,
+			'ACTIVO',
+			$idRest
+		));
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> ADMINISTRADOR CREADO</div>";
+		exit;
+	}
+
+	public function ListarUsuariosPlataforma()
+	{
+		self::SetNames();
+		$this->p = array();
+		$sql = "SELECT u.*, r.nombre AS restaurante_nombre FROM usuarios u LEFT JOIN restaurantes r ON r.id_restaurante = u.id_restaurante WHERE u.nivel <> 'SUPERADMINISTRADOR' ORDER BY u.id_restaurante ASC, u.nivel ASC, u.nombres ASC";
+		foreach ($this->dbh->query($sql) as $row) {
+			$this->p[] = $row;
+		}
+		return $this->p;
+	}
+
+	public function DashboardSuperAdmin()
+	{
+		self::SetNames();
+		$out = array(
+			'total_restaurantes' => 0,
+			'activos' => 0,
+			'ventas_hoy' => 0,
+			'ventas_mes' => 0,
+			'ordenes_hoy' => 0,
+			'ordenes_mes' => 0,
+			'usuarios' => 0,
+			'por_restaurante' => array(),
+		);
+		$row = $this->dbh->query("SELECT COUNT(*) AS c, SUM(CASE WHEN status='ACTIVO' THEN 1 ELSE 0 END) AS activos FROM restaurantes")->fetch(PDO::FETCH_ASSOC);
+		$out['total_restaurantes'] = (int) $row['c'];
+		$out['activos'] = (int) $row['activos'];
+
+		$hoy = date('Y-m-d');
+		$mesIni = date('Y-m-01');
+		$vh = $this->dbh->query("SELECT COALESCE(SUM(totalpago),0) AS t, COUNT(*) AS n FROM ventas WHERE DATE(fechaventa) = '".$hoy."' AND statusventa = 'PAGADA'")->fetch(PDO::FETCH_ASSOC);
+		$out['ventas_hoy'] = (float) $vh['t'];
+		$out['ordenes_hoy'] = (int) $vh['n'];
+		$vm = $this->dbh->query("SELECT COALESCE(SUM(totalpago),0) AS t, COUNT(*) AS n FROM ventas WHERE DATE(fechaventa) >= '".$mesIni."' AND statusventa = 'PAGADA'")->fetch(PDO::FETCH_ASSOC);
+		$out['ventas_mes'] = (float) $vm['t'];
+		$out['ordenes_mes'] = (int) $vm['n'];
+		$out['usuarios'] = (int) $this->dbh->query("SELECT COUNT(*) AS c FROM usuarios WHERE nivel <> 'SUPERADMINISTRADOR'")->fetch(PDO::FETCH_ASSOC)['c'];
+
+		$sql = "SELECT r.id_restaurante, r.nombre, r.status, r.logo, r.color_acento,
+			(SELECT COUNT(*) FROM usuarios u WHERE u.id_restaurante = r.id_restaurante) AS usuarios,
+			(SELECT COALESCE(SUM(v.totalpago),0) FROM ventas v WHERE v.id_restaurante = r.id_restaurante AND DATE(v.fechaventa) = '".$hoy."' AND v.statusventa='PAGADA') AS ventas_hoy,
+			(SELECT COALESCE(SUM(v.totalpago),0) FROM ventas v WHERE v.id_restaurante = r.id_restaurante AND DATE(v.fechaventa) >= '".$mesIni."' AND v.statusventa='PAGADA') AS ventas_mes,
+			(SELECT COUNT(*) FROM ventas v WHERE v.id_restaurante = r.id_restaurante AND DATE(v.fechaventa) >= '".$mesIni."' AND v.statusventa='PAGADA') AS ordenes_mes
+			FROM restaurantes r ORDER BY r.id_restaurante ASC";
+		foreach ($this->dbh->query($sql) as $row) {
+			$out['por_restaurante'][] = $row;
+		}
+		return $out;
+	}
+
+	public function ListarVentasPorRestaurante($idRest = null)
+	{
+		self::SetNames();
+		$this->p = array();
+		if ($idRest === null && isset($_GET['id_restaurante'])) {
+			$idRest = (int) $_GET['id_restaurante'];
+		}
+		if ($idRest) {
+			$stmt = $this->dbh->prepare("SELECT v.codventa, v.fechaventa, v.totalpago, v.statusventa, v.tipopagove, r.nombre AS restaurante FROM ventas v INNER JOIN restaurantes r ON r.id_restaurante = v.id_restaurante WHERE v.id_restaurante = ? ORDER BY v.fechaventa DESC LIMIT 200");
+			$stmt->execute(array((int) $idRest));
+		} else {
+			$stmt = $this->dbh->query("SELECT v.codventa, v.fechaventa, v.totalpago, v.statusventa, v.tipopagove, r.nombre AS restaurante, v.id_restaurante FROM ventas v INNER JOIN restaurantes r ON r.id_restaurante = v.id_restaurante ORDER BY v.fechaventa DESC LIMIT 200");
+		}
+		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
+		}
+		return $this->p;
+	}
+############################## MULTI-TENANT / SUPERADMIN ############################
 
 
 }
-############################## AQUI TERMINA LA CLASE LOGIN ##############################
-?>

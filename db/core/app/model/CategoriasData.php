@@ -18,7 +18,10 @@ class CategoriasData {
 
 
 	public static function getAll(){
-		$sql = "select * from ".self::$tablename;
+		$sql = "select * from ".self::$tablename." where 1=1";
+		if (function_exists('web_tenant_sql')) {
+			$sql .= web_tenant_sql();
+		}
 		$query = Executor::doit($sql);
 		return Model::many($query[0],new CategoriasData());
 	} 

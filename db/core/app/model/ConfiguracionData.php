@@ -18,7 +18,11 @@ class ConfiguracionData {
 	}
 
 	public static function getAllConfiguracion(){
-		$sql = "select * from ".self::$tablename." limit 1";
+		$sql = "select * from ".self::$tablename." where 1=1";
+		if (function_exists('web_tenant_sql')) {
+			$sql .= web_tenant_sql();
+		}
+		$sql .= " limit 1";
 		$query = Executor::doit($sql);
 		return Model::one($query[0],new ConfiguracionData());
 	}

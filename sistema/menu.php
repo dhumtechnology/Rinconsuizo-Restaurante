@@ -1,6 +1,18 @@
 
 <!--#e5960c #461756 -->
-<?php 
+<?php
+if (function_exists('sistema_brand_head_styles')) {
+  sistema_brand_head_styles();
+}
+$__logoutHref = 'logout';
+if (function_exists('restaurant_resolve_logout_slug')) {
+  $__slugOut = restaurant_resolve_logout_slug();
+  if ($__slugOut !== '') {
+    $__logoutHref = '/' . $__slugOut . '/sistema/logout';
+  }
+} elseif (!empty($_SESSION['url_slug'])) {
+  $__logoutHref = '/' . preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug'])) . '/sistema/logout';
+}
 if(isset($_SESSION['acceso'])) { 
   if ($_SESSION['acceso'] == "administrador" || $_SESSION["acceso"]=="cajero" || $_SESSION["acceso"]=="cocinero" || $_SESSION["acceso"]=="mesero" || $_SESSION["acceso"]=="repartidor") {
 
@@ -121,7 +133,7 @@ if(isset($_SESSION['acceso'])) {
  </ul>
  </li>
  
- <li> <a href="logout" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
+ <li> <a href="<?php echo htmlspecialchars($__logoutHref); ?>" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
  
  </ul>
  </div>
@@ -173,7 +185,7 @@ if(isset($_SESSION['acceso'])) {
  </ul>
  </li>
  
- <li> <a href="logout" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
+ <li> <a href="<?php echo htmlspecialchars($__logoutHref); ?>" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
  
  </ul>
  </div>
@@ -190,7 +202,7 @@ if(isset($_SESSION['acceso'])) {
  <li> <a href="panel" class="waves-effect"><i class="fa fa-desktop"></i><span> Mostrador </span></a></li>
  
  
- <li> <a href="logout" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
+ <li> <a href="<?php echo htmlspecialchars($__logoutHref); ?>" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
  
  </ul>
  </div>
@@ -204,7 +216,7 @@ if(isset($_SESSION['acceso'])) {
  <li> <a href="panel" class="waves-effect"><i class="fa fa-desktop"></i><span> Mostrador </span></a></li>
  
  
- <li> <a href="logout" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
+ <li> <a href="<?php echo htmlspecialchars($__logoutHref); ?>" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
  
  </ul>
  </div>
@@ -218,7 +230,7 @@ if(isset($_SESSION['acceso'])) {
  <li> <a href="panel" class="waves-effect"><i class="fa fa-motorcycle"></i><span> Delivery </span></a></li>
  
  
- <li> <a href="logout" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
+ <li> <a href="<?php echo htmlspecialchars($__logoutHref); ?>" class="waves-effect"><i class="fa fa-power-off"></i> Cerrar Sesión</a></li>
  
  </ul>
  </div>
@@ -226,8 +238,21 @@ if(isset($_SESSION['acceso'])) {
 		
                 <?php } ?>
 
-<link rel="stylesheet" href="assets/css/teclado-tactil.css?v=4">
-<script src="assets/script/teclado-tactil.js?v=4"></script>
+<link rel="stylesheet" href="assets/css/teclado-tactil.css?v=dead3">
+<style>
+  #teclado-tactil { display: none !important; visibility: hidden !important; pointer-events: none !important; height: 0 !important; overflow: hidden !important; }
+</style>
+<script>
+/* Solo elimina el teclado LEGACY (#teclado-tactil). No toca observaciones. */
+(function () {
+  function wipeLegacyDom() {
+    var t = document.getElementById('teclado-tactil');
+    if (t && t.parentNode) t.parentNode.removeChild(t);
+  }
+  wipeLegacyDom();
+  setInterval(wipeLegacyDom, 500);
+})();
+</script>
 
 </body>
 </html>

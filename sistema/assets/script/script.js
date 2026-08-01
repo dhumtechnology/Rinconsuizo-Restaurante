@@ -42,6 +42,9 @@ $('document').ready(function() {
 	   function submitForm()
 	   {		
 			var data = $("#loginform").serialize();
+			if (data.indexOf('btn-login=') === -1) {
+				data += (data ? '&' : '') + 'btn-login=1';
+			}
 				
 			$.ajax({
 				
@@ -64,7 +67,7 @@ $('document').ready(function() {
 				
 				$("#error").fadeIn(1000, function(){	
 				$("#error").html('<center> '+response+' </center>');
-				setTimeout(function() { $("#error").html(""); }, 5000);
+				setTimeout(function() { $("#error").html(""); }, 8000);
 				$("#btn-login").html('<i class="fa fa-sign-in"></i> Acceder');
 									});
 					}
@@ -3481,7 +3484,7 @@ $('document').ready(function()
 									$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN ARQUEO ABIERTO DE ESTA CAJA, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN ARQUEO DE CAJA ABIERTO EN ESTE RESTAURANTE. DEBE CERRARLO ANTES DE ABRIR UNO NUEVO.</div></center>');
 											
 										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
 										
@@ -3573,7 +3576,7 @@ $('document').ready(function()
 									$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN ARQUEO ABIERTO DE ESTA CAJA, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN ARQUEO DE CAJA ABIERTO EN ESTE RESTAURANTE. DEBE CERRARLO ANTES DE CONTINUAR.</div></center>');
 											
 								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
 										
@@ -4538,11 +4541,29 @@ $('document').ready(function()
 	  {
 			descuento: { required: true, },
 			tipopagove: { required: true, },
-			formapagove: { required: true, },
+			formapagove: {
+				required: {
+					depends: function() {
+						return !$('#pagomixto').is(':checked');
+					}
+				}
+			},
 			fechavencecredito: { required: true, },
 			montoabono: { required: true, },
-			montopagado: { required: true, },
-			montodevuelto: { required: true, },
+			montopagado: {
+				required: {
+					depends: function() {
+						return !$('#pagomixto').is(':checked');
+					}
+				}
+			},
+			montodevuelto: {
+				required: {
+					depends: function() {
+						return !$('#pagomixto').is(':checked');
+					}
+				}
+			},
 			observaciones: {
 				required: function() {
 					return window.ventasAccionSubmit !== 'btn-cerrar';
@@ -4573,6 +4594,11 @@ $('document').ready(function()
 			  }
 			  var accion = window.ventasAccionSubmit || 'btn-venta';
 			  var esCerrarMesa = accion === 'btn-cerrar';
+			  if (esCerrarMesa && typeof ValidarPagoMixtoAntesDeCerrar === 'function') {
+			      if (!ValidarPagoMixtoAntesDeCerrar()) {
+			          return false;
+			      }
+			  }
 			  var codmesaForm = $('#recibemesa input[name="codmesa"]').val() || $('#codmesa').val() || '';
 			  if (typeof normalizarCodmesaRef === 'function') {
 			      codmesaForm = normalizarCodmesaRef(codmesaForm);
@@ -4751,6 +4777,20 @@ $('document').ready(function()
 											
 					$("#btn-cerrar").html('<span class="fa fa-save"></span> Cerrar Mesa');
 										
+									});
+								}
+								else if(data=='10')
+								{
+					$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> EL PAGO MIXTO REQUIERE AL MENOS 2 MEDIOS DE PAGO CON MONTO.</div></center>');
+					$("#btn-cerrar").html('<span class="fa fa-save"></span> Cerrar Mesa');
+									});
+								}
+								else if(data=='11')
+								{
+					$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LA SUMA DE LOS MEDIOS DE PAGO DEBE SER IGUAL AL TOTAL DE LA CUENTA.</div></center>');
+					$("#btn-cerrar").html('<span class="fa fa-save"></span> Cerrar Mesa');
 									});
 								}
 								else{

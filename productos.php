@@ -26,6 +26,7 @@ $idCategoria = (isset($_GET['id']) && $_GET['id'] !== '') ? (int) $_GET['id'] : 
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
 <link rel="stylesheet" href="css/tienda-mejoras.css?v=5" type="text/css" media="all">
+  <?php if (function_exists('web_brand_head_styles')) { web_brand_head_styles(); } ?>
 
 </head>
 
@@ -44,7 +45,7 @@ $idCategoria = (isset($_GET['id']) && $_GET['id'] !== '') ? (int) $_GET['id'] : 
           <div class="inner"></div>
         </div>
     </div>
-    <div class="bottomnav" style="background-color: #132332 !important;">
+    <div class="bottomnav" style="background-color: var(--brand-primary, #132332) !important;">
         <div class="container">
         <div class="inner">
     <div id="form_7278891982233858" class="row dpnav2 ApRow  has-bg bg-fullwidth" data-src="" style="" data-bg_data=" no-repeat center center">
@@ -150,7 +151,7 @@ $idCategoria = (isset($_GET['id']) && $_GET['id'] !== '') ? (int) $_GET['id'] : 
         <div class="inner">
           <div id="form_6256705932421997" class="row dptop ApRow  has-bg bg-fullwidth" style="" data-bg_data=" #fff no-repeat center center">
               <div class="col-xl-3 col-lg-12 col-md-4 col-sm-4 col-xs-4 col-sp-4  ApColumn " >
-                  <div class="logo-header"><a href="#"><img class="logo img-fluid" src="img/logo.jpg" alt="At Galvatron"></a></div>
+                  <div class="logo-header"><a href="<?php echo function_exists('web_url') ? htmlspecialchars(web_url()) : '#'; ?>"><img class="logo img-fluid" src="<?php echo htmlspecialchars(function_exists('restaurant_logo_url') ? restaurant_logo_url() : 'img/logo.jpg'); ?>" alt="<?php $__br = function_exists('web_tenant_row') ? web_tenant_row() : null; echo htmlspecialchars($__br ? $__br['nombre'] : 'Menu'); ?>" style="max-height:64px;width:auto;object-fit:contain;"></a></div>
 
               </div>
               <div    class="col-xl-6 col-lg-9 col-md-4 col-sm-4 col-xs-4 col-sp-4  ApColumn ">
@@ -472,7 +473,7 @@ $idCategoria = (isset($_GET['id']) && $_GET['id'] !== '') ? (int) $_GET['id'] : 
             <div class="modal fade" id="exampleModal<?php echo $productoc->codalmacen; ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
               <div class="modal-dialog modal-xl">
                 <div class="modal-content">
-                  <div class="modal-header" style="background: #4cbb6c;">
+                  <div class="modal-header" style="background: var(--brand-primary);">
                     <h4 class="modal-title" id="exampleModalLabel" style="color: white;"> <i class="fa fa-check"></i> Producto añadido con éxito a su carrito de compras</h4>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i></button>
                   </div>
@@ -485,8 +486,8 @@ $idCategoria = (isset($_GET['id']) && $_GET['id'] !== '') ? (int) $_GET['id'] : 
                             <img src="sistema/fotos/<?php echo $productoc->codproducto; ?>.jpg" class="product-image" style="width: 100%;">
                           </div>
                           <div class="col-md-6" style="text-align: left;">
-                            <h6 class="h6 product-name" style="color: #f79a34; font-size: 1.125rem;margin-bottom: 0.625rem;"><?php echo $productoc->producto;?></h6>
-                            <p class="product-price" style="color: #142332;text-align: left;font-size: 24px;font-weight: 600;">S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></p>
+                            <h6 class="h6 product-name" style="color: var(--brand-accent); font-size: 1.125rem;margin-bottom: 0.625rem;"><?php echo $productoc->producto;?></h6>
+                            <p class="product-price" style="color: var(--brand-secondary);text-align: left;font-size: 24px;font-weight: 600;">S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></p>
                             <span class="js-modal-qty">Cantidad: <b>1</b></span>
                           </div>
                         </div>

@@ -60,7 +60,7 @@ $reg = $tra->ListarUsuarios();
  <div class="topbar">
  <div class="topbar-left">
  <div class="text-center"> 
- <a href="panel" class="logo"><img src="assets/images/logo_white_2.png" height="50"></a> 
+ <a href="panel" class="logo"><img src="<?php echo htmlspecialchars(restaurant_logo_url()); ?>" height="50"></a> 
  <a href="panel" class="logo-sm"><img src="assets/images/logo_sm.png" height="50"></a>
  </div>
  </div>

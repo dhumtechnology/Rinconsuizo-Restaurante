@@ -1,5 +1,13 @@
 <?php
 require_once __DIR__ . '/web_session.php';
+
+// Sin slug de restaurante: ir al login SuperAdmin (no hay tienda global)
+$__slug = function_exists('web_tenant_slug') ? web_tenant_slug() : '';
+if ($__slug === '' && empty($_GET['r_slug'])) {
+	header('Location: /sistema/superadmin/login.php');
+	exit;
+}
+
 $session_id = web_session_id();
 include "db/core/autoload.php";
 include "db/core/app/model/CategoriasData.php";
@@ -7,6 +15,7 @@ include "db/core/app/model/ProductoData.php";
 include "db/core/app/model/CarritoData.php";
 
 include "db/core/app/model/ClientesData.php";
+$__tn = function_exists('web_tenant_row') ? web_tenant_row() : null;
 ?>
 <!doctype html>
 <html lang="es"  class="default" >
@@ -14,15 +23,19 @@ include "db/core/app/model/ClientesData.php";
 <head> 
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Carrito</title>
+  <title><?php echo $__tn ? htmlspecialchars($__tn['nombre']) : 'Menu'; ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <?php if (function_exists('web_tenant_slug') && web_tenant_slug() !== '') { ?>
+  <base href="<?php echo htmlspecialchars(web_base_href()); ?>">
+  <?php } ?>
   <link rel="stylesheet" href="css/estilos.css" type="text/css" media="all">
 
 <link rel="stylesheet" href="css/bos.css" type="text/css" media="all">
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
-<link rel="stylesheet" href="css/tienda-mejoras.css?v=3" type="text/css" media="all">
+<link rel="stylesheet" href="css/tienda-mejoras.css?v=5" type="text/css" media="all">
+  <?php if (function_exists('web_brand_head_styles')) { web_brand_head_styles(); } ?>
 
 </head>
 
@@ -41,7 +54,7 @@ include "db/core/app/model/ClientesData.php";
           <div class="inner"></div>
         </div>
     </div>
-    <div class="bottomnav" style="background-color: #132332 !important;">
+    <div class="bottomnav" style="background-color: var(--brand-primary, #132332) !important;">
         <div class="container">
         <div class="inner">
     <div id="form_7278891982233858" class="row dpnav2 ApRow  has-bg bg-fullwidth" data-src="" style="" data-bg_data=" no-repeat center center">
@@ -147,7 +160,7 @@ include "db/core/app/model/ClientesData.php";
         <div class="inner">
           <div id="form_6256705932421997" class="row dptop ApRow  has-bg bg-fullwidth" style="" data-bg_data=" #fff no-repeat center center">
               <div class="col-xl-3 col-lg-12 col-md-4 col-sm-4 col-xs-4 col-sp-4  ApColumn " >
-                  <div class="logo-header"><a href="#"><img class="logo img-fluid" src="img/logo.jpg" alt="At Galvatron"></a></div>
+                  <div class="logo-header"><a href="<?php echo function_exists('web_url') ? htmlspecialchars(web_url()) : '#'; ?>"><img class="logo img-fluid" src="<?php echo htmlspecialchars(function_exists('restaurant_logo_url') ? restaurant_logo_url() : 'img/logo.jpg'); ?>" alt="<?php $__br = function_exists('web_tenant_row') ? web_tenant_row() : null; echo htmlspecialchars($__br ? $__br['nombre'] : 'Menu'); ?>" style="max-height:64px;width:auto;object-fit:contain;"></a></div>
 
               </div>
               <div    class="col-xl-6 col-lg-9 col-md-4 col-sm-4 col-xs-4 col-sp-4  ApColumn ">
@@ -437,7 +450,7 @@ include "db/core/app/model/ClientesData.php";
             <div class="modal fade" id="exampleModal<?php echo $productoc->codalmacen; ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
               <div class="modal-dialog modal-xl">
                 <div class="modal-content">
-                  <div class="modal-header" style="background: #4cbb6c;">
+                  <div class="modal-header" style="background: var(--brand-primary);">
                     <h4 class="modal-title" id="exampleModalLabel" style="color: white;"> <i class="fa fa-check"></i> Producto añadido con éxito a su carrito de compras</h4>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i></button>
                   </div>
@@ -450,8 +463,8 @@ include "db/core/app/model/ClientesData.php";
                             <img src="sistema/fotos/<?php echo $productoc->codproducto; ?>.jpg" class="product-image" style="width: 100%;">
                           </div>
                           <div class="col-md-6" style="text-align: left;">
-                            <h6 class="h6 product-name" style="color: #f79a34; font-size: 1.125rem;margin-bottom: 0.625rem;"><?php echo $productoc->producto;?></h6>
-                            <p class="product-price" style="color: #142332;text-align: left;font-size: 24px;font-weight: 600;">S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></p>
+                            <h6 class="h6 product-name" style="color: var(--brand-accent); font-size: 1.125rem;margin-bottom: 0.625rem;"><?php echo $productoc->producto;?></h6>
+                            <p class="product-price" style="color: var(--brand-secondary);text-align: left;font-size: 24px;font-weight: 600;">S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></p>
                             <span class="js-modal-qty">Cantidad: <b>1</b></span>
                           </div>
                         </div>

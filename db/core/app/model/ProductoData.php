@@ -18,13 +18,19 @@ class ProductoData {
 
 
 	public static function getAll(){
-		$sql = "select * from ".self::$tablename;
+		$sql = "select * from ".self::$tablename." where 1=1";
+		if (function_exists('web_tenant_sql')) {
+			$sql .= web_tenant_sql();
+		}
 		$query = Executor::doit($sql);
 		return Model::many($query[0],new ProductoData());
 	} 
 
 	public static function getBycategoria($id){
 		$sql = "select * from ".self::$tablename." where codcategoria=$id ";
+		if (function_exists('web_tenant_sql')) {
+			$sql .= web_tenant_sql();
+		}
 		$query = Executor::doit($sql);
 		return Model::many($query[0],new ProductoData());
 	}
@@ -37,6 +43,9 @@ class ProductoData {
 	public static function buscar($q, $categoriaId = null){
 		$q = trim((string) $q);
 		$sql = "SELECT * FROM ".self::$tablename." WHERE 1=1";
+		if (function_exists('web_tenant_sql')) {
+			$sql .= web_tenant_sql();
+		}
 		if ($categoriaId !== null && $categoriaId !== '' && (int) $categoriaId > 0) {
 			$sql .= " AND codcategoria=".(int) $categoriaId;
 		}

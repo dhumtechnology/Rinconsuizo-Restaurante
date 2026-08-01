@@ -19,6 +19,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/tenant_context.php';
+tenant_resolve_request();
+
 if (!isset($_SESSION['web_cart_boot'])) {
     $_SESSION['web_cart_boot'] = time();
 }
@@ -26,4 +29,17 @@ if (!isset($_SESSION['web_cart_boot'])) {
 function web_session_id()
 {
     return session_id();
+}
+
+/**
+ * Cláusula SQL AND id_restaurante = N para tienda web
+ */
+function web_tenant_sql($alias = '')
+{
+    $id = web_tenant_id();
+    if ($id <= 0) {
+        $id = 1;
+    }
+    $col = $alias !== '' ? $alias . '.id_restaurante' : 'id_restaurante';
+    return ' AND ' . $col . ' = ' . (int) $id . ' ';
 }
