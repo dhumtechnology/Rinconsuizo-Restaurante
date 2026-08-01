@@ -1,19 +1,36 @@
 <?php
-session_start(); 
-$session_id= session_id(); 
+require_once __DIR__ . '/web_session.php';
+require_once __DIR__ . '/mail/enviar_correo.php';
 
+$info = web_mail_restaurante_info();
+$restaurante_nombre = $info['nombre'];
 
-$para  = "rinconsuizo0744@gmail.com";
-$titulo = 'MENSAJE DESDE CONTACTOS';
+$para = '';
+if (!empty($info['email']) && filter_var($info['email'], FILTER_VALIDATE_EMAIL)) {
+    $para = $info['email'];
+}
+if ($para === '') {
+    $para = getenv('SMTP_FROM_EMAIL') ?: (getenv('SMTP_USER') ?: '');
+}
+
+$nombreForm = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
+$titulo = 'Mensaje de contacto - ' . $restaurante_nombre;
+if ($nombreForm !== '') {
+    $titulo .= ' · ' . $nombreForm;
+}
+
 ob_start();
-include "mail/contacto.php";
-$mensaje = ob_get_contents();
-ob_end_clean();
-$cabeceras  = 'MIME-Version: 1.0' . "\r\n";
-$cabeceras .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";   
-$cabeceras .= 'From: MENSAJE DE CONTACTOS <rinconsuizo0744@gmail.com>' . "\r\n";    
-mail($para, $titulo, $mensaje, $cabeceras);
+include __DIR__ . '/mail/contacto.php';
+$mensaje = ob_get_clean();
+
+if ($para !== '' && filter_var($para, FILTER_VALIDATE_EMAIL)) {
+    $envio = enviar_correo_web($para, $titulo, $mensaje, $restaurante_nombre);
+    if (!$envio['ok']) {
+        error_log('Contacto web: fallo envío correo a ' . $para . ' — ' . $envio['error']);
+    }
+} else {
+    error_log('Contacto web: restaurante sin email válido configurado');
+}
+
 print "<script>window.location='contacto.php';</script>";
 ?>
-			
-           

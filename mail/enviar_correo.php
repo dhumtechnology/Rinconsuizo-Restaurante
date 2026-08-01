@@ -37,7 +37,50 @@ function cargar_env_smtp_si_falta()
     }
 }
 
-function enviar_correo_web($para, $asunto, $html, $nombreDestino = '')
+/**
+ * Nombre y email del restaurante actual (tienda web / tenant).
+ * @return array{nombre: string, email: string}
+ */
+function web_mail_restaurante_info()
+{
+    $nombre = '';
+    $email = '';
+
+    if (function_exists('web_tenant_row')) {
+        $row = web_tenant_row();
+        if (is_array($row)) {
+            if (!empty($row['nombre'])) {
+                $nombre = trim((string) $row['nombre']);
+            }
+            if (!empty($row['email'])) {
+                $email = trim((string) $row['email']);
+            }
+        }
+    }
+
+    if ($nombre === '' && !empty($_SESSION['restaurante_nombre'])) {
+        $nombre = trim((string) $_SESSION['restaurante_nombre']);
+    }
+
+    if ($nombre === '') {
+        $nombre = trim((string) (getenv('SMTP_FROM_NAME') ?: ''));
+    }
+    if ($nombre === '') {
+        $nombre = 'Restaurante';
+    }
+
+    return array('nombre' => $nombre, 'email' => $email);
+}
+
+/**
+ * @param string $para
+ * @param string $asunto
+ * @param string $html
+ * @param string $nombreDestino
+ * @param string|null $fromNameOverride Nombre visible del remitente (por defecto: restaurante del tenant)
+ * @return array{ok: bool, error: string}
+ */
+function enviar_correo_web($para, $asunto, $html, $nombreDestino = '', $fromNameOverride = null)
 {
     cargar_env_smtp_si_falta();
 
@@ -48,8 +91,12 @@ function enviar_correo_web($para, $asunto, $html, $nombreDestino = '')
     $pass = str_replace(' ', '', $pass);
     $port = (int) (getenv('SMTP_PORT') ?: 587);
     $fromEmail = getenv('SMTP_FROM_EMAIL') ?: $user;
-    $fromName = getenv('SMTP_FROM_NAME') ?: 'Rincon Suizo';
     $secure = strtolower(getenv('SMTP_SECURE') ?: 'tls');
+
+    $info = web_mail_restaurante_info();
+    $fromName = ($fromNameOverride !== null && trim((string) $fromNameOverride) !== '')
+        ? trim((string) $fromNameOverride)
+        : $info['nombre'];
 
     $para = trim((string) $para);
     if ($para === '' || !filter_var($para, FILTER_VALIDATE_EMAIL)) {
@@ -92,7 +139,13 @@ function enviar_correo_web($para, $asunto, $html, $nombreDestino = '')
 
     $mail->setFrom($fromEmail, $fromName);
     $mail->addAddress($para, $nombreDestino);
-    $mail->addReplyTo($fromEmail, $fromName);
+
+    $replyEmail = $fromEmail;
+    if (!empty($info['email']) && filter_var($info['email'], FILTER_VALIDATE_EMAIL)) {
+        $replyEmail = $info['email'];
+    }
+    $mail->addReplyTo($replyEmail, $fromName);
+
     $mail->isHTML(true);
     $mail->Subject = $asunto;
     $mail->Body = $html;

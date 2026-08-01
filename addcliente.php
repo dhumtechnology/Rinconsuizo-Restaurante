@@ -1,6 +1,8 @@
 <?php
+require_once __DIR__ . '/web_session.php';
 include "db/core/autoload.php";
 include "db/core/app/model/ClientesData.php";
+require_once __DIR__ . '/mail/enviar_correo.php';
 
  
 if(count($_POST)>0){ 
@@ -37,13 +39,13 @@ $codigo = substr(str_shuffle($caracteres_permitidos), 0, $longitud);
 
 
 $para  = $_POST['email'];
-$titulo = 'CONFIRMACION RESTO';
+$restaurante_nombre = web_mail_restaurante_info()['nombre'];
+$titulo = 'Confirmación de cuenta - ' . $restaurante_nombre;
 ob_start();
 include "mail/voucher.php";
 $mensaje = ob_get_contents();
 ob_end_clean();
 
-require_once "mail/enviar_correo.php";
 $envio = enviar_correo_web($para, $titulo, $mensaje, $_POST['nombre']);
 if (!$envio['ok']) {
     error_log('Registro cliente: fallo envío correo a ' . $para . ' — ' . $envio['error']);
@@ -54,8 +56,6 @@ if (!isset($codigo) || $codigo === '') {
     $codigo = isset($cliente->codigo) ? $cliente->codigo : '';
 }
 
-
-session_start();
 
 $base = new Database();
 $con = $base->connect();

@@ -15,27 +15,35 @@ if (is_file($__tenantCtx)) {
 	}
 }
 
-// Inyectar colores de marca del restaurante en el <head> de cualquier página del POS
+// Inyectar colores de marca del restaurante en el <head> de páginas del POS
+// (sin ob_start anidado: en PHP 7.4 vacía toda la salida)
 if (!defined('RS_BRAND_OB') && PHP_SAPI !== 'cli') {
 	define('RS_BRAND_OB', 1);
-	ob_start(function ($html) {
-		if ($html === '' || strpos($html, 'id="sistema-brand-theme"') !== false) {
+	$__scriptName = isset($_SERVER['SCRIPT_NAME']) ? str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME']) : '';
+	$__isSuperadminPath = (stripos($__scriptName, '/superadmin/') !== false);
+	if (!$__isSuperadminPath) {
+		ob_start(function ($html) {
+			if ($html === '' || strpos($html, 'id="sistema-brand-theme"') !== false) {
+				return $html;
+			}
+			if (strpos($html, '</head>') === false && strpos($html, '</HEAD>') === false) {
+				return $html;
+			}
+			if (!empty($_SESSION['acceso']) && $_SESSION['acceso'] === 'superadministrador') {
+				return $html;
+			}
+			if (!function_exists('sistema_brand_head_styles_html')) {
+				return $html;
+			}
+			$inject = sistema_brand_head_styles_html();
+			if ($inject === '') {
+				return $html;
+			}
+			$html = str_replace('</head>', $inject . '</head>', $html);
+			$html = str_replace('</HEAD>', $inject . '</HEAD>', $html);
 			return $html;
-		}
-		if (strpos($html, '</head>') === false) {
-			return $html;
-		}
-		if (!function_exists('sistema_brand_head_styles')) {
-			return $html;
-		}
-		ob_start();
-		sistema_brand_head_styles();
-		$inject = ob_get_clean();
-		if ($inject === '') {
-			return $html;
-		}
-		return str_replace('</head>', $inject . '</head>', $html);
-	});
+		});
+	}
 }
 
 ####################################### CLASE LOGIN #######################################
@@ -1286,13 +1294,13 @@ public function ListarMesas()
 {
 	self::SetNames();
 	$this->p = array();
-	$sqlSync = "UPDATE mesas m SET m.statusmesa = '0' WHERE m.statusmesa = '1' AND ".tenantWhere('m')." AND NOT EXISTS (SELECT 1 FROM ventas v WHERE v.codmesa = m.codmesa AND v.statusventa = 'PENDIENTE')";
+	$sqlSync = "UPDATE mesas m SET m.statusmesa = '0' WHERE m.statusmesa = '1' AND ".tenantWhere('m')." AND NOT EXISTS (SELECT 1 FROM ventas v WHERE v.codmesa = m.codmesa AND v.statusventa = 'PENDIENTE' AND ".tenantWhere('v').")";
 	$this->dbh->exec($sqlSync);
 	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
-		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS fechapedido,
-		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS pedidos_cocina,
-		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '0' AND v.statusventa = 'PENDIENTE') AS pedidos_activos,
-		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE') AS pedidos_pendientes
+		(SELECT MIN(v.fechaventa) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE' AND ".tenantWhere('v').") AS fechapedido,
+		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE' AND ".tenantWhere('v').") AS pedidos_cocina,
+		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.cocinero = '0' AND v.statusventa = 'PENDIENTE' AND ".tenantWhere('v').") AS pedidos_activos,
+		(SELECT COUNT(*) FROM ventas v WHERE v.codmesa = mesas.codmesa AND v.statusventa = 'PENDIENTE' AND ".tenantWhere('v').") AS pedidos_pendientes
 		FROM mesas LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ".tenantWhere('mesas');
 	foreach ($this->dbh->query($sql) as $row)
 	{
@@ -1371,16 +1379,16 @@ public function ListarMesasCocinero()
 	$sql = " SELECT salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa,
 		(SELECT MIN(v.fechaventa) FROM ventas v
 			INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
-			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS fechapedido,
+			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE' AND ".tenantWhere('v').") AS fechapedido,
 		(SELECT COUNT(DISTINCT v.codventa) FROM ventas v
 			INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
-			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE') AS pedidos_cocina
+			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE' AND ".tenantWhere('v').") AS pedidos_cocina
 		FROM mesas
 		LEFT JOIN salas ON mesas.codsala = salas.codsala
-		WHERE EXISTS (
+		WHERE ".tenantWhere('mesas')." AND EXISTS (
 			SELECT 1 FROM ventas v
 			INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
-			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE'
+			WHERE v.codmesa = mesas.codmesa AND v.cocinero = '1' AND v.statusventa = 'PENDIENTE' AND ".tenantWhere('v')."
 		)";
 	foreach ($this->dbh->query($sql) as $row)
 	{
@@ -1747,7 +1755,8 @@ public function ContarDeliveryCocina()
 	$sql = "SELECT COUNT(DISTINCT v.codventa) AS total, MIN(v.fechaventa) AS fechapedido
 		FROM ventas v
 		INNER JOIN detalleventas d ON d.codventa = v.codventa AND d.comanda = '1' AND d.statusdetalle = '1'
-		WHERE v.codmesa = '0' AND v.delivery = '1' AND v.cocinero = '1'";
+		WHERE v.codmesa = '0' AND v.delivery = '1' AND v.cocinero = '1'
+		AND ".tenantWhere('v');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		return $row;
@@ -6450,6 +6459,7 @@ if(base64_decode($_GET["tipomovimientocaja"])=="INGRESO"){
 	{
 		self::SetNames();
 		$this->p = array();
+		$tw = " AND ".tenantWhere('ventas');
 
 if($_SESSION["acceso"] == 'repartidor'){
 	// Solo externos / web (no internos). Asignados a mí + sin asignar.
@@ -6461,6 +6471,7 @@ if($_SESSION["acceso"] == 'repartidor'){
 		LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo
 		WHERE ventas.delivery = 1
 		AND ventas.entregado = 1
+		".$tw."
 		AND (ventas.repartidor = ? OR ventas.repartidor = '0' OR ventas.repartidor = '' OR ventas.repartidor IS NULL)
 		AND IFNULL(ventas.observaciones,'') NOT LIKE '%DELIVERY INTERNO%'
 		AND (
@@ -6485,7 +6496,7 @@ if($_SESSION["acceso"] == 'repartidor'){
 		? ""
 		: " AND ventas.codigo = '".$_SESSION["codigo"]."'";
 
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.totalpago, ventas.entregado, ventas.delivery, ventas.repartidor, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.direccliente, usuarios.nombres, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo WHERE ventas.delivery = 1 AND ventas.entregado = 1".$filtroUsuario." GROUP BY detalleventas.codventa";
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.totalpago, ventas.entregado, ventas.delivery, ventas.repartidor, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.direccliente, usuarios.nombres, GROUP_CONCAT(cantventa, ' | ', producto SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN usuarios ON ventas.repartidor = usuarios.codigo WHERE ventas.delivery = 1 AND ventas.entregado = 1".$tw.$filtroUsuario." GROUP BY detalleventas.codventa";
         foreach ($this->dbh->query($sql) as $row)
 		{
 			$this->p[] = $row;
@@ -6511,6 +6522,7 @@ if($_SESSION["acceso"] == 'repartidor'){
 			WHERE codventa = ?
 			AND delivery = 1
 			AND entregado = 1
+			AND ".tenantWhere()."
 			AND (repartidor = '0' OR repartidor = '' OR repartidor IS NULL)
 			AND IFNULL(observaciones,'') NOT LIKE '%DELIVERY INTERNO%'
 			AND (
@@ -6544,7 +6556,7 @@ if($_SESSION["acceso"] == 'repartidor'){
 		$entregado = "0";
 
 		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'repartidor') {
-			$sql = "UPDATE ventas SET entregado = ? WHERE codventa = ? AND repartidor = ? AND delivery = 1 AND entregado = 1";
+			$sql = "UPDATE ventas SET entregado = ? WHERE codventa = ? AND repartidor = ? AND delivery = 1 AND entregado = 1 AND ".tenantWhere();
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute(array($entregado, $codventa, (string) $_SESSION["codigo"]));
 			if ($stmt->rowCount() == 0) {
@@ -6552,7 +6564,7 @@ if($_SESSION["acceso"] == 'repartidor'){
 				exit;
 			}
 		} else {
-			$sql = "UPDATE ventas SET entregado = ? WHERE codventa = ?";
+			$sql = "UPDATE ventas SET entregado = ? WHERE codventa = ? AND ".tenantWhere();
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute(array($entregado, $codventa));
 		}
@@ -8965,7 +8977,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 		$selectNum = $this->TieneNumerocomanda()
 			? "detalleventas.numerocomanda, MIN(detalleventas.fechadetalleventa) AS fechapedido,"
 			: "";
-	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, ".$selectNum." clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' | ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa AND detalleventas.comanda = '1' AND detalleventas.statusdetalle = '1'".$this->SqlFiltroDetallePorVenta()." LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' AND (ventas.statusventa = 'PENDIENTE' OR ventas.delivery = '1') GROUP BY ventas.idventa, ".$groupBy." HAVING detalles IS NOT NULL AND detalles != ''";
+	$sql = "SELECT ventas.idventa, ventas.codventa, ventas.codcliente as cliente, ventas.codmesa, ventas.totalpago, ventas.cocinero, ventas.delivery, ventas.repartidor, ventas.observaciones, ventas.fechaventa, ".$selectNum." clientes.codcliente, clientes.cedcliente, clientes.nomcliente, salas.nombresala, mesas.nombremesa, GROUP_CONCAT(CONCAT(detalleventas.cantventa, ' | ', detalleventas.producto) ORDER BY detalleventas.coddetalleventa SEPARATOR '<br>') AS detalles FROM ventas INNER JOIN detalleventas ON detalleventas.codventa = ventas.codventa AND detalleventas.comanda = '1' AND detalleventas.statusdetalle = '1'".$this->SqlFiltroDetallePorVenta()." LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa LEFT JOIN salas ON mesas.codsala = salas.codsala WHERE ventas.cocinero = '1' AND (ventas.statusventa = 'PENDIENTE' OR ventas.delivery = '1') AND ".tenantWhere('ventas')." GROUP BY ventas.idventa, ".$groupBy." HAVING detalles IS NOT NULL AND detalles != ''";
         foreach ($this->dbh->query($sql) as $row)
 		{
 			if (!empty($row['codmesa'])) {
@@ -8987,6 +8999,13 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 		$sala = strip_tags(base64_decode($_GET["nombresala"]));
 		$mesa = strip_tags(base64_decode($_GET["nombremesa"]));
 		$numerocomanda = isset($_GET['numerocomanda']) ? (int) $_GET['numerocomanda'] : 0;
+
+		$chk = $this->dbh->prepare("SELECT codventa FROM ventas WHERE codventa = ? AND ".tenantWhere()." LIMIT 1");
+		$chk->execute(array($codventa));
+		if ($chk->rowCount() == 0) {
+			echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center>Pedido no encontrado en este restaurante.</center></div>";
+			exit;
+		}
 
 		if ($this->TieneNumerocomanda()) {
 			if ($numerocomanda <= 0) {
@@ -9013,7 +9032,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 		$pendientes = (int) $stmtPend->fetchColumn();
 
 		$cocinero = ($pendientes > 0) ? '1' : '0';
-		$sql = " update ventas set cocinero = ? where codventa = ?; ";
+		$sql = " update ventas set cocinero = ? where codventa = ? AND ".tenantWhere()."; ";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1, $cocinero);
 		$stmt->bindParam(2, $codventa);
@@ -9073,6 +9092,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 			LEFT JOIN mesas ON mesas.codmesa = ventas.codmesa
 			LEFT JOIN salas ON mesas.codsala = salas.codsala
 			WHERE ventas.codmesa = ? AND ventas.cocinero = '1'
+				AND ".tenantWhere('ventas')."
 				AND (ventas.statusventa = 'PENDIENTE' OR (ventas.delivery = '1' AND ventas.codmesa = '0'))
 			GROUP BY ventas.idventa, ".$groupBy."
 			HAVING detalles IS NOT NULL AND detalles != ''
@@ -11669,15 +11689,54 @@ $sql = "select
 		exit;
 	}
 
-	public function ListarUsuariosPlataforma()
+	public function ListarUsuariosPlataforma($id_restaurante = null, $cargo = null)
 	{
 		self::SetNames();
 		$this->p = array();
-		$sql = "SELECT u.*, r.nombre AS restaurante_nombre FROM usuarios u LEFT JOIN restaurantes r ON r.id_restaurante = u.id_restaurante WHERE u.nivel <> 'SUPERADMINISTRADOR' ORDER BY u.id_restaurante ASC, u.nivel ASC, u.nombres ASC";
-		foreach ($this->dbh->query($sql) as $row) {
+		$sql = "SELECT u.*, r.nombre AS restaurante_nombre
+			FROM usuarios u
+			LEFT JOIN restaurantes r ON r.id_restaurante = u.id_restaurante
+			WHERE u.nivel <> 'SUPERADMINISTRADOR'";
+		$params = array();
+		$idRest = ($id_restaurante !== null && $id_restaurante !== '') ? (int) $id_restaurante : 0;
+		if ($idRest > 0) {
+			$sql .= " AND u.id_restaurante = ?";
+			$params[] = $idRest;
+		}
+		$cargoFiltro = ($cargo !== null) ? trim((string) $cargo) : '';
+		if ($cargoFiltro !== '') {
+			// Coincide cargo (puesto) o nivel de acceso
+			$sql .= " AND (u.cargo = ? OR u.nivel = ?)";
+			$params[] = $cargoFiltro;
+			$params[] = $cargoFiltro;
+		}
+		$sql .= " ORDER BY u.id_restaurante ASC, u.nivel ASC, u.nombres ASC";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute($params);
+		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 			$this->p[] = $row;
 		}
 		return $this->p;
+	}
+
+	/** Valores distintos de cargo/nivel para filtros SuperAdmin (sin SUPERADMINISTRADOR). */
+	public function ListarCargosUsuariosPlataforma()
+	{
+		self::SetNames();
+		$seen = array();
+		$out = array();
+		$sql = "SELECT cargo, nivel FROM usuarios WHERE nivel <> 'SUPERADMINISTRADOR'";
+		foreach ($this->dbh->query($sql) as $row) {
+			foreach (array('cargo', 'nivel') as $k) {
+				$v = isset($row[$k]) ? trim((string) $row[$k]) : '';
+				if ($v !== '' && !isset($seen[$v])) {
+					$seen[$v] = true;
+					$out[] = $v;
+				}
+			}
+		}
+		sort($out, SORT_STRING);
+		return $out;
 	}
 
 	public function DashboardSuperAdmin()

@@ -18,8 +18,12 @@ class CarritoData {
 	}
 
 	public function addTmp(){
-		$sql = "insert into carrito (id_producto,cantidad,precio,sessionn_id) ";
-		$sql .= "value (\"$this->id_producto\",\"$this->cantidad\",\"$this->precio\",\"$this->sessionn_id\")";
+		$idRest = function_exists('web_tenant_id') ? (int) web_tenant_id() : 1;
+		if ($idRest <= 0) {
+			$idRest = 1;
+		}
+		$sql = "insert into carrito (id_producto,cantidad,precio,sessionn_id,id_restaurante) ";
+		$sql .= "value (\"$this->id_producto\",\"$this->cantidad\",\"$this->precio\",\"$this->sessionn_id\",\"$idRest\")";
 		Executor::doit($sql);
 	}
 
@@ -58,7 +62,14 @@ class CarritoData {
 	}
 	
 	public static function getByIdProductoSession($id,$session){
-		$sql = "select * from ".self::$tablename." where id_producto=$id and sessionn_id=\"$session\"";
+		$extra = '';
+		if (function_exists('web_tenant_id')) {
+			$tid = (int) web_tenant_id();
+			if ($tid > 0) {
+				$extra = " and id_restaurante=$tid";
+			}
+		}
+		$sql = "select * from ".self::$tablename." where id_producto=$id and sessionn_id=\"$session\"".$extra;
 		$query = Executor::doit($sql);
 		return Model::one($query[0],new CarritoData());
 
@@ -72,7 +83,14 @@ class CarritoData {
 	}
 	
 	public static function getAllTemporal($id_session){
-		$sql = "select * from ".self::$tablename." where sessionn_id=\"$id_session\" ";
+		$extra = '';
+		if (function_exists('web_tenant_id')) {
+			$tid = (int) web_tenant_id();
+			if ($tid > 0) {
+				$extra = " and id_restaurante=$tid";
+			}
+		}
+		$sql = "select * from ".self::$tablename." where sessionn_id=\"$id_session\" ".$extra;
 		$query = Executor::doit($sql);
 		return Model::many($query[0],new CarritoData());
 	}

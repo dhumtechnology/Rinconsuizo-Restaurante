@@ -15,7 +15,7 @@ function sa_header($title = 'SuperAdmin')
 	echo '<title>'.htmlspecialchars($title).' · Plataforma</title>';
 	echo '<link href="../assets/css/bootstrap.min.css" rel="stylesheet">';
 	echo '<link href="../assets/css/icons.css" rel="stylesheet">';
-	echo '<link href="assets/sa.css?v=2" rel="stylesheet">';
+	echo '<link href="assets/sa.css?v=3" rel="stylesheet">';
 	echo '<script src="../assets/js/jquery.min.js"></script>';
 	echo '</head><body class="sa-body">';
 	echo '<aside class="sa-sidebar">';

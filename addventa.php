@@ -31,6 +31,11 @@ if (!is_array($tmps) || count($tmps) === 0) {
 $id_cliente = $cliente->codcliente;
 $fechaventa = isset($_POST['fechaventa']) ? $_POST['fechaventa'] : date('Y-m-d H:i:s');
 $subtotal = isset($_POST['subtotalivanove']) ? $_POST['subtotalivanove'] : 0;
+$id_restaurante = function_exists('web_tenant_id') ? (int) web_tenant_id() : 0;
+if ($id_restaurante <= 0) {
+    echo "<script>alert('No se pudo identificar el restaurante. Recargue la página e intente de nuevo.');window.location='carrito.php';</script>";
+    exit;
+}
 
 // Siguiente código de venta (numérico) = código de confirmación del pedido
 $base = new Database();
@@ -46,10 +51,16 @@ $venta->codventa = $codigo;
 // Asociar al arqueo abierto del local (si existe) para que sume en caja
 $codcajaWeb = 0;
 $codarqueoWeb = 0;
-$rsArq = $con->query("SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1");
-if ($rsArq && ($rowArq = $rsArq->fetch_assoc())) {
-    $codcajaWeb = (int) $rowArq['codcaja'];
-    $codarqueoWeb = (int) $rowArq['codarqueo'];
+$stmtArq = $con->prepare("SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' AND id_restaurante = ? ORDER BY codarqueo DESC LIMIT 1");
+if ($stmtArq) {
+    $stmtArq->bind_param('i', $id_restaurante);
+    $stmtArq->execute();
+    $resArq = $stmtArq->get_result();
+    if ($resArq && ($rowArq = $resArq->fetch_assoc())) {
+        $codcajaWeb = (int) $rowArq['codcaja'];
+        $codarqueoWeb = (int) $rowArq['codarqueo'];
+    }
+    $stmtArq->close();
 }
 
 $venta->codcaja = $codcajaWeb;
@@ -83,15 +94,16 @@ $venta->comprobante = '1';
 $venta->serie_doc = '001';
 $venta->aceptado = 'no';
 $venta->enviado = '1';
+$venta->id_restaurante = $id_restaurante;
 $venta->add();
 
 // Sumar el pedido web a los ingresos del arqueo abierto
 if ($codarqueoWeb > 0) {
     $montoWeb = (float) str_replace(',', '', (string) $subtotal);
     if ($montoWeb > 0) {
-        $stmtIng = $con->prepare('UPDATE arqueocaja SET ingresos = ingresos + ? WHERE codarqueo = ? AND statusarqueo = \'1\'');
+        $stmtIng = $con->prepare('UPDATE arqueocaja SET ingresos = ingresos + ? WHERE codarqueo = ? AND statusarqueo = \'1\' AND id_restaurante = ?');
         if ($stmtIng) {
-            $stmtIng->bind_param('di', $montoWeb, $codarqueoWeb);
+            $stmtIng->bind_param('dii', $montoWeb, $codarqueoWeb, $id_restaurante);
             $stmtIng->execute();
             $stmtIng->close();
         }
@@ -124,7 +136,8 @@ foreach ($tmps as $p) {
 
 // Correo con código de confirmación + detalle (antes de vaciar el carrito en sesión DB)
 $para = trim((string) $cliente->emailcliente);
-$titulo = 'Código de confirmación de pedido - Rincon Suizo';
+$restaurante_nombre = web_mail_restaurante_info()['nombre'];
+$titulo = 'Código de confirmación de pedido - ' . $restaurante_nombre;
 ob_start();
 include "mail/comprobante.php";
 $cuerpo = ob_get_clean();

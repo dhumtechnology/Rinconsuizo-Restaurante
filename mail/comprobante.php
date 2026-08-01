@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <?php
+if (!isset($restaurante_nombre) || $restaurante_nombre === '') {
+    $restaurante_nombre = function_exists('web_mail_restaurante_info')
+        ? web_mail_restaurante_info()['nombre']
+        : 'Restaurante';
+}
 $full_name = strip_tags(isset($cliente->nomcliente) ? $cliente->nomcliente : '');
 $email = strip_tags(isset($cliente->emailcliente) ? $cliente->emailcliente : '');
 $codigoPedido = isset($codigo) ? (string) $codigo : '';
@@ -23,7 +28,7 @@ $subject = "Comprobante de pedidos";
 
         <tr height='80'>
          <th colspan='4' style='background-color:white; border-bottom:solid 0px #bdbdbd; font-family:Verdana, Geneva, sans-serif; color:#333; font-size:34px;' >
-         <h4>RESTAURANTE EL RINCON SUIZO</h4>
+         <h4><?php echo htmlspecialchars(function_exists('mb_strtoupper') ? mb_strtoupper($restaurante_nombre, 'UTF-8') : strtoupper($restaurante_nombre)); ?></h4>
 
 
           <p style='font-size: 16px;font-family: Verdana, Geneva, sans-serif;background-color: #333f50;color: white;text-align: center; font-weight: 200;padding: 15px;border-radius: 10px;'> <?php echo htmlspecialchars($full_name); ?></p>

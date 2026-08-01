@@ -91,7 +91,8 @@ $nombreDestino = $nombreForm !== '' ? $nombreForm : $cliente->nomcliente;
 
 // Enviar correo solo si hay destino válido (la reserva ya está guardada)
 if ($para !== '') {
-    $titulo = 'Confirmación de reserva - Rincon Suizo';
+    $restaurante_nombre = web_mail_restaurante_info()['nombre'];
+    $titulo = 'Confirmación de reserva - ' . $restaurante_nombre;
     $reserva_email = array(
         'nombre' => $nombreDestino,
         'email' => $para,

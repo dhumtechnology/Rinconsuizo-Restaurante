@@ -438,6 +438,65 @@ if (!function_exists('sistema_brand_colors')) {
 	}
 }
 
+if (!function_exists('sistema_brand_head_styles_html')) {
+	/** Devuelve el CSS/JS de marca como string (seguro para callbacks de ob_start). */
+	function sistema_brand_head_styles_html()
+	{
+		static $cache = null;
+		if ($cache !== null) {
+			return $cache;
+		}
+		if (!empty($_SESSION['acceso']) && $_SESSION['acceso'] === 'superadministrador') {
+			return $cache = '';
+		}
+		$c = sistema_brand_colors();
+		$p = htmlspecialchars($c['primario'], ENT_QUOTES, 'UTF-8');
+		$s = htmlspecialchars($c['secundario'], ENT_QUOTES, 'UTF-8');
+		$a = htmlspecialchars($c['acento'], ENT_QUOTES, 'UTF-8');
+		$pr = function_exists('web_hex_to_rgb') ? web_hex_to_rgb($c['primario']) : '47, 53, 63';
+		$sr = function_exists('web_hex_to_rgb') ? web_hex_to_rgb($c['secundario']) : '60, 72, 88';
+		$ar = function_exists('web_hex_to_rgb') ? web_hex_to_rgb($c['acento']) : '1, 186, 154';
+		$jp = json_encode($c['primario']);
+		$js = json_encode($c['secundario']);
+		$ja = json_encode($c['acento']);
+
+		$css = "<style id=\"sistema-brand-theme\">\n";
+		$css .= ":root{\n";
+		$css .= "  --brand-primary: {$p};\n";
+		$css .= "  --brand-secondary: {$s};\n";
+		$css .= "  --brand-accent: {$a};\n";
+		$css .= "  --brand-primary-rgb: {$pr};\n";
+		$css .= "  --brand-secondary-rgb: {$sr};\n";
+		$css .= "  --brand-accent-rgb: {$ar};\n";
+		$css .= "}\n";
+		$css .= ".navbar-default,.topbar .navbar-default,.navbar.navbar-default{background-color:var(--brand-primary)!important;border-color:var(--brand-primary)!important;}\n";
+		$css .= ".topbar .topbar-left{background-color:var(--brand-secondary)!important;}\n";
+		$css .= ".left.side-menu,.side-menu,#sidebar-menu,#sidebar-menu > ul > li > a,#wrapper.enlarged .left.side-menu #sidebar-menu ul > li:hover > ul a{background-color:var(--brand-secondary)!important;}\n";
+		$css .= "#sidebar-menu a,#sidebar-menu ul li a,#sidebar-menu > ul > li > a,#sidebar-menu ul ul a,.side-menu a,.left.side-menu a{color:rgba(255,255,255,.88)!important;background-color:transparent!important;}\n";
+		$css .= "#sidebar-menu > ul > li > a{background-color:var(--brand-secondary)!important;}\n";
+		$css .= "#sidebar-menu > ul > li > a:hover,#sidebar-menu > ul > li > a:focus,#sidebar-menu > ul > li > a.subdrop,#sidebar-menu ul li a.subdrop,.subdrop{background-color:rgba(0,0,0,.22)!important;color:#fff!important;}\n";
+		$css .= "#sidebar-menu > ul > li > a.active,#sidebar-menu ul li a.active{background-color:var(--brand-accent)!important;color:#fff!important;}\n";
+		$css .= "#sidebar-menu ul ul a:hover,#sidebar-menu ul ul li.active a,#sidebar-menu ul ul a:focus{color:#fff!important;background-color:rgba(0,0,0,.18)!important;}\n";
+		$css .= "#sidebar-menu a i,#sidebar-menu a span,#sidebar-menu .pull-right i{color:inherit!important;}\n";
+		$css .= ".btn-warning,.btn-warning:hover,.btn-warning:focus,.btn-warning:active,.btn-success,.btn-success:hover,.btn-success:focus,.btn-teal,.btn-search,.bg-primary,.label-primary,.label-success,.badge-primary,.badge-success,.social-links li a,.pagination > .active > a,.pagination > .active > span,.nav-pills > li.active > a,.nav-pills > li.active > a:hover,.nav-pills > li.active > a:focus{background-color:var(--brand-accent)!important;border-color:var(--brand-accent)!important;color:#fff!important;}\n";
+		$css .= ".btn-primary,.btn-primary:hover,.btn-primary:focus,.btn-primary:active{background-color:var(--brand-primary)!important;border-color:var(--brand-primary)!important;color:#fff!important;}\n";
+		$css .= ".btn-info,.btn-info:hover,.btn-info:focus{background-color:var(--brand-secondary)!important;border-color:var(--brand-secondary)!important;}\n";
+		$css .= "a{color:var(--brand-accent);}a:hover,a:focus{color:var(--brand-primary);}\n";
+		$css .= "#sidebar-menu a:hover,#sidebar-menu a:focus,.side-menu a:hover,.side-menu a:focus{color:#fff!important;}\n";
+		$css .= ".text-primary,.text-success{color:var(--brand-accent)!important;}\n";
+		$css .= ".panel-primary > .panel-heading,.panel-color .panel-heading,.panel-pages .panel-heading.bg-img{background-color:var(--brand-primary)!important;border-color:var(--brand-primary)!important;}\n";
+		$css .= ".progress-bar,.progress-bar-success{background-color:var(--brand-accent)!important;}\n";
+		$css .= ".form-control:focus{border-color:var(--brand-accent)!important;box-shadow:0 0 0 0.15rem rgba(var(--brand-accent-rgb),.25)!important;}\n";
+		$css .= "th[style*=\"#01ba9a\"],td[style*=\"#01ba9a\"],tr[style*=\"#01ba9a\"],[style*=\"background:#01ba9a\"],[style*=\"background: #01ba9a\"],[style*=\"background-color:#01ba9a\"],[style*=\"background-color: #01ba9a\"]{background:var(--brand-accent)!important;background-color:var(--brand-accent)!important;}\n";
+		$css .= ".table > thead > tr > th{border-bottom-color:var(--brand-accent);}\n";
+		$css .= ".checkbox-primary input[type=checkbox]:checked + label::before,.checkbox-success input[type=checkbox]:checked + label::before,.radio-primary input[type=radio]:checked + label::before{background-color:var(--brand-accent)!important;border-color:var(--brand-accent)!important;}\n";
+		$css .= ".waves-effect.waves-light .waves-ripple{background:rgba(var(--brand-accent-rgb),.4);}\n";
+		$css .= "</style>\n";
+		$css .= "<script>window.__BRAND_PRIMARY={$jp};window.__BRAND_SECONDARY={$js};window.__BRAND_ACCENT={$ja};</script>\n";
+		return $cache = $css;
+	}
+}
+
 if (!function_exists('sistema_brand_head_styles')) {
 	/** Tema de marca del POS: navbar, botones, badges, tablas, etc. */
 	function sistema_brand_head_styles()
@@ -446,169 +505,8 @@ if (!function_exists('sistema_brand_head_styles')) {
 		if ($printed) {
 			return;
 		}
-		// SuperAdmin tiene su propio look
-		if (!empty($_SESSION['acceso']) && $_SESSION['acceso'] === 'superadministrador') {
-			return;
-		}
 		$printed = true;
-		$c = sistema_brand_colors();
-		$p = htmlspecialchars($c['primario'], ENT_QUOTES, 'UTF-8');
-		$s = htmlspecialchars($c['secundario'], ENT_QUOTES, 'UTF-8');
-		$a = htmlspecialchars($c['acento'], ENT_QUOTES, 'UTF-8');
-		$pr = function_exists('web_hex_to_rgb') ? web_hex_to_rgb($c['primario']) : '47, 53, 63';
-		$sr = function_exists('web_hex_to_rgb') ? web_hex_to_rgb($c['secundario']) : '60, 72, 88';
-		$ar = function_exists('web_hex_to_rgb') ? web_hex_to_rgb($c['acento']) : '1, 186, 154';
-
-		echo "<style id=\"sistema-brand-theme\">\n";
-		echo ":root{\n";
-		echo "  --brand-primary: {$p};\n";
-		echo "  --brand-secondary: {$s};\n";
-		echo "  --brand-accent: {$a};\n";
-		echo "  --brand-primary-rgb: {$pr};\n";
-		echo "  --brand-secondary-rgb: {$sr};\n";
-		echo "  --brand-accent-rgb: {$ar};\n";
-		echo "}\n";
-		/* Barra superior / chrome */
-		echo ".navbar-default,\n";
-		echo ".topbar .navbar-default,\n";
-		echo ".navbar.navbar-default {\n";
-		echo "  background-color: var(--brand-primary) !important;\n";
-		echo "  border-color: var(--brand-primary) !important;\n";
-		echo "}\n";
-		echo ".topbar .topbar-left {\n";
-		echo "  background-color: var(--brand-secondary) !important;\n";
-		echo "}\n";
-		echo ".left.side-menu,\n";
-		echo ".side-menu,\n";
-		echo "#sidebar-menu,\n";
-		echo "#sidebar-menu > ul > li > a,\n";
-		echo "#wrapper.enlarged .left.side-menu #sidebar-menu ul > li:hover > ul a {\n";
-		echo "  background-color: var(--brand-secondary) !important;\n";
-		echo "}\n";
-		/* Enlaces del sidebar: mismo tono del fondo (no acento global) */
-		echo "#sidebar-menu a,\n";
-		echo "#sidebar-menu ul li a,\n";
-		echo "#sidebar-menu > ul > li > a,\n";
-		echo "#sidebar-menu ul ul a,\n";
-		echo ".side-menu a,\n";
-		echo ".left.side-menu a {\n";
-		echo "  color: rgba(255,255,255,.88) !important;\n";
-		echo "  background-color: transparent !important;\n";
-		echo "}\n";
-		echo "#sidebar-menu > ul > li > a {\n";
-		echo "  background-color: var(--brand-secondary) !important;\n";
-		echo "}\n";
-		echo "#sidebar-menu > ul > li > a:hover,\n";
-		echo "#sidebar-menu > ul > li > a:focus,\n";
-		echo "#sidebar-menu > ul > li > a.subdrop,\n";
-		echo "#sidebar-menu ul li a.subdrop,\n";
-		echo ".subdrop {\n";
-		echo "  background-color: rgba(0,0,0,.22) !important;\n";
-		echo "  color: #fff !important;\n";
-		echo "}\n";
-		echo "#sidebar-menu > ul > li > a.active,\n";
-		echo "#sidebar-menu ul li a.active {\n";
-		echo "  background-color: var(--brand-accent) !important;\n";
-		echo "  color: #fff !important;\n";
-		echo "}\n";
-		echo "#sidebar-menu ul ul a:hover,\n";
-		echo "#sidebar-menu ul ul li.active a,\n";
-		echo "#sidebar-menu ul ul a:focus {\n";
-		echo "  color: #fff !important;\n";
-		echo "  background-color: rgba(0,0,0,.18) !important;\n";
-		echo "}\n";
-		echo "#sidebar-menu a i,\n";
-		echo "#sidebar-menu a span,\n";
-		echo "#sidebar-menu .pull-right i {\n";
-		echo "  color: inherit !important;\n";
-		echo "}\n";
-		/* Botones / badges / labels del tema (#01ba9a) */
-		echo ".btn-warning,\n";
-		echo ".btn-warning:hover,\n";
-		echo ".btn-warning:focus,\n";
-		echo ".btn-warning:active,\n";
-		echo ".btn-success,\n";
-		echo ".btn-success:hover,\n";
-		echo ".btn-success:focus,\n";
-		echo ".btn-teal,\n";
-		echo ".btn-search,\n";
-		echo ".bg-primary,\n";
-		echo ".label-primary,\n";
-		echo ".label-success,\n";
-		echo ".badge-primary,\n";
-		echo ".badge-success,\n";
-		echo ".social-links li a,\n";
-		echo ".pagination > .active > a,\n";
-		echo ".pagination > .active > span,\n";
-		echo ".nav-pills > li.active > a,\n";
-		echo ".nav-pills > li.active > a:hover,\n";
-		echo ".nav-pills > li.active > a:focus {\n";
-		echo "  background-color: var(--brand-accent) !important;\n";
-		echo "  border-color: var(--brand-accent) !important;\n";
-		echo "  color: #fff !important;\n";
-		echo "}\n";
-		echo ".btn-primary,\n";
-		echo ".btn-primary:hover,\n";
-		echo ".btn-primary:focus,\n";
-		echo ".btn-primary:active {\n";
-		echo "  background-color: var(--brand-primary) !important;\n";
-		echo "  border-color: var(--brand-primary) !important;\n";
-		echo "  color: #fff !important;\n";
-		echo "}\n";
-		echo ".btn-info,\n";
-		echo ".btn-info:hover,\n";
-		echo ".btn-info:focus {\n";
-		echo "  background-color: var(--brand-secondary) !important;\n";
-		echo "  border-color: var(--brand-secondary) !important;\n";
-		echo "}\n";
-		echo "a { color: var(--brand-accent); }\n";
-		echo "a:hover, a:focus { color: var(--brand-primary); }\n";
-		echo "#sidebar-menu a:hover,\n";
-		echo "#sidebar-menu a:focus,\n";
-		echo ".side-menu a:hover,\n";
-		echo ".side-menu a:focus {\n";
-		echo "  color: #fff !important;\n";
-		echo "}\n";
-		echo ".text-primary, .text-success { color: var(--brand-accent) !important; }\n";
-		echo ".panel-primary > .panel-heading,\n";
-		echo ".panel-color .panel-heading,\n";
-		echo ".panel-pages .panel-heading.bg-img {\n";
-		echo "  background-color: var(--brand-primary) !important;\n";
-		echo "  border-color: var(--brand-primary) !important;\n";
-		echo "}\n";
-		echo ".progress-bar,\n";
-		echo ".progress-bar-success {\n";
-		echo "  background-color: var(--brand-accent) !important;\n";
-		echo "}\n";
-		echo ".form-control:focus {\n";
-		echo "  border-color: var(--brand-accent) !important;\n";
-		echo "  box-shadow: 0 0 0 0.15rem rgba(var(--brand-accent-rgb), .25) !important;\n";
-		echo "}\n";
-		/* Tablas / celdas con verde fijo del tema */
-		echo "th[style*=\"#01ba9a\"],\n";
-		echo "td[style*=\"#01ba9a\"],\n";
-		echo "tr[style*=\"#01ba9a\"],\n";
-		echo "[style*=\"background:#01ba9a\"],\n";
-		echo "[style*=\"background: #01ba9a\"],\n";
-		echo "[style*=\"background-color:#01ba9a\"],\n";
-		echo "[style*=\"background-color: #01ba9a\"] {\n";
-		echo "  background: var(--brand-accent) !important;\n";
-		echo "  background-color: var(--brand-accent) !important;\n";
-		echo "}\n";
-		echo ".table > thead > tr > th {\n";
-		echo "  border-bottom-color: var(--brand-accent);\n";
-		echo "}\n";
-		echo ".checkbox-primary input[type=checkbox]:checked + label::before,\n";
-		echo ".checkbox-success input[type=checkbox]:checked + label::before,\n";
-		echo ".radio-primary input[type=radio]:checked + label::before {\n";
-		echo "  background-color: var(--brand-accent) !important;\n";
-		echo "  border-color: var(--brand-accent) !important;\n";
-		echo "}\n";
-		echo ".waves-effect.waves-light .waves-ripple {\n";
-		echo "  background: rgba(var(--brand-accent-rgb), .4);\n";
-		echo "}\n";
-		echo "</style>\n";
-		echo "<script>window.__BRAND_PRIMARY=" . json_encode($c['primario']) . ";window.__BRAND_SECONDARY=" . json_encode($c['secundario']) . ";window.__BRAND_ACCENT=" . json_encode($c['acento']) . ";</script>\n";
+		echo sistema_brand_head_styles_html();
 	}
 }
 

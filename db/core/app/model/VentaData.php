@@ -11,8 +11,15 @@ class VentaData {
 	public function getCliente(){ return ClientesData::getById($this->codcliente);}
 	
 	public function add(){
-		$sql = "insert into ventas (codventa,codcaja,codcliente,codmesa,subtotalivasive,subtotalivanove,ivave,totalivave,descuentove,totaldescuentove,totalpago,totalpago2,tipopagove,formapagove,montopagado,montodevuelto,fechavencecredito,statusventa,statuspago,fechaventa,codigo,cocinero,delivery,repartidor,entregado,observaciones,codarqueocaja,comprobante,serie_doc,aceptado,enviado) ";
-		$sql .= "value (\"$this->codventa\",\"$this->codcaja\",\"$this->codcliente\",\"$this->codmesa\",\"$this->subtotalivasive\",\"$this->subtotalivanove\",\"$this->ivave\",\"$this->totalivave\",\"$this->descuentove\",\"$this->totaldescuentove\",\"$this->totalpago\",\"$this->totalpago2\",\"$this->tipopagove\",\"$this->formapagove\",\"$this->montopagado\",\"$this->montodevuelto\",\"$this->fechavencecredito\",\"$this->statusventa\",\"$this->statuspago\",\"$this->fechaventa\",\"$this->codigo\",\"$this->cocinero\",\"$this->delivery\",\"$this->repartidor\",\"$this->entregado\",\"$this->observaciones\",\"$this->codarqueocaja\",\"$this->comprobante\",\"$this->serie_doc\",\"$this->aceptado\",\"$this->enviado\")";
+		$idRest = isset($this->id_restaurante) ? (int) $this->id_restaurante : 0;
+		if ($idRest <= 0 && function_exists('web_tenant_id')) {
+			$idRest = (int) web_tenant_id();
+		}
+		if ($idRest <= 0) {
+			$idRest = 1;
+		}
+		$sql = "insert into ventas (codventa,codcaja,codcliente,codmesa,subtotalivasive,subtotalivanove,ivave,totalivave,descuentove,totaldescuentove,totalpago,totalpago2,tipopagove,formapagove,montopagado,montodevuelto,fechavencecredito,statusventa,statuspago,fechaventa,codigo,cocinero,delivery,repartidor,entregado,observaciones,codarqueocaja,comprobante,serie_doc,aceptado,enviado,id_restaurante) ";
+		$sql .= "value (\"$this->codventa\",\"$this->codcaja\",\"$this->codcliente\",\"$this->codmesa\",\"$this->subtotalivasive\",\"$this->subtotalivanove\",\"$this->ivave\",\"$this->totalivave\",\"$this->descuentove\",\"$this->totaldescuentove\",\"$this->totalpago\",\"$this->totalpago2\",\"$this->tipopagove\",\"$this->formapagove\",\"$this->montopagado\",\"$this->montodevuelto\",\"$this->fechavencecredito\",\"$this->statusventa\",\"$this->statuspago\",\"$this->fechaventa\",\"$this->codigo\",\"$this->cocinero\",\"$this->delivery\",\"$this->repartidor\",\"$this->entregado\",\"$this->observaciones\",\"$this->codarqueocaja\",\"$this->comprobante\",\"$this->serie_doc\",\"$this->aceptado\",\"$this->enviado\",\"$idRest\")";
 		return Executor::doit($sql);
 	}
 

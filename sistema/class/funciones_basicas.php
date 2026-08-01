@@ -411,11 +411,19 @@ function getSubString($string, $length=NULL)
     //Si no se especifica la longitud por defecto es 50
     if ($length == NULL)
         $length = 50;
-    //Primero eliminamos las etiquetas html y luego cortamos el string
-    $stringDisplay = substr(strip_tags($string), 0, $length);
-    //Si el texto es mayor que la longitud se agrega puntos suspensivos
-    if (strlen(strip_tags($string)) > $length)
+    //Primero eliminamos las etiquetas html y luego cortamos el string (UTF-8 seguro)
+    $clean = strip_tags((string) $string);
+    if (function_exists('mb_substr') && function_exists('mb_strlen')) {
+        $stringDisplay = mb_substr($clean, 0, $length, 'UTF-8');
+        if (mb_strlen($clean, 'UTF-8') > $length) {
+            $stringDisplay .= '.';
+        }
+        return $stringDisplay;
+    }
+    $stringDisplay = substr($clean, 0, $length);
+    if (strlen($clean) > $length) {
         $stringDisplay .= '.';
+    }
     return $stringDisplay;
 }
 
