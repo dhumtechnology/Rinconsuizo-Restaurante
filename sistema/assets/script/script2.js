@@ -1283,6 +1283,7 @@ function TogglePagoMixto(el) {
 		ActualizarSumaPagoMixto();
 	} else {
 		$('#pago-mixto-wrap').hide();
+		$('#pago-mixto-vuelto').hide();
 		$('#formapagove_mix_hidden,#montopagado_mix_hidden,#montodevuelto_mix_hidden').prop('disabled', true);
 		$('#pago-simple-wrap').show().find('input,select').prop('disabled', false);
 		$('#muestracambiospagos').show().find('input,select').prop('disabled', false);
@@ -1292,15 +1293,38 @@ function TogglePagoMixto(el) {
 	}
 }
 
+function MedioPagoMixEsEfectivo($select) {
+	var txt = $.trim(String($select.find('option:selected').text() || '')).toUpperCase();
+	return txt.indexOf('EFECTIVO') !== -1;
+}
+
+function ObtenerMontosEfectivoMixto() {
+	var cuentaEfectivo = 0;
+	$('#filas-pago-mixto .fila-pago-mixto').each(function() {
+		var $sel = $(this).find('.formapagove-mix');
+		if (!MedioPagoMixEsEfectivo($sel)) {
+			return;
+		}
+		var monto = parseFloat(String($(this).find('.montopago-mix').val() || '0').replace(',', '')) || 0;
+		cuentaEfectivo += monto;
+	});
+	return {
+		cuenta: Math.round(cuentaEfectivo * 100) / 100,
+		hayEfectivo: cuentaEfectivo > 0 || $('#filas-pago-mixto .formapagove-mix').filter(function() {
+			return MedioPagoMixEsEfectivo($(this));
+		}).length > 0
+	};
+}
+
 function AgregarFilaPagoMixto() {
 	var opts = ($('#html-opciones-medios-pago').length ? $('#html-opciones-medios-pago').val() : '') || window.htmlOpcionesMediosPago || '<option value="">SELECCIONE</option>';
 	var html = ''
 		+ '<div class="row fila-pago-mixto" style="margin-bottom:6px;">'
 		+ '  <div class="col-xs-6 col-md-6">'
-		+ '    <select name="formapagove_mix[]" class="form-control formapagove-mix" required>' + opts + '</select>'
+		+ '    <select name="formapagove_mix[]" class="form-control formapagove-mix" onchange="ActualizarSumaPagoMixto();" required>' + opts + '</select>'
 		+ '  </div>'
 		+ '  <div class="col-xs-4 col-md-4">'
-		+ '    <input type="text" name="montopago[]" class="form-control number montopago-mix" value="0.00" placeholder="Monto" onKeyPress="EvaluateText(\'%f\', this);" onBlur="this.value = NumberFormat(this.value, \'2\', \'.\', \'\'); ActualizarSumaPagoMixto();" onKeyUp="ActualizarSumaPagoMixto();" required>'
+		+ '    <input type="text" name="montopago[]" class="form-control number montopago-mix" value="0.00" placeholder="Monto a cuenta" onKeyPress="EvaluateText(\'%f\', this);" onBlur="this.value = NumberFormat(this.value, \'2\', \'.\', \'\'); ActualizarSumaPagoMixto();" onKeyUp="ActualizarSumaPagoMixto();" required>'
 		+ '  </div>'
 		+ '  <div class="col-xs-2 col-md-2">'
 		+ '    <button type="button" class="btn btn-danger btn-sm btn-block" onclick="QuitarFilaPagoMixto(this); return false;"><i class="fa fa-trash"></i></button>'
@@ -1331,8 +1355,11 @@ function ActualizarSumaPagoMixto() {
 	$('#suma-pago-mixto').text(suma.toFixed(2));
 	$('#total-cuenta-mixto').text(total.toFixed(2));
 	$('#diff-pago-mixto').text(diff.toFixed(2));
+	var accent = (window.getComputedStyle && document.documentElement)
+		? (getComputedStyle(document.documentElement).getPropertyValue('--brand-accent') || '').trim()
+		: '';
 	if (Math.abs(diff) < 0.05) {
-		$('#diff-pago-mixto').css('color', '#01ba9a');
+		$('#diff-pago-mixto').css('color', accent || '#01ba9a');
 	} else {
 		$('#diff-pago-mixto').css('color', '#e74c3c');
 	}
@@ -1344,9 +1371,39 @@ function ActualizarSumaPagoMixto() {
 		}
 	});
 	$('#formapagove_mix_hidden').val(primerMedio || '');
-	$('#montopagado_mix_hidden').val(suma.toFixed(2));
-	$('#montodevuelto_mix_hidden').val('0.00');
+
+	var ef = ObtenerMontosEfectivoMixto();
+	var vuelto = 0;
+	var montopagado = suma;
+	if (ef.hayEfectivo) {
+		$('#pago-mixto-vuelto').show();
+		var $recibido = $('#montorecibido_mix_efectivo');
+		var recibido = parseFloat(String($recibido.val() || '0').replace(',', '')) || 0;
+		// Si aún no tiparon recibido (o quedó en 0), sugerir la parte de efectivo a cuenta
+		if (!$recibido.data('touched') && (recibido <= 0 || Math.abs(recibido - ef.cuenta) < 0.001)) {
+			recibido = ef.cuenta;
+			$recibido.val(ef.cuenta.toFixed(2));
+		}
+		vuelto = Math.round((recibido - ef.cuenta) * 100) / 100;
+		if (vuelto < 0) {
+			vuelto = 0;
+		}
+		montopagado = Math.round((suma - ef.cuenta + recibido) * 100) / 100;
+		$('#montodevuelto_mix_visible').val(vuelto.toFixed(2));
+	} else {
+		$('#pago-mixto-vuelto').hide();
+		$('#montorecibido_mix_efectivo').val('0.00').removeData('touched');
+		$('#montodevuelto_mix_visible').val('0.00');
+		vuelto = 0;
+		montopagado = suma;
+	}
+	$('#montopagado_mix_hidden').val(montopagado.toFixed(2));
+	$('#montodevuelto_mix_hidden').val(vuelto.toFixed(2));
 }
+
+$(document).on('input change', '#montorecibido_mix_efectivo', function() {
+	$(this).data('touched', true);
+});
 
 function ValidarPagoMixtoAntesDeCerrar() {
 	if (!$('#pagomixto').is(':checked')) {
@@ -1368,8 +1425,16 @@ function ValidarPagoMixtoAntesDeCerrar() {
 	}
 	var total = parseFloat(String($('#txtTotall').val() || '0').replace(',', '')) || 0;
 	if (Math.abs(suma - total) > 0.05) {
-		alert('La suma de los medios (' + suma.toFixed(2) + ') debe ser igual al total de la cuenta (' + total.toFixed(2) + ').');
+		alert('La suma de los medios a cuenta (' + suma.toFixed(2) + ') debe ser igual al total de la cuenta (' + total.toFixed(2) + ').');
 		return false;
+	}
+	var ef = ObtenerMontosEfectivoMixto();
+	if (ef.hayEfectivo) {
+		var recibido = parseFloat(String($('#montorecibido_mix_efectivo').val() || '0').replace(',', '')) || 0;
+		if (recibido + 0.001 < ef.cuenta) {
+			alert('El monto recibido en efectivo (' + recibido.toFixed(2) + ') no puede ser menor a la parte en efectivo de la cuenta (' + ef.cuenta.toFixed(2) + ').');
+			return false;
+		}
 	}
 	ActualizarSumaPagoMixto();
 	return true;

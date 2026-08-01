@@ -81,7 +81,7 @@
         <script src="assets/js/jquery.min.js"></script> 
       <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
         <script type="text/javascript" src="assets/script/titulos.js"></script>
-        <script type="text/javascript" src="assets/script/script2.js?v=obs2"></script>
+        <script type="text/javascript" src="assets/script/script2.js?v=mixvuelto1"></script>
         <script type="text/javascript" src="assets/script/jsventas.js"></script>
 <?php if (in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true)) { ?>
         <script type="text/javascript" src="assets/script/mesas-union.js"></script>

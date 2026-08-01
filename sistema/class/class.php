@@ -8679,8 +8679,19 @@ public function CerrarMesa()
 			exit;
 		}
 		$formapagove = $primerMedio;
-		$montopagado = number_format($sumaMix, 2, '.', '');
-		$montodevuelto = '0.00';
+		// Vuelto permitido si hay efectivo: montopago[] = parte a cuenta; montodevuelto = cambio
+		$montodevuelto = isset($_POST['montodevuelto']) ? (float) str_replace(',', '', (string) $_POST['montodevuelto']) : 0.0;
+		if ($montodevuelto < 0) {
+			$montodevuelto = 0.0;
+		}
+		$montodevuelto = number_format($montodevuelto, 2, '.', '');
+		$montopagadoPost = isset($_POST['montopagado']) ? (float) str_replace(',', '', (string) $_POST['montopagado']) : 0.0;
+		$montopagadoCalc = $sumaMix + (float) $montodevuelto;
+		if ($montopagadoPost > 0 && abs($montopagadoPost - $montopagadoCalc) <= 0.05) {
+			$montopagado = number_format($montopagadoPost, 2, '.', '');
+		} else {
+			$montopagado = number_format($montopagadoCalc, 2, '.', '');
+		}
 	} else {
 		if ($tipopagove === "CONTADO") { $formapagove = strip_tags(isset($_POST["formapagove"]) ? $_POST["formapagove"] : ''); } else { $formapagove = "CREDITO"; }
 		if (isset($_POST['montopagado'])) { $montopagado = strip_tags($_POST['montopagado']); } else { $montopagado =''; }

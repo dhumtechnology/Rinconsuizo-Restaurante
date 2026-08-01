@@ -2033,7 +2033,26 @@ for($i=0;$i<sizeof($arqueo);$i++){
 <div id="pago-mixto-wrap" style="display:none;">
   <div id="filas-pago-mixto"></div>
   <button type="button" class="btn btn-info btn-sm btn-block" onclick="AgregarFilaPagoMixto(); return false;"><i class="fa fa-plus"></i> Agregar medio de pago</button>
-  <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
+  <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma a cuenta: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
+  <div id="pago-mixto-vuelto" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed #ddd;">
+    <p class="help-block" style="margin-top:0;">Hay EFECTIVO en el mixto: indique lo que entrega el cliente y el vuelto (la fila de efectivo es solo la parte de la cuenta).</p>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="form-group has-feedback">
+          <label class="control-label">Monto recibido en efectivo:</label>
+          <input class="form-control number" type="text" id="montorecibido_mix_efectivo" value="0.00" autocomplete="off" placeholder="Monto que entrega el cliente" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', ''); ActualizarSumaPagoMixto();" onKeyUp="ActualizarSumaPagoMixto();">
+          <i class="fa fa-usd form-control-feedback"></i>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group has-feedback">
+          <label class="control-label">Cambio / Vuelto:</label>
+          <input class="form-control number" type="text" id="montodevuelto_mix_visible" value="0.00" autocomplete="off" readonly>
+          <i class="fa fa-usd form-control-feedback"></i>
+        </div>
+      </div>
+    </div>
+  </div>
   <input type="hidden" name="formapagove" id="formapagove_mix_hidden" value="" disabled>
   <input type="hidden" name="montopagado" id="montopagado_mix_hidden" value="0.00" disabled>
   <input type="hidden" name="montodevuelto" id="montodevuelto_mix_hidden" value="0.00" disabled>
@@ -2120,7 +2139,26 @@ if (isset($_GET['BuscaFormaPagoVentas']) && isset($_GET['tipopagove'])) {
 <div id="pago-mixto-wrap" style="display:none;">
   <div id="filas-pago-mixto"></div>
   <button type="button" class="btn btn-info btn-sm btn-block" onclick="AgregarFilaPagoMixto(); return false;"><i class="fa fa-plus"></i> Agregar medio de pago</button>
-  <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
+  <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma a cuenta: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
+  <div id="pago-mixto-vuelto" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed #ddd;">
+    <p class="help-block" style="margin-top:0;">Hay EFECTIVO en el mixto: indique lo que entrega el cliente y el vuelto (la fila de efectivo es solo la parte de la cuenta).</p>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="form-group has-feedback">
+          <label class="control-label">Monto recibido en efectivo:</label>
+          <input class="form-control number" type="text" id="montorecibido_mix_efectivo" value="0.00" autocomplete="off" placeholder="Monto que entrega el cliente" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', ''); ActualizarSumaPagoMixto();" onKeyUp="ActualizarSumaPagoMixto();">
+          <i class="fa fa-usd form-control-feedback"></i>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group has-feedback">
+          <label class="control-label">Cambio / Vuelto:</label>
+          <input class="form-control number" type="text" id="montodevuelto_mix_visible" value="0.00" autocomplete="off" readonly>
+          <i class="fa fa-usd form-control-feedback"></i>
+        </div>
+      </div>
+    </div>
+  </div>
   <input type="hidden" name="formapagove" id="formapagove_mix_hidden" value="" disabled>
   <input type="hidden" name="montopagado" id="montopagado_mix_hidden" value="0.00" disabled>
   <input type="hidden" name="montodevuelto" id="montodevuelto_mix_hidden" value="0.00" disabled>
