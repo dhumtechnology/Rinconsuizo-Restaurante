@@ -5,13 +5,16 @@ if (function_exists('sistema_brand_head_styles')) {
   sistema_brand_head_styles();
 }
 $__logoutHref = 'logout';
-if (function_exists('restaurant_resolve_logout_slug')) {
+if (function_exists('sistema_url')) {
+  $__logoutHref = sistema_url('logout');
+} elseif (function_exists('restaurant_resolve_logout_slug')) {
   $__slugOut = restaurant_resolve_logout_slug();
   if ($__slugOut !== '') {
-    $__logoutHref = '/' . $__slugOut . '/sistema/logout';
+    $__logoutHref = (function_exists('app_url') ? app_url('/' . $__slugOut . '/sistema/logout') : ('/' . $__slugOut . '/sistema/logout'));
   }
 } elseif (!empty($_SESSION['url_slug'])) {
-  $__logoutHref = '/' . preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug'])) . '/sistema/logout';
+  $__s = preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug']));
+  $__logoutHref = function_exists('app_url') ? app_url('/' . $__s . '/sistema/logout') : ('/' . $__s . '/sistema/logout');
 }
 if(isset($_SESSION['acceso'])) { 
   if ($_SESSION['acceso'] == "administrador" || $_SESSION["acceso"]=="cajero" || $_SESSION["acceso"]=="cocinero" || $_SESSION["acceso"]=="mesero" || $_SESSION["acceso"]=="repartidor") {

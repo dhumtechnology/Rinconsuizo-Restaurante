@@ -76,7 +76,7 @@ if (!function_exists('app_base_path')) {
 
 		// Fallback: SCRIPT_NAME (ej. /resto/sistema/index.php)
 		$script = isset($_SERVER['SCRIPT_NAME']) ? str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME']) : '';
-		if ($script !== '' && preg_match('#^(.*?)/sistema(?:/|$)#', $script, $m)) {
+		if ($script !== '' && preg_match('#^(.*?)/sistema(?:/|$)#i', $script, $m)) {
 			$cached = rtrim($m[1], '/');
 			return $cached;
 		}
@@ -653,6 +653,22 @@ if (!function_exists('sistema_url')) {
 			return $prefix . '/';
 		}
 		return $prefix . '/' . $path;
+	}
+}
+
+if (!function_exists('sistema_assets_base_href')) {
+	/**
+	 * Base para CSS/JS/img y enlaces relativos del POS.
+	 * Debe incluir el slug del restaurante para no romper el menú
+	 * (panel → /{base}/{slug}/sistema/panel). Los estáticos se reescriben
+	 * en .htaccess a sistema/assets|fotos|uploads/.
+	 */
+	function sistema_assets_base_href()
+	{
+		if (function_exists('sistema_url')) {
+			return rtrim(sistema_url(''), '/') . '/';
+		}
+		return rtrim(app_url('/sistema'), '/') . '/';
 	}
 }
 

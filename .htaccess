@@ -8,11 +8,17 @@
     # / sin slug → login SuperAdministrador
     RewriteRule ^$ sistema/superadmin/login.php [R=302,L]
 
+    # Canonicalizar /Sistema → /sistema (Linux es case-sensitive; Windows no)
+    RewriteRule ^Sistema(?:/(.*))?$ sistema/$1 [L]
+    RewriteRule ^([a-z0-9\-]+)/Sistema(?:/(.*))?$ $1/sistema/$2 [L]
+
     # No tocar recursos ni /sistema sin slug (superadmin / legacy)
     RewriteRule ^(sistema|db|css|js|img|fonts|mail|docker|uploads|assets)(/|$) - [L]
 
     # /{slug}/sistema → POS del restaurante
     RewriteRule ^([a-z0-9\-]+)/sistema/?$ sistema/index.php?r_slug=$1 [L,QSA]
+    # Estáticos del POS (css/js/img): servir archivo real (sin pasar por .php)
+    RewriteRule ^([a-z0-9\-]+)/sistema/(assets|fotos|uploads)/(.*)$ sistema/$2/$3 [L]
     RewriteRule ^([a-z0-9\-]+)/sistema/(.*)$ sistema/$2?r_slug=$1 [L,QSA]
 
     # /{slug}/ → tienda

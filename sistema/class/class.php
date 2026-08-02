@@ -23,7 +23,7 @@ if (!defined('RS_BRAND_OB') && PHP_SAPI !== 'cli') {
 	$__isSuperadminPath = (stripos($__scriptName, '/superadmin/') !== false);
 	if (!$__isSuperadminPath) {
 		ob_start(function ($html) {
-			if ($html === '' || strpos($html, 'id="sistema-brand-theme"') !== false) {
+			if ($html === '') {
 				return $html;
 			}
 			if (strpos($html, '</head>') === false && strpos($html, '</HEAD>') === false) {
@@ -32,15 +32,22 @@ if (!defined('RS_BRAND_OB') && PHP_SAPI !== 'cli') {
 			if (!empty($_SESSION['acceso']) && $_SESSION['acceso'] === 'superadministrador') {
 				return $html;
 			}
-			if (!function_exists('sistema_brand_head_styles_html')) {
-				return $html;
+			// CSS/JS/enlaces relativos → /{base}/{slug}/sistema/... (rewrite sirve assets)
+			if (strpos($html, '<base ') === false && function_exists('sistema_assets_base_href')) {
+				$base = '<base href="' . htmlspecialchars(sistema_assets_base_href(), ENT_QUOTES, 'UTF-8') . '">';
+				if (stripos($html, '<head>') !== false) {
+					$html = preg_replace('/<head>/i', '<head>' . $base, $html, 1);
+				} elseif (preg_match('/<head\s[^>]*>/i', $html)) {
+					$html = preg_replace('/<head\s[^>]*>/i', '$0' . $base, $html, 1);
+				}
 			}
-			$inject = sistema_brand_head_styles_html();
-			if ($inject === '') {
-				return $html;
+			if (strpos($html, 'id="sistema-brand-theme"') === false && function_exists('sistema_brand_head_styles_html')) {
+				$brand = sistema_brand_head_styles_html();
+				if ($brand !== '') {
+					$html = str_replace('</head>', $brand . '</head>', $html);
+					$html = str_replace('</HEAD>', $brand . '</HEAD>', $html);
+				}
 			}
-			$html = str_replace('</head>', $inject . '</head>', $html);
-			$html = str_replace('</HEAD>', $inject . '</HEAD>', $html);
 			return $html;
 		});
 	}
