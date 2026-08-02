@@ -74,6 +74,17 @@ if (!function_exists('app_base_path')) {
 			}
 		}
 
+		// Fallback: URL del navegador /resto/{slug}/sistema/... → /resto
+		$reqPath = isset($_SERVER['REQUEST_URI']) ? parse_url((string) $_SERVER['REQUEST_URI'], PHP_URL_PATH) : '';
+		$reqPath = is_string($reqPath) ? str_replace('\\', '/', $reqPath) : '';
+		if ($reqPath !== '' && preg_match('#^(/[^/]+)/[a-z0-9\-]+/sistema(?:/|$)#i', $reqPath, $m)) {
+			$doc = $docRoot ? rtrim(str_replace('\\', '/', $docRoot), '/') : '';
+			if ($doc === '' || is_dir($doc . $m[1] . '/sistema') || is_file($doc . $m[1] . '/tenant_context.php')) {
+				$cached = $m[1];
+				return $cached;
+			}
+		}
+
 		// Fallback: SCRIPT_NAME (ej. /resto/sistema/index.php)
 		$script = isset($_SERVER['SCRIPT_NAME']) ? str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME']) : '';
 		if ($script !== '' && preg_match('#^(.*?)/sistema(?:/|$)#i', $script, $m)) {
@@ -656,19 +667,76 @@ if (!function_exists('sistema_url')) {
 	}
 }
 
+if (!function_exists('sistema_request_path')) {
+	/** Path de la petición actual (sin query), normalizado. */
+	function sistema_request_path()
+	{
+		$uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '';
+		$path = parse_url($uri, PHP_URL_PATH);
+		if (!is_string($path) || $path === '') {
+			$script = isset($_SERVER['SCRIPT_NAME']) ? (string) $_SERVER['SCRIPT_NAME'] : '';
+			$path = $script !== '' ? $script : '/';
+		}
+		return str_replace('\\', '/', $path);
+	}
+}
+
 if (!function_exists('sistema_assets_base_href')) {
 	/**
-	 * Base para CSS/JS/img y enlaces relativos del POS.
-	 * Debe incluir el slug del restaurante para no romper el menú
-	 * (panel → /{base}/{slug}/sistema/panel). Los estáticos se reescriben
-	 * en .htaccess a sistema/assets|fotos|uploads/.
+	 * <base href> del POS = prefijo real de la URL del navegador hasta /sistema/.
+	 * Ej: /resto/dhum/sistema/panel → /resto/dhum/sistema/
+	 * Así el menú conserva el slug y no depende de APP_BASE_PATH mal detectado.
 	 */
 	function sistema_assets_base_href()
 	{
+		$path = sistema_request_path();
+		if (preg_match('#^(.*?)/sistema(?:/|$)#i', $path, $m)) {
+			return rtrim($m[1], '/') . '/sistema/';
+		}
 		if (function_exists('sistema_url')) {
 			return rtrim(sistema_url(''), '/') . '/';
 		}
 		return rtrim(app_url('/sistema'), '/') . '/';
+	}
+}
+
+if (!function_exists('sistema_static_base_href')) {
+	/**
+	 * Prefijo donde viven los archivos CSS/JS en disco: /[resto/]sistema/
+	 * (NO bajo /{slug}/). Evita 404 cuando el rewrite del slug falla en XAMPP.
+	 */
+	function sistema_static_base_href()
+	{
+		$path = sistema_request_path();
+		$doc = isset($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
+		$doc = $doc ? rtrim(str_replace('\\', '/', $doc), '/') : '';
+
+		// /resto/{slug}/sistema/... → CSS físico en /resto/sistema/assets/...
+		// (con 2 segmentos antes de sistema, el primero es siempre la carpeta de la app)
+		if (preg_match('#^(/[^/]+)/[a-z0-9\-]+/sistema(?:/|$)#i', $path, $m)) {
+			return $m[1] . '/sistema/';
+		}
+
+		// /resto/sistema/... (sin slug en la URL) → /resto/sistema/
+		// /dhum/sistema/... (Docker raíz) → /sistema/  (dhum es el slug, no la carpeta)
+		if (preg_match('#^(/[^/]+)/sistema(?:/|$)#i', $path, $m)) {
+			$candidate = $m[1];
+			if ($doc !== '' && (is_dir($doc . $candidate . '/sistema/assets') || is_file($doc . $candidate . '/tenant_context.php'))) {
+				return $candidate . '/sistema/';
+			}
+			$app = app_base_path();
+			if ($app !== '' && strcasecmp($app, $candidate) === 0) {
+				return $candidate . '/sistema/';
+			}
+			return '/sistema/';
+		}
+
+		if (preg_match('#^/sistema(?:/|$)#i', $path)) {
+			return '/sistema/';
+		}
+
+		$app = app_base_path();
+		return ($app !== '' ? $app : '') . '/sistema/';
 	}
 }
 

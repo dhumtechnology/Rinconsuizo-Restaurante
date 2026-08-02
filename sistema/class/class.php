@@ -32,13 +32,23 @@ if (!defined('RS_BRAND_OB') && PHP_SAPI !== 'cli') {
 			if (!empty($_SESSION['acceso']) && $_SESSION['acceso'] === 'superadministrador') {
 				return $html;
 			}
-			// CSS/JS/enlaces relativos → /{base}/{slug}/sistema/... (rewrite sirve assets)
+			// <base> con slug (menú) + CSS/JS absolutos a /[app/]sistema/assets (archivos reales)
 			if (strpos($html, '<base ') === false && function_exists('sistema_assets_base_href')) {
 				$base = '<base href="' . htmlspecialchars(sistema_assets_base_href(), ENT_QUOTES, 'UTF-8') . '">';
 				if (stripos($html, '<head>') !== false) {
 					$html = preg_replace('/<head>/i', '<head>' . $base, $html, 1);
 				} elseif (preg_match('/<head\s[^>]*>/i', $html)) {
 					$html = preg_replace('/<head\s[^>]*>/i', '$0' . $base, $html, 1);
+				}
+			}
+			if (function_exists('sistema_static_base_href') && strpos($html, 'data-rs-assets-rewritten') === false) {
+				$static = rtrim(sistema_static_base_href(), '/') . '/';
+				// href/src="assets/..." → /resto/sistema/assets/... (ruta física, sin slug)
+				$html = preg_replace('#\b(href|src)=(["\'])assets/#i', '$1=$2' . $static . 'assets/', $html);
+				$html = preg_replace('#\b(href|src)=(["\'])\.\./assets/#i', '$1=$2' . $static . 'assets/', $html);
+				$html = preg_replace('#\b(href|src)=(["\'])(fotos|uploads)/#i', '$1=$2' . $static . '$3/', $html);
+				if (strpos($html, '<head') !== false) {
+					$html = preg_replace('/<head(\s[^>]*)?>/i', '<head$1 data-rs-assets-rewritten="1">', $html, 1);
 				}
 			}
 			if (strpos($html, 'id="sistema-brand-theme"') === false && function_exists('sistema_brand_head_styles_html')) {
