@@ -86,7 +86,12 @@ if (!function_exists('app_base_path')) {
 		}
 
 		// Fallback: SCRIPT_NAME (ej. /resto/sistema/index.php)
+		// Ojo: NO usar /resto/{slug}/sistema → eso dejaría app=/resto/{slug} (rompe CSS)
 		$script = isset($_SERVER['SCRIPT_NAME']) ? str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME']) : '';
+		if ($script !== '' && preg_match('#^(/[^/]+)/[a-z0-9\-]+/sistema(?:/|$)#i', $script, $m)) {
+			$cached = $m[1];
+			return $cached;
+		}
 		if ($script !== '' && preg_match('#^(.*?)/sistema(?:/|$)#i', $script, $m)) {
 			$cached = rtrim($m[1], '/');
 			return $cached;
@@ -707,36 +712,36 @@ if (!function_exists('sistema_static_base_href')) {
 	 */
 	function sistema_static_base_href()
 	{
+		// Siempre la carpeta real del POS: /resto/sistema/ o /sistema/
+		// Nunca /{slug}/assets (eso es lo que provoca el 404 en XAMPP).
+		$app = app_base_path();
 		$path = sistema_request_path();
 		$doc = isset($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
 		$doc = $doc ? rtrim(str_replace('\\', '/', $doc), '/') : '';
 
-		// /resto/{slug}/sistema/... → CSS físico en /resto/sistema/assets/...
-		// (con 2 segmentos antes de sistema, el primero es siempre la carpeta de la app)
+		// /resto/{slug}/sistema/... → /resto/sistema/
 		if (preg_match('#^(/[^/]+)/[a-z0-9\-]+/sistema(?:/|$)#i', $path, $m)) {
 			return $m[1] . '/sistema/';
 		}
 
-		// /resto/sistema/... (sin slug en la URL) → /resto/sistema/
-		// /dhum/sistema/... (Docker raíz) → /sistema/  (dhum es el slug, no la carpeta)
+		// /resto/sistema/... → /resto/sistema/ si esa carpeta existe en disco
 		if (preg_match('#^(/[^/]+)/sistema(?:/|$)#i', $path, $m)) {
 			$candidate = $m[1];
 			if ($doc !== '' && (is_dir($doc . $candidate . '/sistema/assets') || is_file($doc . $candidate . '/tenant_context.php'))) {
 				return $candidate . '/sistema/';
 			}
-			$app = app_base_path();
 			if ($app !== '' && strcasecmp($app, $candidate) === 0) {
 				return $candidate . '/sistema/';
 			}
+			// /rincon-suizo/sistema en raíz → /sistema/
 			return '/sistema/';
 		}
 
-		if (preg_match('#^/sistema(?:/|$)#i', $path)) {
-			return '/sistema/';
+		if ($app !== '') {
+			return $app . '/sistema/';
 		}
 
-		$app = app_base_path();
-		return ($app !== '' ? $app : '') . '/sistema/';
+		return '/sistema/';
 	}
 }
 

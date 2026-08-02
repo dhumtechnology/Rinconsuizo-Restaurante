@@ -15,10 +15,16 @@
     # No tocar recursos ni /sistema sin slug (superadmin / legacy)
     RewriteRule ^(sistema|db|css|js|img|fonts|mail|docker|uploads|assets)(/|$) - [L]
 
+    # /{slug}/sistema sin slash final → con slash
+    # Sin esto el navegador resuelve assets/ como /{slug}/assets/ (404)
+    RewriteRule ^([a-z0-9\-]+)/sistema$ %{REQUEST_URI}/ [R=301,L]
+
     # /{slug}/sistema → POS del restaurante
     RewriteRule ^([a-z0-9\-]+)/sistema/?$ sistema/index.php?r_slug=$1 [L,QSA]
     # Estáticos del POS (css/js/img): servir archivo real (sin pasar por .php)
     RewriteRule ^([a-z0-9\-]+)/sistema/(assets|fotos|uploads)/(.*)$ sistema/$2/$3 [L]
+    # Seguridad: /{slug}/assets|fotos|uploads → sistema/... (relativos rotos sin /sistema/)
+    RewriteRule ^([a-z0-9\-]+)/(assets|fotos|uploads)/(.*)$ sistema/$2/$3 [L]
     RewriteRule ^([a-z0-9\-]+)/sistema/(.*)$ sistema/$2?r_slug=$1 [L,QSA]
 
     # /{slug}/ → tienda
