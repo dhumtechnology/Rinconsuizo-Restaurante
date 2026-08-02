@@ -12,14 +12,14 @@ if (!empty($_GET['r_slug'])) {
 
 // Sin slug: el login de restaurante no aplica → SuperAdmin
 if ($loginSlug === '' && !(isset($_POST['btn-login']) || (isset($_POST['usuario']) && isset($_POST['password'])))) {
-	header('Location: /sistema/superadmin/login.php');
+	header('Location: ' . (function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php'));
 	exit;
 }
 
 if (isset($_POST['btn-login']) || (isset($_POST['usuario']) && isset($_POST['password']) && !isset($_POST['btn-recuperar'])))
 {
 	if ($loginSlug === '') {
-		header('Location: /sistema/superadmin/login.php');
+		header('Location: ' . (function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php'));
 		exit;
 	}
 	$_GET['r_slug'] = $loginSlug;
@@ -45,7 +45,7 @@ if ($loginSlug !== '' && function_exists('tenant_find_restaurante')) {
 	}
 }
 if (!$loginRest) {
-	header('Location: /sistema/superadmin/login.php');
+	header('Location: ' . (function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php'));
 	exit;
 }
 

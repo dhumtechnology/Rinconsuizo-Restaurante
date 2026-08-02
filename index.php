@@ -4,7 +4,7 @@ require_once __DIR__ . '/web_session.php';
 // Sin slug de restaurante: ir al login SuperAdmin (no hay tienda global)
 $__slug = function_exists('web_tenant_slug') ? web_tenant_slug() : '';
 if ($__slug === '' && empty($_GET['r_slug'])) {
-	header('Location: /sistema/superadmin/login.php');
+	header('Location: ' . (function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php'));
 	exit;
 }
 

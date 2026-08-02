@@ -81,6 +81,26 @@ docker compose logs -f db
 - **Panel del restaurante:** http://localhost:8080/sistema
 - **phpMyAdmin:** http://localhost:8081
 
+### Despliegue en XAMPP (subcarpeta)
+
+Si el cliente copia el proyecto a `htdocs/resto`, las URLs serán `http://localhost/resto/...`.
+
+La app detecta sola esa carpeta (`app_base_path`) y antepone `/resto` a login, menú y POS. En Docker (raíz) queda vacío y no cambia nada.
+
+Opcional en `.env` del cliente:
+
+```env
+APP_BASE_PATH=/resto
+```
+
+Ejemplos con carpeta `resto`:
+
+- SuperAdmin: `http://localhost/resto/` o `http://localhost/resto/sistema/superadmin/login`
+- POS: `http://localhost/resto/{slug}/sistema/`
+- Menú: `http://localhost/resto/{slug}/`
+
+Requisitos en XAMPP: `mod_rewrite` activo y `AllowOverride All` en el VirtualHost/`httpd.conf` para que funcione el `.htaccess`.
+
 ### Credenciales de acceso al sistema
 
 Según documentación original (`sistema/db_sql/LEEME.txt`):

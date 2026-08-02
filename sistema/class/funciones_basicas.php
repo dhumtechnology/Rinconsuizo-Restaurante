@@ -537,7 +537,15 @@ function tenantId()
     if (!isset($_SESSION['id_restaurante']) || $_SESSION['id_restaurante'] === '' || $_SESSION['id_restaurante'] === null) {
         return 0;
     }
-    return (int) $_SESSION['id_restaurante'];
+    $id = (int) $_SESSION['id_restaurante'];
+    // Si la URL es de otro restaurante, no devolver datos (evita mezcla por sesión/URL)
+    if ($id > 0 && function_exists('url_tenant_id')) {
+        $urlId = (int) url_tenant_id();
+        if ($urlId > 0 && $urlId !== $id) {
+            return 0;
+        }
+    }
+    return $id;
 }
 
 function requireSuperAdmin()
@@ -556,7 +564,15 @@ function requireTenant()
     }
     if (tenantId() <= 0) {
         $out = 'logout.php';
-        if (function_exists('restaurant_resolve_logout_slug')) {
+        if (function_exists('sistema_url') && function_exists('restaurant_resolve_logout_slug')) {
+            $s = restaurant_resolve_logout_slug();
+            if ($s !== '') {
+                $_SESSION['url_slug'] = $s;
+                $out = sistema_url('logout');
+            } elseif (function_exists('app_url')) {
+                $out = app_url('/sistema/logout.php');
+            }
+        } elseif (function_exists('restaurant_resolve_logout_slug')) {
             $s = restaurant_resolve_logout_slug();
             if ($s !== '') {
                 $out = '/' . $s . '/sistema/logout';

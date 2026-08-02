@@ -43,19 +43,22 @@ if (isset($_COOKIE[$session_name])) {
 	setcookie($session_name, '', time() - 3600, '/');
 }
 
+$saLogin = function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php';
 if ($wasSa) {
-	$redirect = '/sistema/superadmin/login.php';
+	$redirect = $saLogin;
 } elseif ($restSlug !== '') {
 	$redirect = function_exists('restaurant_login_url')
 		? restaurant_login_url($restSlug)
-		: ('/' . $restSlug . '/sistema/');
+		: (function_exists('app_url') ? app_url('/' . $restSlug . '/sistema/') : ('/' . $restSlug . '/sistema/'));
 } else {
 	// Sin slug conocido: no mandar a SuperAdmin por defecto si hay cookie
 	if (!empty($_COOKIE['rs_slug'])) {
 		$s = preg_replace('/[^a-z0-9\-]/', '', strtolower($_COOKIE['rs_slug']));
-		$redirect = $s !== '' ? ('/' . $s . '/sistema/') : '/sistema/superadmin/login.php';
+		$redirect = $s !== ''
+			? (function_exists('app_url') ? app_url('/' . $s . '/sistema/') : ('/' . $s . '/sistema/'))
+			: $saLogin;
 	} else {
-		$redirect = '/sistema/superadmin/login.php';
+		$redirect = $saLogin;
 	}
 }
 

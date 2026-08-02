@@ -1,26 +1,27 @@
 # Multi-tenant: /{slug}/... y /{slug}/sistema/...
+# Compatible con instalación en raíz (Docker) o subcarpeta (XAMPP: /resto/)
+# Importante: sustituciones SIN barra inicial → Apache respeta la carpeta del .htaccess
 <IfModule mod_rewrite.c>
     Options +FollowSymLinks
     RewriteEngine On
-    RewriteBase /
 
     # / sin slug → login SuperAdministrador
-    RewriteRule ^$ /sistema/superadmin/login.php [R=302,L]
+    RewriteRule ^$ sistema/superadmin/login.php [R=302,L]
 
     # No tocar recursos ni /sistema sin slug (superadmin / legacy)
     RewriteRule ^(sistema|db|css|js|img|fonts|mail|docker|uploads|assets)(/|$) - [L]
 
     # /{slug}/sistema → POS del restaurante
-    RewriteRule ^([a-z0-9\-]+)/sistema/?$ /sistema/index.php?r_slug=$1 [L,QSA]
-    RewriteRule ^([a-z0-9\-]+)/sistema/(.*)$ /sistema/$2?r_slug=$1 [L,QSA]
+    RewriteRule ^([a-z0-9\-]+)/sistema/?$ sistema/index.php?r_slug=$1 [L,QSA]
+    RewriteRule ^([a-z0-9\-]+)/sistema/(.*)$ sistema/$2?r_slug=$1 [L,QSA]
 
     # /{slug}/ → tienda
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^([a-z0-9\-]+)/?$ /index.php?r_slug=$1 [L,QSA]
+    RewriteRule ^([a-z0-9\-]+)/?$ index.php?r_slug=$1 [L,QSA]
 
     # /{slug}/ruta → archivo en docroot
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^([a-z0-9\-]+)/(.+)$ /$2?r_slug=$1 [L,QSA]
+    RewriteRule ^([a-z0-9\-]+)/(.+)$ $2?r_slug=$1 [L,QSA]
 </IfModule>

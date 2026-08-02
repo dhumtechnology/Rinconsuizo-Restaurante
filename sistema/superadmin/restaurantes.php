@@ -17,8 +17,12 @@ sa_header('Restaurantes');
   <td><?php if (!empty($r['logo'])) { ?><img class="sa-logo-preview" src="<?php echo htmlspecialchars(function_exists('restaurant_logo_url') ? restaurant_logo_url($r['logo']) : '../'.$r['logo']); ?>"><?php } else { echo '—'; } ?></td>
   <td><?php echo htmlspecialchars($r['nombre']); ?></td>
   <td style="font-size:0.8rem;">
-    <a href="/<?php echo $slug; ?>/" target="_blank" style="color:#3d9cfd;">/<?php echo $slug; ?>/</a><br>
-    <a href="/<?php echo $slug; ?>/sistema/" target="_blank" style="color:#8b9bb4;">/<?php echo $slug; ?>/sistema/</a>
+    <?php
+      $menuUrl = function_exists('app_url') ? app_url('/'.$slug.'/') : '/'.$slug.'/';
+      $posUrl = function_exists('app_url') ? app_url('/'.$slug.'/sistema/') : '/'.$slug.'/sistema/';
+    ?>
+    <a href="<?php echo htmlspecialchars($menuUrl); ?>" target="_blank" style="color:#3d9cfd;"><?php echo htmlspecialchars($menuUrl); ?></a><br>
+    <a href="<?php echo htmlspecialchars($posUrl); ?>" target="_blank" style="color:#8b9bb4;"><?php echo htmlspecialchars($posUrl); ?></a>
   </td>
   <td><?php echo !empty($r['dominio']) ? htmlspecialchars($r['dominio']) : '—'; ?></td>
   <td>

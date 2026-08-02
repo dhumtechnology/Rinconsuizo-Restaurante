@@ -62,13 +62,22 @@ class Login extends Db
 	public function ExpiraSession(){
 
 	$logoutUrl = 'logout.php';
-	if (function_exists('restaurant_resolve_logout_slug')) {
+	if (function_exists('sistema_url')) {
+		$slugOut = function_exists('restaurant_resolve_logout_slug') ? restaurant_resolve_logout_slug() : '';
+		if ($slugOut === '' && !empty($_SESSION['url_slug'])) {
+			$slugOut = preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug']));
+		}
+		if ($slugOut !== '') {
+			$_SESSION['url_slug'] = $slugOut;
+			$logoutUrl = sistema_url('logout');
+		} elseif (function_exists('app_url')) {
+			$logoutUrl = app_url('/sistema/logout.php');
+		}
+	} elseif (function_exists('restaurant_resolve_logout_slug')) {
 		$slugOut = restaurant_resolve_logout_slug();
 		if ($slugOut !== '') {
 			$logoutUrl = '/' . $slugOut . '/sistema/logout';
 		}
-	} elseif (!empty($_SESSION['url_slug'])) {
-		$logoutUrl = '/' . preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug'])) . '/sistema/logout';
 	}
 
 	if(!isset($_SESSION['usuario'])){// Esta logeado?.
@@ -119,9 +128,33 @@ if(empty($_POST["usuario"]) or empty($_POST["password"]))
 	exit;
 }
 $pass = sha1(md5($_POST["password"]));
-$sql = " SELECT * FROM usuarios WHERE usuario = ? and password = ? and status = 'ACTIVO'";
-$stmt = $this->dbh->prepare($sql);
-$stmt->execute( array( $_POST["usuario"], $pass));
+
+		$loginMode = isset($_POST['login_mode']) ? $_POST['login_mode'] : '';
+		$urlTenant = function_exists('url_tenant_id') ? url_tenant_id() : 0;
+		if ($urlTenant <= 0 && !empty($_POST['r_slug']) && function_exists('tenant_find_restaurante')) {
+			$slugPost = preg_replace('/[^a-z0-9\-]/', '', strtolower($_POST['r_slug']));
+			$restPost = tenant_find_restaurante($slugPost, null);
+			if ($restPost) {
+				$urlTenant = (int) $restPost['id_restaurante'];
+				$_SESSION['url_slug'] = $slugPost;
+				$_SESSION['web_restaurante'] = $restPost;
+			}
+		}
+
+// Login de restaurante: usuario único dentro del restaurante de la URL
+if ($loginMode !== 'superadmin' && $urlTenant > 0) {
+	$sql = " SELECT * FROM usuarios WHERE usuario = ? and password = ? and status = 'ACTIVO' AND id_restaurante = ?";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute( array( $_POST["usuario"], $pass, $urlTenant));
+} elseif ($loginMode === 'superadmin') {
+	$sql = " SELECT * FROM usuarios WHERE usuario = ? and password = ? and status = 'ACTIVO' AND nivel = 'SUPERADMINISTRADOR'";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute( array( $_POST["usuario"], $pass));
+} else {
+	$sql = " SELECT * FROM usuarios WHERE usuario = ? and password = ? and status = 'ACTIVO'";
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute( array( $_POST["usuario"], $pass));
+}
 $num = $stmt->rowCount();
 if($num == 0)
 {
@@ -149,18 +182,6 @@ else
 		$_SESSION["id_restaurante"] = isset($p[0]["id_restaurante"]) && $p[0]["id_restaurante"] !== null && $p[0]["id_restaurante"] !== ''
 			? (int) $p[0]["id_restaurante"]
 			: 0;
-
-		$loginMode = isset($_POST['login_mode']) ? $_POST['login_mode'] : '';
-		$urlTenant = function_exists('url_tenant_id') ? url_tenant_id() : 0;
-		if ($urlTenant <= 0 && !empty($_POST['r_slug']) && function_exists('tenant_find_restaurante')) {
-			$slugPost = preg_replace('/[^a-z0-9\-]/', '', strtolower($_POST['r_slug']));
-			$restPost = tenant_find_restaurante($slugPost, null);
-			if ($restPost) {
-				$urlTenant = (int) $restPost['id_restaurante'];
-				$_SESSION['url_slug'] = $slugPost;
-				$_SESSION['web_restaurante'] = $restPost;
-			}
-		}
 
 		// Login SuperAdmin: solo nivel SUPERADMINISTRADOR
 		if ($loginMode === 'superadmin') {
@@ -220,12 +241,8 @@ else
 		$stmt->execute();
 
 		
-		$panelUrl = 'panel';
-		if (!empty($_SESSION['url_slug'])) {
-			$panelUrl = '/' . preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug'])) . '/sistema/panel';
-		} elseif (function_exists('sistema_url')) {
-			$panelUrl = sistema_url('panel');
-		}
+		$panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
+		$saPanelUrl = function_exists('app_url') ? app_url('/sistema/superadmin/panel') : '/sistema/superadmin/panel';
 
 		switch($_SESSION["nivel"])
 		{
@@ -234,7 +251,7 @@ else
 			$_SESSION["id_restaurante"] = 0;
 			?>
 			<script type="text/javascript">
-				window.location="/sistema/superadmin/panel";
+				window.location=<?php echo json_encode($saPanelUrl); ?>;
 			</script>
 			<?php
 			break;
@@ -400,11 +417,16 @@ public function RecuperarPassword()
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
 		echo "<span class='fa fa-check-square-o'></span> SU CLAVE DE ACCESO FUE ACTUALIZADA EXITOSAMENTE, SER&Aacute; EXPULSADO DE SU SESI&Oacute;N Y DEBER&Aacute; DE ACCEDER NUEVAMENTE";
 		echo "</div>";
-		$logoutJs = 'logout.php';
-		if (function_exists('restaurant_resolve_logout_slug')) {
-			$sOut = restaurant_resolve_logout_slug();
-			if ($sOut !== '') {
-				$logoutJs = '/' . $sOut . '/sistema/logout';
+		$logoutJs = function_exists('sistema_url') ? sistema_url('logout') : 'logout.php';
+		if ($logoutJs === 'logout.php' || (function_exists('web_tenant_slug') && web_tenant_slug() === '' && empty($_SESSION['url_slug']))) {
+			if (function_exists('restaurant_resolve_logout_slug')) {
+				$sOut = restaurant_resolve_logout_slug();
+				if ($sOut !== '' && function_exists('sistema_url')) {
+					$_SESSION['url_slug'] = $sOut;
+					$logoutJs = sistema_url('logout');
+				} elseif ($sOut !== '') {
+					$logoutJs = '/' . $sOut . '/sistema/logout';
+				}
 			}
 		}
 		?>
@@ -650,7 +672,7 @@ public function RegistrarUsuarios()
 		echo "1";
 		exit;
 	}
-	$sql = " select cedula from usuarios where cedula = ? ";
+	$sql = " select cedula from usuarios where cedula = ? AND ".tenantWhere('usuarios');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["cedula"]) );
 	$num = $stmt->rowCount();
@@ -662,7 +684,7 @@ public function RegistrarUsuarios()
 	}
 	else
 	{
-		$sql = " select email from usuarios where email = ? ";
+		$sql = " select email from usuarios where email = ? AND ".tenantWhere('usuarios');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["email"]) );
 		$num = $stmt->rowCount();
@@ -674,7 +696,7 @@ public function RegistrarUsuarios()
 		}
 		else
 		{
-			$sql = " select usuario from usuarios where usuario = ? ";
+			$sql = " select usuario from usuarios where usuario = ? AND ".tenantWhere('usuarios');
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute( array($_POST["usuario"]) );
 			$num = $stmt->rowCount();
@@ -772,7 +794,8 @@ public function ListarUsuarios()
 public function ListarRepartidores()
 {
 	self::SetNames();
-	$sql = " select * from usuarios WHERE nivel = 'REPARTIDOR'";
+	$this->p = array();
+	$sql = " select * from usuarios WHERE nivel = 'REPARTIDOR' AND ".tenantWhere();
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -787,8 +810,8 @@ public function ListarRepartidores()
 public function ListarLogs()
 {
 	self::SetNames();
-
-	$sql = " select * from log ";
+	$this->p = array();
+	$sql = " select * from log WHERE ".tenantWhere('log');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -802,7 +825,7 @@ public function ListarLogs()
 public function UsuariosPorId()
 {
 	self::SetNames();
-	$sql = " select * from usuarios where codigo = ? ";
+	$sql = " select * from usuarios where codigo = ? AND ".tenantWhere('usuarios')." AND nivel <> 'SUPERADMINISTRADOR' ";
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array(base64_decode($_GET["codigo"])) );
 	$num = $stmt->rowCount();
@@ -832,7 +855,7 @@ public function UsuariosPorId()
 			exit;
 		}
 		self::SetNames();
-		$sql = " select * from usuarios where codigo != ? and cedula = ? ";
+		$sql = " select * from usuarios where codigo != ? and cedula = ? AND ".tenantWhere('usuarios');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["codigo"], $_POST["cedula"]) );
 		$num = $stmt->rowCount();
@@ -843,7 +866,7 @@ public function UsuariosPorId()
 		}
 		else
 		{
-			$sql = " select email from usuarios where codigo != ? and email = ? ";
+			$sql = " select email from usuarios where codigo != ? and email = ? AND ".tenantWhere('usuarios');
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute( array($_POST["codigo"], $_POST["email"]) );
 			$num = $stmt->rowCount();
@@ -854,7 +877,7 @@ public function UsuariosPorId()
 			}
 			else
 			{
-				$sql = " select usuario from usuarios where codigo != ? and usuario = ? ";
+				$sql = " select usuario from usuarios where codigo != ? and usuario = ? AND ".tenantWhere('usuarios');
 				$stmt = $this->dbh->prepare($sql);
 				$stmt->execute( array($_POST["codigo"], $_POST["usuario"]) );
 				$num = $stmt->rowCount();
@@ -871,7 +894,7 @@ public function UsuariosPorId()
 					." nivel = ?, "
 					." status = ? "
 					." where "
-					." codigo = ?;
+					." codigo = ? AND ".tenantWhere('usuarios').";
 					";
 					$stmt = $this->dbh->prepare($sql);
 					$stmt->bindParam(1, $cedula);
@@ -943,14 +966,14 @@ public function UsuariosPorId()
 public function EliminarUsuarios()
 {
 
-	$sql = " select codigo from ventas where codigo = ? ";
+	$sql = " select codigo from ventas where codigo = ? AND ".tenantWhere('ventas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array(base64_decode($_GET["codigo"])) );
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
 
-		$sql = " delete from usuarios where codigo = ? ";
+		$sql = " delete from usuarios where codigo = ? AND ".tenantWhere('usuarios')." AND nivel <> 'SUPERADMINISTRADOR' ";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1,$codigo);
 		$codigo = base64_decode($_GET["codigo"]);
@@ -1016,7 +1039,7 @@ public function RegistrarSalas()
 		echo "1";
 		exit;
 	}
-	$sql = " select nombresala from salas where nombresala = ? ";
+	$sql = " select nombresala from salas where nombresala = ? AND ".tenantWhere('salas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["nombresala"]) );
 	$num = $stmt->rowCount();
@@ -1068,7 +1091,7 @@ public function ListarSalas()
 public function SalasPorId()
 {
 	self::SetNames();
-	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM salas LEFT JOIN mesas ON salas.codsala = mesas.codsala where salas.codsala = ? ";
+	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM salas LEFT JOIN mesas ON salas.codsala = mesas.codsala where salas.codsala = ? AND ".tenantWhere('salas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array(base64_decode($_GET["codsala"])) );
 	$num = $stmt->rowCount();
@@ -1126,7 +1149,7 @@ public function ActualizarSalas()
 		echo "1";
 		exit;
 	}
-	$sql = " select nombresala from salas where codsala != ? and nombresala = ? ";
+	$sql = " select nombresala from salas where codsala != ? and nombresala = ? AND ".tenantWhere('salas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["codsala"], $_POST["nombresala"]) );
 	$num = $stmt->rowCount();
@@ -1253,7 +1276,14 @@ public function RegistrarMesas()
 		echo "1";
 		exit;
 	}
-	$sql = " select codsala, nombremesa from mesas where codsala = ? and nombremesa = ? ";
+	// La sala debe pertenecer al restaurante actual
+	$chkSala = $this->dbh->prepare("SELECT codsala FROM salas WHERE codsala = ? AND ".tenantWhere('salas')." LIMIT 1");
+	$chkSala->execute(array($_POST["codsala"]));
+	if ($chkSala->rowCount() == 0) {
+		echo "1";
+		exit;
+	}
+	$sql = " select codsala, nombremesa from mesas where codsala = ? and nombremesa = ? AND ".tenantWhere('mesas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["codsala"], $_POST["nombremesa"]) );
 	$num = $stmt->rowCount();
@@ -1619,7 +1649,7 @@ public function MesaTienePedidoActivo($codmesa)
 			return true;
 		}
 	}
-	$sqlV = "SELECT codventa FROM ventas WHERE codmesa = ? AND statusventa = 'PENDIENTE' LIMIT 1";
+	$sqlV = "SELECT codventa FROM ventas WHERE codmesa = ? AND statusventa = 'PENDIENTE' AND ".tenantWhere('ventas')." LIMIT 1";
 	$stmtV = $this->dbh->prepare($sqlV);
 	$stmtV->execute(array($principal));
 	return $stmtV->rowCount() > 0;
@@ -1772,7 +1802,7 @@ public function MesasPorId()
 	self::SetNames();
 	$codmesaReq = base64_decode($_GET["codmesa"]);
 	$codmesaPrincipal = $this->ResolverMesaPrincipal($codmesaReq);
-	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM mesas INNER JOIN salas ON salas.codsala = mesas.codsala where mesas.codmesa = ? ";
+	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM mesas INNER JOIN salas ON salas.codsala = mesas.codsala where mesas.codmesa = ? AND ".tenantWhere('mesas')." AND ".tenantWhere('salas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($codmesaPrincipal) );
 	$num = $stmt->rowCount();
@@ -1804,7 +1834,7 @@ public function MesasPorId()
 			echo "1";
 			exit;
 		}
-		$sql = " select codsala, nombremesa from mesas where codmesa != ? and codsala = ? and nombremesa = ? ";
+		$sql = " select codsala, nombremesa from mesas where codmesa != ? and codsala = ? and nombremesa = ? AND ".tenantWhere('mesas');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["codmesa"], $_POST["codsala"], $_POST["nombremesa"]) );
 		$num = $stmt->rowCount();
@@ -1925,7 +1955,7 @@ public function RegistrarMediosPagos()
 		echo "1";
 		exit;
 	}
-	$sql = " select mediopago from mediospagos where mediopago = ? ";
+	$sql = " select mediopago from mediospagos where mediopago = ? AND ".tenantWhere('mediospagos');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["mediopago"]) );
 	$num = $stmt->rowCount();
@@ -2089,7 +2119,7 @@ public function MediosPagosPorId()
 				echo "1";
 				exit;
 			}
-			$sql = " select mediopago from mediospagos where codmediopago != ? and mediopago = ? ";
+			$sql = " select mediopago from mediospagos where codmediopago != ? and mediopago = ? AND ".tenantWhere('mediospagos');
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute( array($_POST["codmediopago"], $_POST["mediopago"]) );
 			$num = $stmt->rowCount();
@@ -2207,7 +2237,7 @@ public function RegistrarCategorias()
 		echo "1";
 		exit;
 	}
-	$sql = " select nomcategoria from categorias where nomcategoria = ? ";
+	$sql = " select nomcategoria from categorias where nomcategoria = ? AND ".tenantWhere('categorias');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["nomcategoria"]) );
 	$num = $stmt->rowCount();
@@ -2286,7 +2316,7 @@ public function CategoriasPorId()
 			echo "1";
 			exit;
 		}
-		$sql = " select nomcategoria from categorias where codcategoria != ? and nomcategoria = ? ";
+		$sql = " select nomcategoria from categorias where codcategoria != ? and nomcategoria = ? AND ".tenantWhere('categorias');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["codcategoria"], $_POST["nomcategoria"]) );
 		$num = $stmt->rowCount();
@@ -2399,7 +2429,7 @@ public function RegistrarCajas()
 		echo "1";
 		exit;
 	}
-	$sql = " select nombrecaja from cajas where nombrecaja = ? ";
+	$sql = " select nombrecaja from cajas where nombrecaja = ? AND ".tenantWhere('cajas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["nombrecaja"]) );
 	$num = $stmt->rowCount();
@@ -2408,9 +2438,17 @@ public function RegistrarCajas()
 		echo "2";
 		exit;
 	}
+	$sqlNro = " select nrocaja from cajas where nrocaja = ? AND ".tenantWhere('cajas');
+	$stmtNro = $this->dbh->prepare($sqlNro);
+	$stmtNro->execute( array($_POST["nrocaja"]) );
+	if ($stmtNro->rowCount() > 0)
+	{
+		echo "2";
+		exit;
+	}
 	else
 	{
-		$sql = " select codigo from cajas where codigo = ? and codigo != ''";
+		$sql = " select codigo from cajas where codigo = ? and codigo != '' AND ".tenantWhere('cajas');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["codigo"]) );
 		$num = $stmt->rowCount();
@@ -2472,7 +2510,8 @@ public function ListarCajas()
 public function ListarCajasAbiertas()
 {
 	self::SetNames();
-	$sql = " select * from cajas INNER JOIN arqueocaja ON cajas.codcaja = arqueocaja.codcaja LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE arqueocaja.statusarqueo = '1'";
+	$this->p = array();
+	$sql = " select * from cajas INNER JOIN arqueocaja ON cajas.codcaja = arqueocaja.codcaja LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE arqueocaja.statusarqueo = '1' AND ".tenantWhere('arqueocaja')." AND ".tenantWhere('cajas');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -2487,7 +2526,7 @@ public function ListarCajasAbiertas()
 public function CajaPorId()
 {
 	self::SetNames();
-	$sql = " select * from cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE cajas.codcaja = ?";
+	$sql = " select * from cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE cajas.codcaja = ? AND ".tenantWhere('cajas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array(base64_decode($_GET["codcaja"])) );
 	$num = $stmt->rowCount();
@@ -2539,7 +2578,7 @@ public function CajerosSessionPorId()
 		// Preferir la caja del arqueo activo usable (cajero/mesero: cualquier arqueo abierto)
 		$arq = $this->ObtenerArqueoAbiertoParaVentas();
 		if ($arq && !empty($arq['codcaja'])) {
-			$sql = "SELECT * FROM cajas WHERE codcaja = ? LIMIT 1";
+			$sql = "SELECT * FROM cajas WHERE codcaja = ? AND ".tenantWhere('cajas')." LIMIT 1";
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute(array($arq['codcaja']));
 			if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -2547,7 +2586,7 @@ public function CajerosSessionPorId()
 				return $this->p;
 			}
 		}
-		$sql = "SELECT * FROM cajas WHERE codigo = ? LIMIT 1";
+		$sql = "SELECT * FROM cajas WHERE codigo = ? AND ".tenantWhere('cajas')." LIMIT 1";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute(array($_SESSION["codigo"]));
 		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -2567,7 +2606,7 @@ public function CajerosSessionPorId()
 				echo "1";
 				exit;
 			}
-			$sql = " select nombrecaja from cajas where codcaja != ? and nombrecaja = ? ";
+			$sql = " select nombrecaja from cajas where codcaja != ? and nombrecaja = ? AND ".tenantWhere('cajas');
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute( array($_POST["codcaja"], $_POST["nombrecaja"]) );
 			$num = $stmt->rowCount();
@@ -2578,7 +2617,7 @@ public function CajerosSessionPorId()
 			}
 			else
 			{
-				$sql = " select codigo from cajas where codcaja != ? and codigo = ? and codigo != 0";
+				$sql = " select codigo from cajas where codcaja != ? and codigo = ? and codigo != 0 AND ".tenantWhere('cajas');
 				$stmt = $this->dbh->prepare($sql);
 				$stmt->execute( array($_POST["codcaja"], $_POST["codigo"]) );
 				$num = $stmt->rowCount();
@@ -2589,7 +2628,7 @@ public function CajerosSessionPorId()
 					." nombrecaja = ?, "
 					." codigo = ? "
 					." where "
-					." codcaja = ?;
+					." codcaja = ? AND ".tenantWhere('cajas').";
 					";
 					$stmt = $this->dbh->prepare($sql);
 					$stmt->bindParam(1, $nrocaja);
@@ -2622,14 +2661,14 @@ public function CajerosSessionPorId()
 		public function EliminarCaja()
 		{
 
-			$sql = " select codcaja from ventas where codcaja = ? ";
+			$sql = " select codcaja from ventas where codcaja = ? AND ".tenantWhere('ventas');
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute( array(base64_decode($_GET["codcaja"])) );
 			$num = $stmt->rowCount();
 			if($num == 0)
 			{
 
-				$sql = " delete from cajas where codcaja = ? ";
+				$sql = " delete from cajas where codcaja = ? AND ".tenantWhere('cajas');
 				$stmt = $this->dbh->prepare($sql);
 				$stmt->bindParam(1,$codcaja);
 				$codcaja = base64_decode($_GET["codcaja"]);
@@ -2743,7 +2782,7 @@ public function RegistrarClientes()
 		exit;
 	}
 
-	$sql = " select cedcliente from clientes where cedcliente = ? ";
+	$sql = " select cedcliente from clientes where cedcliente = ? AND ".tenantWhere('clientes');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["cedcliente"]) );
 	$num = $stmt->rowCount();
@@ -2838,7 +2877,7 @@ public function ClientesPorId()
 			exit;
 		}
 
-		$sql = " select cedcliente from clientes where codcliente != ? and cedcliente = ? ";
+		$sql = " select cedcliente from clientes where codcliente != ? and cedcliente = ? AND ".tenantWhere('clientes');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["codcliente"], $_POST["cedcliente"]) );
 		$num = $stmt->rowCount();
@@ -2966,7 +3005,7 @@ public function RegistrarProveedores()
 		echo "1";
 		exit;
 	}
-	$sql = " select ritproveedor from proveedores where ritproveedor = ? ";
+	$sql = " select ritproveedor from proveedores where ritproveedor = ? AND ".tenantWhere('proveedores');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["ritproveedor"]) );
 	$num = $stmt->rowCount();
@@ -3078,7 +3117,7 @@ public function ProveedoresPorId()
 				exit;
 			}
 
-			$sql = " select * from proveedores where codproveedor != ? and ritproveedor = ? ";
+			$sql = " select * from proveedores where codproveedor != ? and ritproveedor = ? AND ".tenantWhere('proveedores');
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute( array($_POST["codproveedor"], $_POST["ritproveedor"]) );
 			$num = $stmt->rowCount();
@@ -3301,7 +3340,7 @@ public function RegistrarIngredientes()
 		echo "1";
 		exit;
 	}
-	$sql = " select nomingrediente from ingredientes where nomingrediente = ? ";
+	$sql = " select nomingrediente from ingredientes where nomingrediente = ? AND ".tenantWhere('ingredientes');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["nomingrediente"]) );
 	$num = $stmt->rowCount();
@@ -3333,7 +3372,7 @@ public function RegistrarIngredientes()
 		echo $codingrediente = $codigo;
 	}
 
-	$sql = " select codingrediente from ingredientes where codingrediente = ? ";
+	$sql = " select codingrediente from ingredientes where codingrediente = ? AND ".tenantWhere('ingredientes');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["codingrediente"]) );
 		$num = $stmt->rowCount();
@@ -3469,7 +3508,7 @@ public function ActualizarIngredientes()
 		echo "1";
 		exit;
 	}
-	$sql = " select nomingrediente from ingredientes where codingrediente != ? and nomingrediente = ? ";
+	$sql = " select nomingrediente from ingredientes where codingrediente != ? and nomingrediente = ? AND ".tenantWhere('ingredientes');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_POST["codingrediente"], $_POST["nomingrediente"]) );
 	$num = $stmt->rowCount();
@@ -3575,7 +3614,8 @@ public function ListarIngredientesVendidos()
 public function ListarIngredientesStockMinimo()
 {
 	self::SetNames();
-	$sql = " select * from ingredientes WHERE CAST(cantingrediente AS DECIMAL(10,5)) <= CAST(stockminimoingrediente AS DECIMAL(10,5))";
+	$this->p = array();
+	$sql = " select * from ingredientes WHERE CAST(cantingrediente AS DECIMAL(10,5)) <= CAST(stockminimoingrediente AS DECIMAL(10,5)) AND ".tenantWhere('ingredientes');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -3776,6 +3816,7 @@ exit;
 		$sql = "SELECT codigobarra FROM productos
 			WHERE codigobarra REGEXP '^[0-9]{8,15}$'
 			AND CAST(codigobarra AS UNSIGNED) >= ?
+			AND ".tenantWhere('productos')."
 			ORDER BY CAST(codigobarra AS UNSIGNED) DESC
 			LIMIT 1";
 		$stmt = $this->dbh->prepare($sql);
@@ -3793,7 +3834,7 @@ exit;
 			if (strlen($codigo) > 15) {
 				$codigo = substr((string) (time() . mt_rand(100, 999)), 0, 15);
 			}
-			$check = $this->dbh->prepare("SELECT codproducto FROM productos WHERE codigobarra = ? LIMIT 1");
+			$check = $this->dbh->prepare("SELECT codproducto FROM productos WHERE codigobarra = ? AND ".tenantWhere('productos')." LIMIT 1");
 			$check->execute(array($codigo));
 			if ($check->rowCount() === 0) {
 				return $codigo;
@@ -3830,7 +3871,7 @@ exit;
 			exit;
 		}
 
-		$sql = " select codproducto from productos where codproducto = ? ";
+		$sql = " select codproducto from productos where codproducto = ? AND ".tenantWhere('productos');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["codproducto"]) );
 		$num = $stmt->rowCount();
@@ -3868,7 +3909,7 @@ exit;
 			if ($codigobarra === '' || $codigobarra === '0' || $codigobarra === '00000000000') {
 				$codigobarra = $this->GenerarCodigoBarraUnico();
 			} else {
-				$chkBarra = $this->dbh->prepare("SELECT codproducto FROM productos WHERE codigobarra = ? LIMIT 1");
+				$chkBarra = $this->dbh->prepare("SELECT codproducto FROM productos WHERE codigobarra = ? AND ".tenantWhere('productos')." LIMIT 1");
 				$chkBarra->execute(array($codigobarra));
 				if ($chkBarra->rowCount() > 0) {
 					$codigobarra = $this->GenerarCodigoBarraUnico();
@@ -4332,7 +4373,7 @@ public function ListarProductosVendidos()
 	productos.codproducto, productos.producto, productos.codcategoria, productos.precioventa, productos.existencia, productos.stockminimo, categorias.nomcategoria, SUM(detalleventas.cantventa) as cantidad 
 	FROM
 	(productos LEFT OUTER JOIN detalleventas ON productos.codproducto=detalleventas.codproducto) LEFT OUTER JOIN categorias ON 
-	categorias.codcategoria=productos.codcategoria WHERE DATE_FORMAT(detalleventas.fechadetalleventa,'%Y-%m-%d') >= ? AND DATE_FORMAT(detalleventas.fechadetalleventa,'%Y-%m-%d') <= ? AND detalleventas.codproducto is not null GROUP BY productos.codproducto";
+	categorias.codcategoria=productos.codcategoria WHERE DATE_FORMAT(detalleventas.fechadetalleventa,'%Y-%m-%d') >= ? AND DATE_FORMAT(detalleventas.fechadetalleventa,'%Y-%m-%d') <= ? AND detalleventas.codproducto is not null AND ".tenantWhere('productos')." GROUP BY productos.codproducto";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindValue(1, trim(date("Y-m-d",strtotime($_GET['desde']))));
 		$stmt->bindValue(2, trim(date("Y-m-d",strtotime($_GET['hasta']))));
@@ -4363,7 +4404,8 @@ public function ListarProductosVendidos()
 public function ListarProductosStockMinimo()
 {
 	self::SetNames();
-	$sql = " select * from productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria WHERE productos.existencia <= productos.stockminimo";
+	$this->p = array();
+	$sql = " select * from productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria WHERE productos.existencia <= productos.stockminimo AND ".tenantWhere('productos');
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -4554,7 +4596,7 @@ public function RegistrarCompras()
 	################ REALIZAMOS EL PROCESO DE REGISTRO DE INGREDIENTES ###################
 			if($compra[$i]['tipoentrada']=="INGREDIENTE"){
 
-				$sql = " select codingrediente from ingredientes where codingrediente = ? ";
+				$sql = " select codingrediente from ingredientes where codingrediente = ? AND ".tenantWhere('ingredientes');
 				$stmt = $this->dbh->prepare($sql);
 				$stmt->execute( array($compra[$i]['txtCodigo']) );
 				$num = $stmt->rowCount();
@@ -4680,7 +4722,7 @@ public function RegistrarCompras()
 	################ REALIZAMOS EL PROCESO DE REGISTRO DE PRODUCTOS ###################
 			} else {
 
-				$sql = " select codproducto from productos where codproducto = ? ";
+				$sql = " select codproducto from productos where codproducto = ? AND ".tenantWhere('productos');
 				$stmt = $this->dbh->prepare($sql);
 				$stmt->execute( array($compra[$i]['txtCodigo']) );
 				$num = $stmt->rowCount();
@@ -4835,8 +4877,9 @@ public function RegistrarCompras()
 ################################### FUNCION LISTAR COMPRAS PAGADAS ################################# 
 	public function ListarComprasPag()
 	{
-		self::SetNames();		
-		$sql = " SELECT compras.codcompra, compras.subtotalivasic, compras.subtotalivanoc, compras.ivac, compras.totalivac, compras.descuentoc, compras.totaldescuentoc, compras.totalc, compras.statuscompra, compras.fechavencecredito, compras.fechacompra, proveedores.nomproveedor, SUM(detallecompras.cantcompra) AS articulos FROM (compras INNER JOIN proveedores ON compras.codproveedor = proveedores.codproveedor) INNER JOIN usuarios ON compras.codigo = usuarios.codigo LEFT JOIN detallecompras ON detallecompras.codcompra = compras.codcompra WHERE compras.statuscompra = 'PAGADA' GROUP BY compras.codcompra";
+		self::SetNames();
+		$this->p = array();
+		$sql = " SELECT compras.codcompra, compras.subtotalivasic, compras.subtotalivanoc, compras.ivac, compras.totalivac, compras.descuentoc, compras.totaldescuentoc, compras.totalc, compras.statuscompra, compras.fechavencecredito, compras.fechacompra, proveedores.nomproveedor, SUM(detallecompras.cantcompra) AS articulos FROM (compras INNER JOIN proveedores ON compras.codproveedor = proveedores.codproveedor) INNER JOIN usuarios ON compras.codigo = usuarios.codigo LEFT JOIN detallecompras ON detallecompras.codcompra = compras.codcompra WHERE compras.statuscompra = 'PAGADA' AND ".tenantWhere('compras')." GROUP BY compras.codcompra";
        foreach ($this->dbh->query($sql) as $row)
 		{
 			$this->p[] = $row;
@@ -4849,8 +4892,9 @@ public function RegistrarCompras()
 ################################ FUNCION LISTAR COMPRAS PENDIENTES ################################# 
 	public function ListarComprasPend()
 	{
-		self::SetNames();		
-		$sql = " SELECT compras.codcompra, compras.subtotalivasic, compras.subtotalivanoc, compras.ivac, compras.totalivac, compras.descuentoc, compras.totaldescuentoc, compras.totalc, compras.statuscompra, compras.fechavencecredito, compras.fechacompra, proveedores.nomproveedor, SUM(detallecompras.cantcompra) AS articulos FROM (compras INNER JOIN proveedores ON compras.codproveedor = proveedores.codproveedor) INNER JOIN usuarios ON compras.codigo = usuarios.codigo LEFT JOIN detallecompras ON detallecompras.codcompra = compras.codcompra WHERE compras.statuscompra = 'PENDIENTE' GROUP BY compras.codcompra";
+		self::SetNames();
+		$this->p = array();
+		$sql = " SELECT compras.codcompra, compras.subtotalivasic, compras.subtotalivanoc, compras.ivac, compras.totalivac, compras.descuentoc, compras.totaldescuentoc, compras.totalc, compras.statuscompra, compras.fechavencecredito, compras.fechacompra, proveedores.nomproveedor, SUM(detallecompras.cantcompra) AS articulos FROM (compras INNER JOIN proveedores ON compras.codproveedor = proveedores.codproveedor) INNER JOIN usuarios ON compras.codigo = usuarios.codigo LEFT JOIN detallecompras ON detallecompras.codcompra = compras.codcompra WHERE compras.statuscompra = 'PENDIENTE' AND ".tenantWhere('compras')." GROUP BY compras.codcompra";
        foreach ($this->dbh->query($sql) as $row)
 		{
 			$this->p[] = $row;
@@ -5671,7 +5715,7 @@ public function RegistrarArqueoCaja()
 		exit;
 	}
 
-	$sql = "select codigo from cajas where codcaja = ? LIMIT 1";
+	$sql = "select codigo from cajas where codcaja = ? AND ".tenantWhere('cajas')." LIMIT 1";
 	$stmtCaja = $this->dbh->prepare($sql);
 	$stmtCaja->execute(array($_POST["codcaja"]));
 	$row = $stmtCaja->fetch(PDO::FETCH_ASSOC);
@@ -5687,6 +5731,10 @@ public function RegistrarArqueoCaja()
 	}
 	$codigo = $row['codigo'];
 	$id_restaurante = tenantId();
+	if ($id_restaurante <= 0) {
+		echo "1";
+		exit;
+	}
 
 	// Solo un arqueo abierto por restaurante (cualquier caja)
 	$sql = "SELECT a.codarqueo, a.codcaja FROM arqueocaja a
@@ -5748,11 +5796,13 @@ public function RegistrarArqueoCaja()
 public function ListarArqueoCaja()
 {
 	self::SetNames();
-	
+	$this->p = array();
+	$tw = " AND ".tenantWhere('arqueocaja')." AND ".tenantWhere('cajas');
+
 	if($_SESSION["acceso"] == "cajero") {
 
 
-    $sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE cajas.codigo = '".$_SESSION["codigo"]."' ORDER BY arqueocaja.codarqueo DESC";
+    $sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE cajas.codigo = '".$_SESSION["codigo"]."'".$tw." ORDER BY arqueocaja.codarqueo DESC";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -5763,7 +5813,7 @@ public function ListarArqueoCaja()
 
 	} else {
 
-	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja ORDER BY arqueocaja.codarqueo DESC";
+	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE 1=1".$tw." ORDER BY arqueocaja.codarqueo DESC";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
@@ -5779,7 +5829,7 @@ public function ListarArqueoCaja()
 public function ArqueoCajaPorId()
 {
 	self::SetNames();
-	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo where arqueocaja.codarqueo = ? ";
+	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo where arqueocaja.codarqueo = ? AND ".tenantWhere('arqueocaja')." AND ".tenantWhere('cajas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array($_GET["codarqueo"]) );
 	$num = $stmt->rowCount();
@@ -5818,7 +5868,7 @@ public function ActualizarArqueoCaja()
 		$sql = " update arqueocaja set "
 		." montoinicial = ? "
 		." where "
-		." codarqueo = ?;
+		." codarqueo = ? AND ".tenantWhere('arqueocaja').";
 		";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1, $montoinicial);
@@ -5880,7 +5930,7 @@ public function CerrarArqueoCaja()
 	$statusarqueo = "0";
 
 	// Solo bloquear si hay ventas de esta caja aún pendientes de cobro
-	$sql = "SELECT idventa FROM ventas WHERE codcaja = ? AND statuspago = '1' LIMIT 1";
+	$sql = "SELECT idventa FROM ventas WHERE codcaja = ? AND statuspago = '1' AND ".tenantWhere('ventas')." LIMIT 1";
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute(array($codcaja));
 	if ($stmt->rowCount() > 0)
@@ -5895,7 +5945,7 @@ public function CerrarArqueoCaja()
 		comentarios = ?,
 		fechacierre = ?,
 		statusarqueo = ?
-		WHERE codarqueo = ? AND statusarqueo = '1'";
+		WHERE codarqueo = ? AND statusarqueo = '1' AND ".tenantWhere('arqueocaja');
 	$stmt = $this->dbh->prepare($sql);
 	$ok = $stmt->execute(array(
 		$dineroefectivo,
@@ -5925,7 +5975,7 @@ public function EliminarArqueoCaja()
 
 	if($_SESSION['acceso'] == "administrador") {
 
-		$sql = " delete from arqueocaja where codarqueo = ? ";
+		$sql = " delete from arqueocaja where codarqueo = ? AND ".tenantWhere('arqueocaja');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1,$codarqueo);
 		$codarqueo = base64_decode($_GET["codarqueo"]);
@@ -5947,7 +5997,7 @@ public function EliminarArqueoCaja()
 public function VerificaArqueosCaja()
 {
 	self::SetNames();
-	$sql = " select * from arqueocaja where statusarqueo = ? ";
+	$sql = " select * from arqueocaja where statusarqueo = ? AND ".tenantWhere('arqueocaja');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->execute( array('1') );
 	$num = $stmt->rowCount();
@@ -6028,9 +6078,9 @@ if(empty($_POST["tipomovimientocaja"]) or empty($_POST["montomovimientocaja"]) o
 	exit;
 }
 
-$sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE arqueocaja.codcaja = ".$_POST["codcaja"]." AND statusarqueo = '1'";
+$sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE arqueocaja.codcaja = ? AND statusarqueo = '1' AND ".tenantWhere('arqueocaja')." AND ".tenantWhere('cajas');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute();
+	$stmt->execute(array($_POST["codcaja"]));
 	$num = $stmt->rowCount();
 	if($num==0)
 	{
@@ -6040,13 +6090,20 @@ $sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas
 	}  
 	else if($_POST["montomovimientocaja"]>0)
 {
-	
+	$id_restaurante_mov = tenantId();
+	if ($id_restaurante_mov <= 0) {
+		echo "1";
+		exit;
+	}
 
 #################### AQUI AGREGAMOS EL INGRESO A ARQUEO DE CAJA ####################
-	$sql = "select montoinicial, ingresos, egresos from arqueocaja where codcaja = '".$_POST["codcaja"]."'";
-	foreach ($this->dbh->query($sql) as $row)
-	{
-		$this->p[] = $row;
+	$sql = "select montoinicial, ingresos, egresos from arqueocaja where codcaja = ? AND statusarqueo = '1' AND ".tenantWhere('arqueocaja');
+	$stmtArq = $this->dbh->prepare($sql);
+	$stmtArq->execute(array($_POST["codcaja"]));
+	$row = $stmtArq->fetch(PDO::FETCH_ASSOC);
+	if (!$row) {
+		echo "2";
+		exit;
 	}
 	$inicial = $row['montoinicial'];
 	$ingreso = $row['ingresos'];
@@ -6058,8 +6115,7 @@ $sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas
 		$sql = " update arqueocaja set "
 		." ingresos = ? "
 		." where "
-		." codcaja = ? and statusarqueo = '1';
-		";
+		." codcaja = ? and statusarqueo = '1' AND ".tenantWhere('arqueocaja');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1, $ingresos);
 		$stmt->bindParam(2, $codcaja);
@@ -6068,7 +6124,7 @@ $sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas
 		$codcaja = strip_tags($_POST["codcaja"]);
 		$stmt->execute();
 
-		$query = " insert into movimientoscajas values (null, ?, ?, ?, ?, ?, ?, ?); ";
+		$query = " insert into movimientoscajas (tipomovimientocaja, montomovimientocaja, mediopagomovimientocaja, codcaja, descripcionmovimientocaja, fechamovimientocaja, codigo, id_restaurante) values (?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $tipomovimientocaja);
 		$stmt->bindParam(2, $montomovimientocaja);
@@ -6077,6 +6133,7 @@ $sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas
 		$stmt->bindParam(5, $descripcionmovimientocaja);
 		$stmt->bindParam(6, $fechamovimientocaja);
 		$stmt->bindParam(7, $codigo);
+		$stmt->bindParam(8, $id_restaurante_mov);
 
 		$tipomovimientocaja = strip_tags($_POST["tipomovimientocaja"]);
 		$montomovimientocaja = strip_tags($_POST["montomovimientocaja"]);
@@ -6099,8 +6156,7 @@ $sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas
 		$sql = " update arqueocaja set "
 		." egresos = ? "
 		." where "
-		." codcaja = ? and statusarqueo = '1';
-		";
+		." codcaja = ? and statusarqueo = '1' AND ".tenantWhere('arqueocaja');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1, $egresos);
 		$stmt->bindParam(2, $codcaja);
@@ -6109,7 +6165,7 @@ $sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas
 		$codcaja = strip_tags($_POST["codcaja"]);
 		$stmt->execute();
 
-		$query = " insert into movimientoscajas values (null, ?, ?, ?, ?, ?, ?, ?); ";
+		$query = " insert into movimientoscajas (tipomovimientocaja, montomovimientocaja, mediopagomovimientocaja, codcaja, descripcionmovimientocaja, fechamovimientocaja, codigo, id_restaurante) values (?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $tipomovimientocaja);
 		$stmt->bindParam(2, $montomovimientocaja);
@@ -6118,6 +6174,7 @@ $sql = " SELECT * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas
 		$stmt->bindParam(5, $descripcionmovimientocaja);
 		$stmt->bindParam(6, $fechamovimientocaja);
 		$stmt->bindParam(7, $codigo);
+		$stmt->bindParam(8, $id_restaurante_mov);
 
 		$tipomovimientocaja = strip_tags($_POST["tipomovimientocaja"]);
 		$montomovimientocaja = strip_tags($_POST["montomovimientocaja"]);
@@ -6150,11 +6207,13 @@ exit;
 public function ListarMovimientoCajas()
 {
             self::SetNames();
-     
+            $this->p = array();
+            $tw = " AND ".tenantWhere('movimientoscajas');
+
      if($_SESSION["acceso"] == "cajero") {
 
 
-            $sql = "SELECT * FROM movimientoscajas WHERE codigo = '".$_SESSION["codigo"]."'";
+            $sql = "SELECT * FROM movimientoscajas WHERE codigo = '".$_SESSION["codigo"]."'".$tw;
 			foreach ($this->dbh->query($sql) as $row)
 			{
 				$this->p[] = $row;
@@ -6165,7 +6224,7 @@ public function ListarMovimientoCajas()
 
 			} else {
 
-			$sql = "SELECT * FROM movimientoscajas";
+			$sql = "SELECT * FROM movimientoscajas WHERE 1=1".$tw;
 			foreach ($this->dbh->query($sql) as $row)
 			{
 				$this->p[] = $row;
@@ -7544,15 +7603,15 @@ echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo
 
 		// Admin: no activar mesas/delivery con el arqueo de otro usuario
 		if ($_SESSION['acceso'] == 'administrador') {
-			$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE codigo = ? AND statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1";
+			$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE codigo = ? AND statusarqueo = '1' AND ".tenantWhere('arqueocaja')." ORDER BY codarqueo DESC LIMIT 1";
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->execute(array($_SESSION['codigo']));
 			$row = $stmt->fetch(PDO::FETCH_ASSOC);
 			return $row ? $row : null;
 		}
 
-		// Cajero y mesero: un arqueo abierto sirve para todos
-		$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' ORDER BY codarqueo DESC LIMIT 1";
+		// Cajero y mesero: un arqueo abierto sirve para todos (del mismo restaurante)
+		$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' AND ".tenantWhere('arqueocaja')." ORDER BY codarqueo DESC LIMIT 1";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute();
 		$row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -7742,7 +7801,7 @@ public function RegistrarVentas()
 
 	}
 
-	$sqlVentaActiva = "SELECT codventa FROM ventas WHERE codmesa = ? AND statusventa = 'PENDIENTE' LIMIT 1";
+	$sqlVentaActiva = "SELECT codventa FROM ventas WHERE codmesa = ? AND statusventa = 'PENDIENTE' AND ".tenantWhere('ventas')." LIMIT 1";
 	$stmtVentaActiva = $this->dbh->prepare($sqlVentaActiva);
 	$stmtVentaActiva->execute(array($codmesaPrincipal));
 	if ($stmtVentaActiva->rowCount() > 0) {
@@ -8073,7 +8132,7 @@ public function AgregaPedidos()
 		echo "3";
 		exit;
 	}
-	$sqlValVenta = "SELECT codmesa, idventa FROM ventas WHERE codventa = ? AND codmesa = ? AND statusventa = 'PENDIENTE' ORDER BY idventa DESC LIMIT 1";
+	$sqlValVenta = "SELECT codmesa, idventa FROM ventas WHERE codventa = ? AND codmesa = ? AND statusventa = 'PENDIENTE' AND ".tenantWhere('ventas')." ORDER BY idventa DESC LIMIT 1";
 	$stmtValVenta = $this->dbh->prepare($sqlValVenta);
 	$stmtValVenta->execute(array(strip_tags($_POST['codventa']), $codmesaPrincipal));
 	if ($stmtValVenta->rowCount() == 0) {
@@ -8809,7 +8868,7 @@ exit;
 
 	if ($_GET['tipobusqueda'] == "1") {
 
-$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE ventas.codcliente = ? GROUP BY ventas.codventa";
+$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE ventas.codcliente = ? AND ".tenantWhere('ventas')." GROUP BY ventas.codventa";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_GET['codcliente']));
 		$stmt->execute();
@@ -8834,7 +8893,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 
 		} else if ($_GET['tipobusqueda'] == "2") {
 
-$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, cajas.nombrecaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE ventas.codcaja = ? GROUP BY ventas.codventa";
+$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, cajas.nombrecaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE ventas.codcaja = ? AND ".tenantWhere('ventas')." GROUP BY ventas.codventa";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_GET['codcaja']));
 		$stmt->execute();
@@ -8859,7 +8918,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 
 		} else if ($_GET['tipobusqueda'] == "3") {
 
-$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE DATE_FORMAT(ventas.fechaventa,'%Y-%m-%d') = ? GROUP BY ventas.codventa";
+$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE DATE_FORMAT(ventas.fechaventa,'%Y-%m-%d') = ? AND ".tenantWhere('ventas')." GROUP BY ventas.codventa";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array(date("Y-m-d",strtotime($_GET['fecha']))));
 		$stmt->execute();
@@ -8890,7 +8949,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 
 		  	if ($_GET['tipobusqueda'] == "1") {
 
-$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE ventas.codcliente = ? AND ventas.codigo = '".$_SESSION["codigo"]."' GROUP BY ventas.codventa";
+$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE ventas.codcliente = ? AND ventas.codigo = '".$_SESSION["codigo"]."' AND ".tenantWhere('ventas')." GROUP BY ventas.codventa";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_GET['codcliente']));
 		$stmt->execute();
@@ -8915,7 +8974,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 
 		} else if ($_GET['tipobusqueda'] == "2") {
 
-$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, cajas.nombrecaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE ventas.codcaja = ? AND ventas.codigo = '".$_SESSION["codigo"]."' GROUP BY ventas.codventa";
+$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, cajas.nombrecaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE ventas.codcaja = ? AND ventas.codigo = '".$_SESSION["codigo"]."' AND ".tenantWhere('ventas')." GROUP BY ventas.codventa";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_GET['codcaja']));
 		$stmt->execute();
@@ -8940,7 +8999,7 @@ $sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codclien
 
 		} else if ($_GET['tipobusqueda'] == "3") {
 
-$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE DATE_FORMAT(ventas.fechaventa,'%Y-%m-%d') = ? AND ventas.codigo = '".$_SESSION["codigo"]."' GROUP BY ventas.codventa";
+$sql = " SELECT ventas.idventa, ventas.codventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave, ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, cajas.nrocaja, SUM(detalleventas.cantventa) AS articulos FROM (ventas LEFT JOIN clientes ON ventas.codcliente = clientes.codcliente) LEFT JOIN mesas ON ventas.codmesa = mesas.codmesa LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja LEFT JOIN detalleventas ON detalleventas.codventa = ventas.codventa WHERE DATE_FORMAT(ventas.fechaventa,'%Y-%m-%d') = ? AND ventas.codigo = '".$_SESSION["codigo"]."' AND ".tenantWhere('ventas')." GROUP BY ventas.codventa";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array(date("Y-m-d",strtotime($_GET['fecha']))));
 		$stmt->execute();
@@ -10516,7 +10575,7 @@ public function BuscarVentasCajas()
 public function BuscarVentasCajasID() 
 {
 	self::SetNames();
-	$sql ="SELECT ventas.idventa, ventas.totalpago, ventas.formapagove FROM ventas WHERE ventas.codarqueocaja = ?  ";
+	$sql ="SELECT ventas.idventa, ventas.totalpago, ventas.formapagove FROM ventas WHERE ventas.codarqueocaja = ? AND ".tenantWhere('ventas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->bindValue(1, trim($_GET['codarqueo']));
 	$stmt->execute();
@@ -10546,7 +10605,7 @@ public function BuscarVentasCajasID()
 	{
 		self::SetNames();
 		$sql ="SELECT detalleventas.codventa, cajas.nrocaja, ventas.idventa, ventas.codcaja, ventas.codcliente, ventas.subtotalivasive, ventas.subtotalivanove, ventas.ivave, ventas.totalivave,  ventas.descuentove, ventas.totaldescuentove, ventas.totalpago, ventas.totalpago2, ventas.fechavencecredito, ventas.statusventa, ventas.fechaventa, clientes.nomcliente, SUM(detalleventas.cantventa) as articulos FROM (detalleventas LEFT JOIN ventas ON detalleventas.codventa=ventas.codventa) 
-		LEFT JOIN cajas ON cajas.codcaja=ventas.codcaja LEFT JOIN clientes ON ventas.codcliente=clientes.codcliente WHERE DATE_FORMAT(ventas.fechaventa,'%Y-%m-%d') >= ? AND DATE_FORMAT(ventas.fechaventa,'%Y-%m-%d') <= ? GROUP BY detalleventas.codventa";
+		LEFT JOIN cajas ON cajas.codcaja=ventas.codcaja LEFT JOIN clientes ON ventas.codcliente=clientes.codcliente WHERE DATE_FORMAT(ventas.fechaventa,'%Y-%m-%d') >= ? AND DATE_FORMAT(ventas.fechaventa,'%Y-%m-%d') <= ? AND ".tenantWhere('ventas')." GROUP BY detalleventas.codventa";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindValue(1, trim(date("Y-m-d",strtotime($_GET['desde']))));
 		$stmt->bindValue(2, trim(date("Y-m-d",strtotime($_GET['hasta']))));
@@ -10640,7 +10699,7 @@ public function BuscarIngredientesVendidos()
 	public function BuscarArqueosCajasFechas() 
 	{
 		self::SetNames();
-		$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE DATE_FORMAT(arqueocaja.fechaapertura,'%Y-%m-%d') >= ? AND DATE_FORMAT(arqueocaja.fechaapertura,'%Y-%m-%d') <= ? ORDER BY arqueocaja.codarqueo DESC";
+		$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE DATE_FORMAT(arqueocaja.fechaapertura,'%Y-%m-%d') >= ? AND DATE_FORMAT(arqueocaja.fechaapertura,'%Y-%m-%d') <= ? AND ".tenantWhere('arqueocaja')." AND ".tenantWhere('cajas')." ORDER BY arqueocaja.codarqueo DESC";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindValue(1, trim(date("Y-m-d",strtotime($_GET['desde']))));
 		$stmt->bindValue(2, trim(date("Y-m-d",strtotime($_GET['hasta']))));
@@ -10671,7 +10730,7 @@ public function BuscarIngredientesVendidos()
 	public function BuscarMovimientosCajasFechas() 
 	{
 		self::SetNames();
-	$sql = " SELECT * FROM movimientoscajas INNER JOIN cajas ON movimientoscajas.codcaja = cajas.codcaja WHERE movimientoscajas.codcaja = ? AND DATE_FORMAT(movimientoscajas.fechamovimientocaja,'%Y-%m-%d') >= ? AND DATE_FORMAT(movimientoscajas.fechamovimientocaja,'%Y-%m-%d') <= ?";
+	$sql = " SELECT * FROM movimientoscajas INNER JOIN cajas ON movimientoscajas.codcaja = cajas.codcaja WHERE movimientoscajas.codcaja = ? AND DATE_FORMAT(movimientoscajas.fechamovimientocaja,'%Y-%m-%d') >= ? AND DATE_FORMAT(movimientoscajas.fechamovimientocaja,'%Y-%m-%d') <= ? AND ".tenantWhere('movimientoscajas')." AND ".tenantWhere('cajas');
 		$stmt = $this->dbh->prepare($sql);
 	$stmt->bindValue(1, trim($_GET['codcaja']));
 	$stmt->bindValue(2, trim(date("Y-m-d",strtotime($_GET['desde']))));
@@ -10703,7 +10762,7 @@ public function BuscarIngredientesVendidos()
 public function SumarVentas() 
 {
 	self::SetNames();
-	$sql = "select sum(totalivave) as totaliva, sum(totalpago) as totalventa, sum(totalpago2) as totalcompra from ventas WHERE DATE_FORMAT(fechaventa,'%Y-%m-%d') >= ? AND DATE_FORMAT(fechaventa,'%Y-%m-%d') <= ?";
+	$sql = "select sum(totalivave) as totaliva, sum(totalpago) as totalventa, sum(totalpago2) as totalcompra from ventas WHERE DATE_FORMAT(fechaventa,'%Y-%m-%d') >= ? AND DATE_FORMAT(fechaventa,'%Y-%m-%d') <= ? AND ".tenantWhere('ventas');
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->bindValue(1, trim(date("Y-m-d",strtotime($_GET['desde']))));
 	$stmt->bindValue(2, trim(date("Y-m-d",strtotime($_GET['hasta']))));
@@ -11208,11 +11267,12 @@ $sql = "select ingresos from arqueocaja where codcaja = '".$_POST["codcaja"]."' 
 public function ListarCreditos()
 {
 	self::SetNames();
+	$this->p = array();
 	$sql ="SELECT 
 	ventas.idventa, ventas.codventa, ventas.totalpago, ventas.statusventa, abonoscreditos.fechaabono, SUM(abonoscreditos.montoabono) as abonototal, clientes.codcliente, clientes.cedcliente, clientes.nomcliente, clientes.tlfcliente, clientes.emailcliente, cajas.nrocaja
 	FROM
 	(ventas LEFT JOIN abonoscreditos ON ventas.codventa=abonoscreditos.codventa) LEFT JOIN clientes ON 
-	clientes.codcliente=ventas.codcliente LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja WHERE ventas.tipopagove ='CREDITO' GROUP BY ventas.codventa";
+	clientes.codcliente=ventas.codcliente LEFT JOIN cajas ON ventas.codcaja = cajas.codcaja WHERE ventas.tipopagove ='CREDITO' AND ".tenantWhere('ventas')." GROUP BY ventas.codventa";
 
 	foreach ($this->dbh->query($sql) as $row)
 	{
@@ -11461,7 +11521,9 @@ $sql = "select
 		$this->sembrarConfiguracionRestaurante($idNuevo, $nombre, $ruc, $telefono, $email, $direccion);
 		$this->sembrarMediosPagoRestaurante($idNuevo);
 
-		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> RESTAURANTE REGISTRADO (#".$idNuevo.") — Menú: /".$slug."/ — POS: /".$slug."/sistema/</div>";
+		$menuHint = function_exists('app_url') ? app_url('/'.$slug.'/') : '/'.$slug.'/';
+		$posHint = function_exists('app_url') ? app_url('/'.$slug.'/sistema/') : '/'.$slug.'/sistema/';
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> RESTAURANTE REGISTRADO (#".$idNuevo.") — Menú: ".$menuHint." — POS: ".$posHint."</div>";
 		exit;
 	}
 
@@ -11528,7 +11590,9 @@ $sql = "select
 		$cfg = $this->dbh->prepare("UPDATE configuracion SET nomempresa=?, rifempresa=?, tlfempresa=?, correoempresa=?, direcempresa=? WHERE id_restaurante=?");
 		$cfg->execute(array($nombre, $ruc, $telefono, $email, $direccion, $id));
 
-		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> RESTAURANTE ACTUALIZADO — Menú: /".$slug."/ — POS: /".$slug."/sistema/ — Colores aplicados</div>";
+		$menuHint = function_exists('app_url') ? app_url('/'.$slug.'/') : '/'.$slug.'/';
+		$posHint = function_exists('app_url') ? app_url('/'.$slug.'/sistema/') : '/'.$slug.'/sistema/';
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> RESTAURANTE ACTUALIZADO — Menú: ".$menuHint." — POS: ".$posHint." — Colores aplicados</div>";
 		exit;
 	}
 
@@ -11666,8 +11730,8 @@ $sql = "select
 		}
 		$idRest = (int) $_POST['id_restaurante'];
 		$nivel = 'ADMINISTRADOR';
-		$chk = $this->dbh->prepare("SELECT codigo FROM usuarios WHERE usuario = ?");
-		$chk->execute(array(strip_tags($_POST['usuario'])));
+		$chk = $this->dbh->prepare("SELECT codigo FROM usuarios WHERE usuario = ? AND id_restaurante = ?");
+		$chk->execute(array(strip_tags($_POST['usuario']), $idRest));
 		if ($chk->rowCount() > 0) {
 			echo "4";
 			exit;

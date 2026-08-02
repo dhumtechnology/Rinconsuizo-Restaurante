@@ -2,10 +2,10 @@
     Options +FollowSymLinks
     RewriteEngine On
      
-    # Remover trailing slashes.
-    # ejemplo  miweb.com/algo/ redirije a miweb.com/algo
+    # Remover trailing slashes (relativo a esta carpeta; compatible con /resto/sistema/)
+    # ejemplo  .../algo/ redirige a .../algo
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.+)/$ /$1 [R=permanent,QSA]
+    RewriteRule ^(.+)/$ $1 [R=permanent,QSA]
      
     # Redirige a HTML si existe.
     # ejemplo  miweb.com/algo muestra contenido de miweb.com/algo.html

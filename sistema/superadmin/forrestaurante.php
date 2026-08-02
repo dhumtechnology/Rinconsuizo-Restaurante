@@ -77,8 +77,12 @@ sa_header($edit ? 'Editar restaurante' : 'Nuevo restaurante');
     <div class="form-group full">
       <label>Enlaces</label>
       <div class="sa-links-box">
-        <p><a href="/<?php echo $slugShow; ?>/" target="_blank">Menú / tienda → /<?php echo $slugShow; ?>/</a></p>
-        <p><a href="/<?php echo $slugShow; ?>/sistema/" target="_blank">Login POS → /<?php echo $slugShow; ?>/sistema/</a></p>
+        <?php
+          $menuUrl = function_exists('app_url') ? app_url('/'.$slugShow.'/') : '/'.$slugShow.'/';
+          $posUrl = function_exists('app_url') ? app_url('/'.$slugShow.'/sistema/') : '/'.$slugShow.'/sistema/';
+        ?>
+        <p><a href="<?php echo htmlspecialchars($menuUrl); ?>" target="_blank">Menú / tienda → <?php echo htmlspecialchars($menuUrl); ?></a></p>
+        <p><a href="<?php echo htmlspecialchars($posUrl); ?>" target="_blank">Login POS → <?php echo htmlspecialchars($posUrl); ?></a></p>
       </div>
     </div>
     <?php } ?>

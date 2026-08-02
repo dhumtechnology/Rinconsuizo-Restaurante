@@ -7,10 +7,106 @@
 if (!function_exists('tenant_reserved_paths')) {
 	function tenant_reserved_paths()
 	{
-		return array(
+		$paths = array(
 			'sistema', 'db', 'css', 'js', 'img', 'fonts', 'mail', 'docker',
-			'uploads', 'assets', 'vendor', 'node_modules', 'phpmyadmin'
+			'uploads', 'assets', 'vendor', 'node_modules', 'phpmyadmin', 'superadmin'
 		);
+		// Evitar que el nombre de la carpeta de despliegue (ej. resto) sea un slug
+		if (function_exists('app_base_path')) {
+			$seg = trim(app_base_path(), '/');
+			if ($seg !== '' && !in_array($seg, $paths, true)) {
+				$paths[] = $seg;
+			}
+		}
+		return $paths;
+	}
+}
+
+if (!function_exists('app_base_path')) {
+	/**
+	 * Prefijo de la app bajo el docroot.
+	 * Docker (raíz): "" → URLs /slug/sistema/...
+	 * XAMPP en htdocs/resto: "/resto" → URLs /resto/slug/sistema/...
+	 *
+	 * Prioridad: APP_BASE_PATH en entorno/.env → auto-detect por DOCUMENT_ROOT.
+	 */
+	function app_base_path()
+	{
+		static $cached = null;
+		if ($cached !== null) {
+			return $cached;
+		}
+
+		$env = getenv('APP_BASE_PATH');
+		if (($env === false || $env === '') && is_readable(__DIR__ . DIRECTORY_SEPARATOR . '.env')) {
+			$lines = @file(__DIR__ . DIRECTORY_SEPARATOR . '.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			if (is_array($lines)) {
+				foreach ($lines as $line) {
+					$line = trim($line);
+					if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
+						continue;
+					}
+					list($k, $v) = explode('=', $line, 2);
+					if (trim($k) === 'APP_BASE_PATH') {
+						$env = trim($v, " \t\"'");
+						break;
+					}
+				}
+			}
+		}
+
+		if ($env !== false && $env !== null && trim((string) $env) !== '') {
+			$base = '/' . trim(str_replace('\\', '/', (string) $env), '/');
+			$cached = ($base === '/' ? '' : $base);
+			return $cached;
+		}
+
+		$docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
+		$appRoot = realpath(__DIR__);
+		if ($docRoot && $appRoot) {
+			$docRoot = str_replace('\\', '/', $docRoot);
+			$appRoot = str_replace('\\', '/', $appRoot);
+			if (strpos($appRoot, $docRoot) === 0) {
+				$rel = substr($appRoot, strlen($docRoot));
+				$rel = '/' . trim(str_replace('\\', '/', (string) $rel), '/');
+				$cached = ($rel === '/' ? '' : $rel);
+				return $cached;
+			}
+		}
+
+		// Fallback: SCRIPT_NAME (ej. /resto/sistema/index.php)
+		$script = isset($_SERVER['SCRIPT_NAME']) ? str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME']) : '';
+		if ($script !== '' && preg_match('#^(.*?)/sistema(?:/|$)#', $script, $m)) {
+			$cached = rtrim($m[1], '/');
+			return $cached;
+		}
+		if ($script !== '') {
+			$dir = rtrim(str_replace('\\', '/', dirname($script)), '/');
+			// Si el script está en la raíz del proyecto (index.php), dirname es el base
+			if ($dir !== '' && $dir !== '/' && basename($dir) !== 'sistema' && basename($dir) !== 'superadmin') {
+				$cached = $dir;
+				return $cached;
+			}
+		}
+
+		$cached = '';
+		return $cached;
+	}
+}
+
+if (!function_exists('app_url')) {
+	/** URL absoluta de la app (incluye /resto si aplica). */
+	function app_url($path = '')
+	{
+		$base = app_base_path();
+		$path = (string) $path;
+		if ($path === '' || $path === '/') {
+			return $base !== '' ? $base . '/' : '/';
+		}
+		if ($path[0] !== '/') {
+			$path = '/' . $path;
+		}
+		return $base . $path;
 	}
 }
 
@@ -515,7 +611,11 @@ if (!function_exists('web_base_path')) {
 	function web_base_path()
 	{
 		$slug = web_tenant_slug();
-		return $slug !== '' ? '/' . $slug : '';
+		$app = app_base_path();
+		if ($slug !== '') {
+			return $app . '/' . $slug;
+		}
+		return $app;
 	}
 }
 
@@ -547,7 +647,8 @@ if (!function_exists('sistema_url')) {
 		if ($slug === '' && !empty($_SESSION['url_slug'])) {
 			$slug = $_SESSION['url_slug'];
 		}
-		$prefix = $slug !== '' ? '/' . $slug . '/sistema' : '/sistema';
+		$app = app_base_path();
+		$prefix = $slug !== '' ? $app . '/' . $slug . '/sistema' : $app . '/sistema';
 		if ($path === '') {
 			return $prefix . '/';
 		}
@@ -572,7 +673,7 @@ if (!function_exists('restaurant_logo_url')) {
 	 */
 	function restaurant_logo_url($logo = null)
 	{
-		$default = '/sistema/assets/images/logo_white_2.png';
+		$default = app_url('/sistema/assets/images/logo_white_2.png');
 		static $dbCache = array();
 
 		if ($logo === null || $logo === '') {
@@ -626,12 +727,12 @@ if (!function_exists('restaurant_logo_url')) {
 		}
 		$logo = ltrim($logo, '/');
 		if (strpos($logo, 'sistema/') === 0) {
-			return '/' . $logo;
+			return app_url('/' . $logo);
 		}
 		if (strpos($logo, 'uploads/') === 0 || strpos($logo, 'assets/') === 0 || strpos($logo, 'fotos/') === 0) {
-			return '/sistema/' . $logo;
+			return app_url('/sistema/' . $logo);
 		}
-		return '/' . $logo;
+		return app_url('/' . $logo);
 	}
 }
 
@@ -687,9 +788,9 @@ if (!function_exists('restaurant_login_url')) {
 	{
 		$slug = restaurant_slug_normalize($slug !== null ? $slug : '');
 		if ($slug === '') {
-			return '/sistema/superadmin/login.php';
+			return app_url('/sistema/superadmin/login.php');
 		}
-		return '/' . $slug . '/sistema/';
+		return app_url('/' . $slug . '/sistema/');
 	}
 }
 
@@ -715,13 +816,19 @@ if (!function_exists('restaurant_resolve_logout_slug')) {
 		if (!empty($_COOKIE['rs_slug'])) {
 			$candidates[] = $_COOKIE['rs_slug'];
 		}
-		// Desde la URL actual: /{slug}/sistema/...
-		$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+		// Desde la URL actual: [ /resto ] /{slug}/sistema/...
+		$uri = isset($_SERVER['REQUEST_URI']) ? (string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '';
+		$app = app_base_path();
+		if ($app !== '' && strpos($uri, $app . '/') === 0) {
+			$uri = substr($uri, strlen($app));
+		} elseif ($app !== '' && $uri === $app) {
+			$uri = '/';
+		}
 		if (preg_match('#^/([a-z0-9\-]+)/sistema(?:/|$)#i', $uri, $m)) {
 			$candidates[] = $m[1];
 		}
 		$ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
-		if ($ref !== '' && preg_match('#/([a-z0-9\-]+)/sistema(?:/|$)#i', $ref, $m2)) {
+		if ($ref !== '' && preg_match('#(?:' . preg_quote($app, '#') . ')?/([a-z0-9\-]+)/sistema(?:/|$)#i', $ref, $m2)) {
 			$candidates[] = $m2[1];
 		}
 
