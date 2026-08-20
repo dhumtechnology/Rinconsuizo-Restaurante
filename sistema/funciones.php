@@ -651,7 +651,7 @@ if (isset($_GET['muestracodigoproducto'])) {
   
 $tra = new Login();
   ?>
-<input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese C?digo de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo $reg = $tra->CodigoProducto(); ?>" <?php } ?> required="" aria-required="true">
+<input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese C?digo de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo htmlspecialchars($tra->CodigoProducto(), ENT_QUOTES, 'UTF-8'); ?>" <?php } ?> required="" aria-required="true">
 
 <?php 
   }

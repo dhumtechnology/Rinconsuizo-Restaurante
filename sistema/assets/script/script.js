@@ -3644,7 +3644,7 @@ $('document').ready(function()
 				$.ajax({
 				
 				type : 'POST',
-				url  : 'forcierrearqueo.php?codarqueo='+codarqueo,
+				url  : (typeof rsSistemaDirUrl === 'function' ? rsSistemaDirUrl('forcierrearqueo') : 'forcierrearqueo') + '?codarqueo=' + encodeURIComponent(codarqueo),
 				data : data,
 				beforeSend: function()
 				{	
@@ -3683,7 +3683,7 @@ $('document').ready(function()
 						$("#error").html('<center> '+data+' </center>');
 						$('#btn-update').attr("disabled", true);
 						$("#btn-update").html('<span class="fa fa-edit"></span> Cerrar Caja');
-					    setTimeout("location.href='arqueoscajas'", 5000);
+					    setTimeout(function(){ window.location.href = (typeof rsSistemaDirUrl === 'function' ? rsSistemaDirUrl('arqueoscajas') : 'arqueoscajas'); }, 5000);
 				
 									});
 											
@@ -4801,7 +4801,12 @@ $('document').ready(function()
 	    $("#carrito tbody").html("");
 		var $linkComanda = $('#error a[href*="reportepdf"]').first();
 		if ($linkComanda.length) {
-		    window.open($linkComanda.attr('href'), '_blank');
+		    var comandaUrl = $linkComanda.attr('href');
+		    if (window.RSPrintDialog && typeof window.RSPrintDialog.openFromUrl === 'function') {
+		        window.RSPrintDialog.openFromUrl(comandaUrl, { title: 'Imprimir Comanda' });
+		    } else {
+		        window.open(comandaUrl, '_blank');
+		    }
 		}
 		var opSeq = ++window.mesaOperacionSeq;
 		var mesaRefAtConfirm = (typeof normalizarCodmesaRef === 'function')

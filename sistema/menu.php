@@ -242,6 +242,7 @@ if(isset($_SESSION['acceso'])) {
                 <?php } ?>
 
 <link rel="stylesheet" href="assets/css/teclado-tactil.css?v=dead3">
+<link rel="stylesheet" href="assets/css/print-dialog.css?v=4">
 <style>
   #teclado-tactil { display: none !important; visibility: hidden !important; pointer-events: none !important; height: 0 !important; overflow: hidden !important; }
 </style>
@@ -256,6 +257,7 @@ if(isset($_SESSION['acceso'])) {
   setInterval(wipeLegacyDom, 500);
 })();
 </script>
+<script src="assets/js/print-dialog.js?v=5"></script>
 
 </body>
 </html>

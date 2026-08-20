@@ -6,7 +6,7 @@ require('fpdf.php');
  * Convierte texto UTF-8 a ISO-8859-1 para fuentes estándar de FPDF (courier/arial).
  * Evita tildes rotas en comanda, boleta y demás tickets.
  */
-if (!function_exists('pdf_text')) {
+	if (!function_exists('pdf_text')) {
 	function pdf_text($s)
 	{
 		if ($s === null || $s === '') {
@@ -15,11 +15,19 @@ if (!function_exists('pdf_text')) {
 		$s = (string) $s;
 		// Quitar caracteres de reemplazo ya corruptos en el archivo fuente
 		$s = str_replace("\xEF\xBF\xBD", '', $s);
+
+		// Texto guardado en Latin1/Windows-1252 (archivos PHP antiguos)
 		if (function_exists('mb_check_encoding') && !mb_check_encoding($s, 'UTF-8')) {
-			return $s;
+			if (function_exists('mb_convert_encoding')) {
+				$fixed = @mb_convert_encoding($s, 'UTF-8', 'Windows-1252');
+				if ($fixed !== false && $fixed !== '') {
+					$s = $fixed;
+				}
+			}
 		}
+
 		if (function_exists('iconv')) {
-			$out = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $s);
+			$out = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT//IGNORE', $s);
 			if ($out !== false && $out !== '') {
 				return $out;
 			}
@@ -2047,7 +2055,7 @@ $this->CellFitSpace(40,6,utf8_decode($simbolo.number_format($reg[$i]['preciom']*
 	//Linea de membrete Nro 1
 	$this->SetFont('courier','B',10);
     $this->SetXY(44, 250);
-    $this->Cell(20, 5, 'INFORMACI�N ADICIONAL', 0 , 0);
+    $this->Cell(20, 5, pdf_text('INFORMACIÓN ADICIONAL'), 0 , 0);
 	
 	//Linea de membrete Nro 2
 	$this->SetFont('courier','B',8);
@@ -2861,13 +2869,13 @@ $this->Ln(5);
 $this->SetFont('Arial','B',6.5);
 $this->SetFillColor(2,157,116);
 $this->SetXY(4, 11);
-$this->CellFitSpace(50,3,utf8_decode($con[0]['direcempresa']),0,1,'C');
+$this->CellFitSpace(50,3,pdf_text($con[0]['direcempresa']),0,1,'C');
 $this->SetXY(4, 13.5);
-$this->CellFitSpace(50,3,"Nit:".utf8_decode($con[0]['rifempresa']),0,1,'C');
+$this->CellFitSpace(50,3,pdf_text("Nit:".$con[0]['rifempresa']),0,1,'C');
 $this->SetXY(4, 16.5);
-$this->CellFitSpace(50,3,utf8_decode($con[0]['nomempresa']),0,1,'C');
+$this->CellFitSpace(50,3,pdf_text($con[0]['nomempresa']),0,1,'C');
 $this->SetXY(4, 19.5);
-$this->CellFitSpace(50,3,"N� TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
+$this->CellFitSpace(50,3,pdf_text("N° TLF:".$con[0]['tlfempresa']),0,1,'C');
 
 $this->SetFont('Arial','B',8);
 $this->SetX(2);
@@ -2881,19 +2889,19 @@ $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es ne
 if($ve[0]['delivery']!="1"){
 
 $this->SetXY(4, 25);
-$this->Cell(4, 5, "SALA: ".utf8_decode($ve[0]['nombresala']), 0 , 0);
+$this->Cell(4, 5, pdf_text("SALA: ".$ve[0]['nombresala']), 0 , 0);
 $this->SetXY(4, 28);
-$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "N� DE MESA: ";
-$this->Cell(4, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
+$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "N° DE MESA: ";
+$this->Cell(4, 5, pdf_text($etiquetaMesa.$ve[0]['nombremesa']), 0 , 0);
 $this->SetXY(4, 31);
-$this->Cell(4, 5, "MESERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
+$this->Cell(4, 5, pdf_text("MESERO: ".$ve[0]['nombres']), 0 , 0);
 $this->SetXY(4, 34);
 $this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
 
 } else {
 
 $this->SetXY(4, 25);
-$this->Cell(4, 5, "CAJERO: ".utf8_decode($ve[0]['nombres']), 0 , 0);
+$this->Cell(4, 5, pdf_text("CAJERO: ".$ve[0]['nombres']), 0 , 0);
 $this->SetXY(4, 28);
 $this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
   
@@ -2914,9 +2922,9 @@ $this->Cell(4, 3, "CLIENTE: CONSUMIDOR FINAL",0,0);
 
 $this->SetFont('Arial','B',6.5);
 $this->SetX(4);
-$this->Cell(4, 3,"C.I/RUC DE CLIENTE: ".utf8_decode($ve[0]['cedcliente']),0,1);
+$this->Cell(4, 3,pdf_text("C.I/RUC DE CLIENTE: ".$ve[0]['cedcliente']),0,1);
 $this->SetX(4);
-$this->Cell(4, 3, "NOMBRE DE CLIENTE: ".utf8_decode(getSubString($ve[0]['nomcliente'], 32)),0,0);
+$this->Cell(4, 3, pdf_text("NOMBRE DE CLIENTE: ".getSubString($ve[0]['nomcliente'], 32)),0,0);
 
 }
 
@@ -2932,7 +2940,7 @@ $this->SetFont('Arial','B',8);
 $this->SetTextColor(3, 3, 3); // Establece el color del texto (en este caso es Negro)
 $this->SetFillColor(229, 229, 229); // establece el color del fondo de la celda (en este caso es GRIS)
 $this->Cell(6,3,'Cant',0,0,'C');
-$this->Cell(24,3,'Descripci�n',0,0,'C');
+$this->Cell(24,3,pdf_text('Descripción'),0,0,'C');
 $this->Cell(8,3,'P.',0,0,'C');
 $this->Cell(8,3,'Importe',0,1,'C');
     
@@ -2954,10 +2962,10 @@ $this->SetDrawColor(3,3,3);
 $this->SetLineWidth(.2);
 $this->SetFont('Arial','B',5);  
 $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
-$this->CellFitSpace(6,3,utf8_decode($reg[$i]['cantventa']),0,0,'C');
-$this->CellFitSpace(24,3,utf8_decode(getSubString($reg[$i]["producto"], 22)),0,0,'C');
-$this->CellFitSpace(8,3,utf8_decode($simbolo.number_format($reg[$i]["precioventa"], 2, '.', ',')),0,0,'R');
-$this->CellFitSpace(8,3,utf8_decode($simbolo.number_format($reg[$i]["precioventa"]*$reg[$i]["cantventa"], 2, '.', ',')),0,0,'R');
+$this->CellFitSpace(6,3,pdf_text($reg[$i]['cantventa']),0,0,'C');
+$this->CellFitSpace(24,3,pdf_text(getSubString($reg[$i]["producto"], 22)),0,0,'C');
+$this->CellFitSpace(8,3,pdf_text($simbolo.number_format($reg[$i]["precioventa"], 2, '.', ',')),0,0,'R');
+$this->CellFitSpace(8,3,pdf_text($simbolo.number_format($reg[$i]["precioventa"]*$reg[$i]["cantventa"], 2, '.', ',')),0,0,'R');
 $this->Ln();  
  }
 
@@ -2971,19 +2979,19 @@ $this->SetX(1);
 $this->SetFont('Arial','B',8);
 $this->CellFitSpace(30,3,"SUBTOTAL IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivasive"], 2, '.', ',')),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($simbolo.number_format($ve[0]["subtotalivasive"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(1);
 $this->SetFont('Arial','B',8);
 $this->CellFitSpace(30,3,"SUBTOTAL IGV 0%:",0,0,'R');
 $this->SetFont('Arial','B',8);
-$this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"], 2, '.', ',')),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($simbolo.number_format($ve[0]["subtotalivanove"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(1);
 $this->SetFont('Arial','B',8);
 $this->CellFitSpace(30,3,"IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','B',8);
-$this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["totalivave"], 2, '.', ',')),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($simbolo.number_format($ve[0]["totalivave"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(1);
 $this->SetFont('Arial','B',8);
@@ -3036,13 +3044,13 @@ $this->Ln(5);
 $this->SetFont('courier','B',6.5);
 $this->SetFillColor(2,157,116);
 $this->SetXY(4, 11);
-$this->CellFitSpace(50,3,utf8_decode($con[0]['direcempresa']),0,1,'C');
+$this->CellFitSpace(50,3,pdf_text($con[0]['direcempresa']),0,1,'C');
 $this->SetXY(4, 13.5);
-$this->CellFitSpace(50,3,"RUC:".utf8_decode($con[0]['rifempresa']),0,1,'C');
+$this->CellFitSpace(50,3,pdf_text("RUC:".$con[0]['rifempresa']),0,1,'C');
 $this->SetXY(4, 16.5);
-$this->CellFitSpace(50,3,utf8_decode($con[0]['nomempresa']),0,1,'C');
+$this->CellFitSpace(50,3,pdf_text($con[0]['nomempresa']),0,1,'C');
 $this->SetXY(4, 19.5);
-$this->CellFitSpace(50,3,"N� TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
+$this->CellFitSpace(50,3,pdf_text("N° TLF:".$con[0]['tlfempresa']),0,1,'C');
 
 $this->SetFont('courier','B',8);
 $this->SetX(2);
@@ -3053,18 +3061,18 @@ $this->SetFont('courier','B',6.5);
 $this->SetFillColor(2,157,116);
 $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
 $this->SetXY(4, 25);
-$this->Cell(4, 5, "N� DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
+$this->Cell(4, 5, pdf_text("N° DE VENTA: ".$ve[0]['codventa']), 0 , 0);
 $this->SetXY(4, 28);
 $this->Cell(4, 5, "FECHA DE VENTA: ".date("d-m-Y h:i:s",strtotime($ve[0]['fechaventa'])), 0 , 0);
 $this->SetXY(4, 31);
 $this->Cell(4, 5, "FECHA: ".date("d-m-Y h:i:s A ",time()), 0 , 0);
 if (isset($ve[0]['delivery']) && $ve[0]['delivery'] != "1" && !empty($ve[0]['nombremesa'])) {
 	$this->SetXY(4, 34);
-	$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "N� DE MESA: ";
-	$this->Cell(4, 5, $etiquetaMesa.utf8_decode($ve[0]['nombremesa']), 0 , 0);
+$etiquetaMesa = (strpos($ve[0]['nombremesa'], '+') !== false) ? "MESAS: " : "N° DE MESA: ";
+$this->Cell(4, 5, pdf_text($etiquetaMesa.$ve[0]['nombremesa']), 0 , 0);
 	if (!empty($ve[0]['nombresala'])) {
 		$this->SetXY(4, 37);
-		$this->Cell(4, 5, "SALA: ".utf8_decode($ve[0]['nombresala']), 0 , 0);
+		$this->Cell(4, 5, pdf_text("SALA: ".$ve[0]['nombresala']), 0 , 0);
 	}
 }
 
@@ -3083,9 +3091,9 @@ $this->Cell(4, 3, "CLIENTE: CONSUMIDOR FINAL",0,0);
 
 $this->SetFont('courier','B',6.5);
 $this->SetX(4);
-$this->Cell(4, 3,"C.I/RUC DE CLIENTE: ".utf8_decode($ve[0]['cedcliente']),0,1);
+$this->Cell(4, 3,pdf_text("C.I/RUC DE CLIENTE: ".$ve[0]['cedcliente']),0,1);
 $this->SetX(4);
-$this->Cell(4, 3, "NOMBRE DE CLIENTE: ".utf8_decode(getSubString($ve[0]['nomcliente'], 32)),0,0);
+$this->Cell(4, 3, pdf_text("NOMBRE DE CLIENTE: ".getSubString($ve[0]['nomcliente'], 32)),0,0);
 
 }
 
@@ -3101,7 +3109,7 @@ $this->SetFont('courier','B',8);
 $this->SetTextColor(3, 3, 3); // Establece el color del texto (en este caso es Negro)
 $this->SetFillColor(229, 229, 229); // establece el color del fondo de la celda (en este caso es GRIS)
 $this->Cell(6,3,'Cant',0,0,'C');
-$this->Cell(24,3,'Descripci�n',0,0,'C');
+$this->Cell(24,3,pdf_text('Descripción'),0,0,'C');
 $this->Cell(8,3,'P.',0,0,'C');
 $this->Cell(8,3,'Importe',0,1,'C');
 
@@ -3123,10 +3131,10 @@ $this->SetDrawColor(3,3,3);
 $this->SetLineWidth(.2);
 $this->SetFont('Arial','B',5);  
 $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
-$this->CellFitSpace(6,3,utf8_decode($reg[$i]['cantventa']),0,0,'C');
-$this->CellFitSpace(24,3,utf8_decode(getSubString($reg[$i]["producto"], 22)),0,0,'C');
-$this->CellFitSpace(8,3,utf8_decode($simbolo.number_format($reg[$i]["precioventa"], 2, '.', ',')),0,0,'C');
-$this->CellFitSpace(8,3,utf8_decode($simbolo.number_format($reg[$i]["precioventa"]*$reg[$i]["cantventa"], 2, '.', ',')),0,0,'C');
+$this->CellFitSpace(6,3,pdf_text($reg[$i]['cantventa']),0,0,'C');
+$this->CellFitSpace(24,3,pdf_text(getSubString($reg[$i]["producto"], 22)),0,0,'C');
+$this->CellFitSpace(8,3,pdf_text($simbolo.number_format($reg[$i]["precioventa"], 2, '.', ',')),0,0,'C');
+$this->CellFitSpace(8,3,pdf_text($simbolo.number_format($reg[$i]["precioventa"]*$reg[$i]["cantventa"], 2, '.', ',')),0,0,'C');
 $this->Ln();  
  }
 
@@ -3140,31 +3148,31 @@ $this->SetX(4);
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(30,3,"SUBTOTAL IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
-$this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"]-($ve[0]["subtotalivanove"]*18)/100, 2, '.', ',')),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($simbolo.number_format($ve[0]["subtotalivanove"]-($ve[0]["subtotalivanove"]*18)/100, 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(30,3,"SUBTOTAL IGV 0%:",0,0,'R');
 $this->SetFont('courier','',8);
-$this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["subtotalivanove"], 2, '.', ',')),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($simbolo.number_format($ve[0]["subtotalivanove"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(30,3,"IGV ".$ve[0]["ivave"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
-$this->CellFitSpace(15,3,utf8_decode($simbolo.number_format(($ve[0]["subtotalivanove"]*18)/100, 2, '.', ',')),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($simbolo.number_format(($ve[0]["subtotalivanove"]*18)/100, 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(30,3,"DESCUENTO ".$ve[0]["descuentove"].'%:',0,0,'R');
 $this->SetFont('courier','',8);
-$this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["totaldescuentove"], 2, '.', ',')),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($simbolo.number_format($ve[0]["totaldescuentove"], 2, '.', ',')),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(30,3,"TOTAL A PAGAR:",0,0,'R');
 $this->SetFont('courier','',8);
-$this->CellFitSpace(15,3,utf8_decode($simbolo.number_format($ve[0]["totalpago"], 2, '.', ',')),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($simbolo.number_format($ve[0]["totalpago"], 2, '.', ',')),0,1,'R');
 $this->Ln(1);
 
 $this->SetFont('courier','B',8);
@@ -3179,18 +3187,18 @@ $this->SetX(4);
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(30,3,"TIPO PAGO:",0,0,'R');
 $this->SetFont('courier','',8);
-$this->CellFitSpace(15,3,utf8_decode($ve[0]["tipopagove"]),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($ve[0]["tipopagove"]),0,1,'R');
 
 $this->SetX(4);
 $this->SetFont('courier','B',8);
 $this->CellFitSpace(30,3,"STATUS PAGO:",0,0,'R');
 $this->SetFont('courier','',8);
 if($ve[0]['fechavencecredito']== '0000-00-00') { 
-$this->CellFitSpace(15,3,utf8_decode($ve[0]["statusventa"]),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($ve[0]["statusventa"]),0,1,'R');
 } elseif($ve[0]['fechavencecredito'] >= date("Y-m-d")) { 
-$this->CellFitSpace(15,3,utf8_decode($ve[0]["statusventa"]),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text($ve[0]["statusventa"]),0,1,'R');
 } elseif($ve[0]['fechavencecredito'] < date("Y-m-d")) { 
-$this->CellFitSpace(15,3,utf8_decode("VENCIDA"),0,1,'R');
+$this->CellFitSpace(15,3,pdf_text("VENCIDA"),0,1,'R');
 } 
 
 $this->SetX(4);
@@ -3271,12 +3279,12 @@ $this->Ln(1);
 
 $this->SetFont('courier','B',8);
 $this->SetX(2);
-$this->Cell(50,3,'-------- INFORMACI�N ADICIONAL --------',0,1,'C');
+$this->Cell(50,3,pdf_text('-------- INFORMACIÓN ADICIONAL --------'),0,1,'C');
 $this->Ln(1);
 
 $this->SetFont('courier','B',7);
 $this->SetX(4);
-$this->Cell(50, 3,"CAJERO: ".utf8_decode($ve[0]['nombres']),0,1,'L');
+$this->Cell(50, 3,pdf_text("CAJERO: ".$ve[0]['nombres']),0,1,'L');
 $this->Ln(5);
 
 $this->SetFont('courier','B',8);
@@ -4842,7 +4850,7 @@ $ve = $ve->VentasPorId();
 $this->SetFont('courier','B',14);
 $this->SetFillColor(2,157,116);
 $this->SetXY(4, 6);
-$this->Cell(66, 5, "TICKET DE CR�DITO", 0 , 0, 'C');
+$this->Cell(66, 5, pdf_text("TICKET DE CRÉDITO"), 0 , 0, 'C');
 $this->Ln(5);
 
 $this->SetFont('courier','B',6.5);
@@ -4854,7 +4862,7 @@ $this->CellFitSpace(65,3,"Nit:".utf8_decode($con[0]['rifempresa']),0,1,'C');
 $this->SetXY(4, 16.5);
 $this->CellFitSpace(65,3,utf8_decode($con[0]['nomempresa']),0,1,'C');
 $this->SetXY(4, 19.5);
-$this->CellFitSpace(65,3,"N� DE TLF:".utf8_decode($con[0]['tlfempresa']),0,1,'C');
+$this->CellFitSpace(65,3,pdf_text("N° DE TLF:".$con[0]['tlfempresa']),0,1,'C');
 
 $this->SetFont('courier','B',8);
 $this->SetX(2);
@@ -4865,11 +4873,11 @@ $this->SetFont('courier','B',6.5);
 $this->SetFillColor(2,157,116);
 $this->SetTextColor(3,3,3);  // Establece el color del texto (en este caso es negro)
 $this->SetXY(3, 25);
-$this->Cell(3, 5, "N� DE VENTA: ".utf8_decode($ve[0]['codventa']), 0 , 0);
+$this->Cell(3, 5, pdf_text("N° DE VENTA: ".$ve[0]['codventa']), 0 , 0);
 $this->SetXY(3, 28);
 $this->Cell(3, 5, "FECHA DE VENTA: ".utf8_decode($ve[0]['fechaventa']), 0 , 0);
 $this->SetXY(3, 31);
-$this->Cell(3, 5, "FECHA DE IMPRESI�N: ".date("Y-m-d h:i:s A ",time()), 0 , 0);
+$this->Cell(3, 5, pdf_text("FECHA DE IMPRESIÓN: ").date("Y-m-d h:i:s A ",time()), 0 , 0);
 
 $this->Ln(5);
 $this->SetFont('courier','B',8);
@@ -5073,12 +5081,12 @@ $this->Ln(1);
 
   $this->SetFont('courier','B',8);
   $this->SetX(2);
-  $this->Cell(70,3,'-------- INFORMACI�N ADICIONAL --------',0,1,'C');
+  $this->Cell(70,3,pdf_text('-------- INFORMACIÓN ADICIONAL --------'),0,1,'C');
   $this->Ln(1);
 
   $this->SetFont('courier','B',7);
   $this->SetX(4);
-  $this->Cell(60, 3,"CAJERO: ".utf8_decode($ve[0]['nombres']),0,1,'C');
+  $this->Cell(60, 3,pdf_text("CAJERO: ".$ve[0]['nombres']),0,1,'C');
   $this->Ln(5);
 
   $this->SetFont('courier','B',8);

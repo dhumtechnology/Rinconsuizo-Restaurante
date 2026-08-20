@@ -178,11 +178,24 @@ function pagar(url)
 	}
 }
 
+function rsSistemaDirUrl(page)
+{
+	var path = window.location.pathname.replace(/\\/g, '/');
+	if (path.indexOf('/') === -1) {
+		return page;
+	}
+	return path.substring(0, path.lastIndexOf('/') + 1) + page;
+}
+
 function cerrarcaja(url)
 {
 	if(confirm('ESTA SEGURO DE REALIZAR EL CIERRE DE ESTA CAJA ?'))
 	{
-		window.location=url;
+		if (/^https?:\/\//i.test(url) || url.charAt(0) === '/') {
+			window.location = url;
+		} else {
+			window.location = rsSistemaDirUrl(url);
+		}
 	}
 }
 

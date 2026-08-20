@@ -274,7 +274,7 @@ exit;
                  <div id="nroproducto"><input type="hidden" name="codproceso" id="codproceso" <?php if (isset($reg[0]['codalmacen'])) { ?> value="" <?php } else { ?>  value="<?php echo GenerateRandomString(); ?>" <?php } ?>></div>
 <input type="hidden" name="codalmacen" id="codalmacen" <?php if (isset($reg[0]['codalmacen'])) { ?> value="<?php echo $reg[0]['codalmacen']; ?>"<?php } ?>>
 
-<div id="codigoproducto"><input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Código de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo $reg = $tra->CodigoProducto(); ?>" <?php } ?> required="" aria-required="true"></div>
+<div id="codigoproducto"><input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Código de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo htmlspecialchars($tra->CodigoProducto(), ENT_QUOTES, 'UTF-8'); ?>" <?php } ?> required="" aria-required="true"></div>
                               </div> 
                         </div>
 															

@@ -1,0 +1,219 @@
+.rs-print-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.rs-print-modal.is-open {
+  display: flex;
+}
+
+.rs-print-card {
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.35);
+}
+
+.rs-print-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  color: #fff;
+  background: linear-gradient(135deg, #334155, #0f172a);
+}
+
+.rs-print-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.rs-print-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.88;
+}
+
+.rs-print-close {
+  border: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.rs-print-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.rs-print-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.rs-print-toolbar .btn {
+  min-width: 130px;
+}
+
+.rs-print-toolbar .rs-print-badge {
+  margin: 0 0 0 auto;
+}
+
+.rs-print-paper-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.rs-print-paper-select {
+  width: auto;
+  min-width: 150px;
+  height: 34px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.rs-print-toolbar .rs-print-status {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  width: 100%;
+}
+
+.rs-print-preview {
+  position: relative;
+  background: #e2e8f0;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.rs-print-canvas-wrap {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 18px 16px;
+  margin: 0 auto;
+}
+
+/* Simula ancho del ticket en la vista previa */
+.rs-print-canvas-wrap.rs-paper-58 {
+  max-width: 240px;
+}
+
+.rs-print-canvas-wrap.rs-paper-80 {
+  max-width: 340px;
+}
+
+.rs-print-canvas-wrap.rs-paper-a4 {
+  max-width: 820px;
+}
+
+.rs-print-canvas-wrap .rs-print-canvas {
+  width: 100%;
+  height: auto;
+}
+
+.rs-print-canvas {
+  background: #fff;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.18);
+}
+
+.rs-print-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 72vh;
+  border: 0;
+  background: #fff;
+}
+
+.rs-print-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: #334155;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.rs-print-loading.is-hidden {
+  display: none;
+}
+
+.rs-print-spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid #cbd5e1;
+  border-top-color: #2563eb;
+  animation: rs-print-spin 0.9s linear infinite;
+}
+
+.rs-print-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  background: #dbeafe;
+}
+
+@keyframes rs-print-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .rs-print-card {
+    width: 100%;
+    max-height: 95vh;
+    border-radius: 10px;
+  }
+
+  .rs-print-toolbar {
+    gap: 8px;
+  }
+
+  .rs-print-toolbar .btn {
+    min-width: 0;
+    flex: 1;
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .rs-print-frame {
+    min-height: 55vh;
+  }
+}

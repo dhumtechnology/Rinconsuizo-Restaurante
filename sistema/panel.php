@@ -87,7 +87,7 @@
         <script type="text/javascript" src="assets/script/mesas-union.js"></script>
 <?php } ?>
         <script type="text/javascript" src="assets/script/validation.min.js"></script>
-        <script type="text/javascript" src="assets/script/script.js?v=pagomixto1"></script>
+        <script type="text/javascript" src="assets/script/script.js?v=comanda-preview1"></script>
         <!-- Teclado observaciones: solo panel / crear orden -->
         <link rel="stylesheet" href="assets/css/teclado-obs-pedido.css?v=3">
         <script src="assets/script/teclado-obs-pedido.js?v=3"></script>

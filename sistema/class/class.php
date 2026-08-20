@@ -111,8 +111,8 @@ class Login extends Db
 		}
 	}
 
-	if(!isset($_SESSION['usuario'])){// Esta logeado?.
-		header("Location: " . $logoutUrl); 
+	if (!isset($_SESSION['acceso']) || !isset($_SESSION['usuario'])) {
+		header("Location: " . $logoutUrl);
 		exit;
 	}
 
@@ -3810,29 +3810,35 @@ exit;
 ################################### FUNCION CARGAR PROVEEDORES ##################################
 
 ############################### FUNCION PARA CODIGO PRODUCTO #################################
-	public function CodigoProducto()
+	/**
+	 * Genera un codigo de producto alfanumerico unico (prefijo P + 8 caracteres).
+	 */
+	public function GenerarCodigoProductoUnico()
 	{
 		self::SetNames();
+		$chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-		$sql = " select codproducto from productos order by codproducto desc limit 1";
-		foreach ($this->dbh->query($sql) as $row){
+		for ($attempt = 0; $attempt < 100; $attempt++) {
+			$codigo = 'P';
+			for ($i = 0; $i < 8; $i++) {
+				$codigo .= $chars[random_int(0, strlen($chars) - 1)];
+			}
 
-			$codproducto["codproducto"]=$row["codproducto"];
-
+			$check = $this->dbh->prepare(
+				"SELECT codproducto FROM productos WHERE codproducto = ? AND ".tenantWhere('productos')." LIMIT 1"
+			);
+			$check->execute(array($codigo));
+			if ($check->rowCount() === 0) {
+				return $codigo;
+			}
 		}
-		if(empty($codproducto["codproducto"]))
-		{
-			echo $nro = '00001';
 
-		} else
-		{
-			$resto = substr($codproducto["codproducto"], 0, -0);
-			$coun = strlen($resto);
-			$num     = substr($codproducto["codproducto"] , $coun);
-			$dig     = $num + 1;
-			$codigo = str_pad($dig, 5, "0", STR_PAD_LEFT);
-			echo $nro = $codigo;
-		}
+		return 'P' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
+	}
+
+	public function CodigoProducto()
+	{
+		return $this->GenerarCodigoProductoUnico();
 	}
 ############################### FUNCION PARA CODIGO PRODUCTO #################################
 
@@ -5857,27 +5863,32 @@ public function ListarArqueoCaja()
 ########################## FUNCION PARA LISTAR ARQUEO DE CAJA #############################
 
 ########################## FUNCION ID ARQUEO DE CAJA #############################
-public function ArqueoCajaPorId()
+public function ArqueoCajaPorId($codarqueo = null)
 {
 	self::SetNames();
-	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo where arqueocaja.codarqueo = ? AND ".tenantWhere('arqueocaja')." AND ".tenantWhere('cajas');
-	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array($_GET["codarqueo"]) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{ 
-		echo "";
-	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
+	$this->p = array();
+
+	if ($codarqueo === null || $codarqueo === '') {
+		if (isset($_GET['codarqueo'])) {
+			$codarqueo = $_GET['codarqueo'];
+		} elseif (isset($_POST['codarqueo'])) {
+			$codarqueo = $_POST['codarqueo'];
 		}
 	}
+
+	$codarqueo = (int) $codarqueo;
+	if ($codarqueo <= 0) {
+		return $this->p;
+	}
+
+	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo where arqueocaja.codarqueo = ? AND ".tenantWhere('arqueocaja')." AND ".tenantWhere('cajas');
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute(array($codarqueo));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+	}
+	return $this->p;
+}
 ########################## FUNCION ID ARQUEO DE CAJA #############################
 
 ########################## FUNCION PARA ACTUALIZAR ARQUEO DE CAJA #############################
@@ -7517,7 +7528,7 @@ echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true
 echo "<span class='fa fa-check-square-o'></span> EL PEDIDO FUE REGISTRADO EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKET")."' class='on-default' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda' target='_black'><strong>IMPRIMIR TICKET</strong></a>";
 echo "</div>";
 
-echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKET")."', '_blank');</script>";
+echo "<script>(function(){var u='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKET")."';if(window.RSPrintDialog&&typeof window.RSPrintDialog.openFromUrl==='function'){window.RSPrintDialog.openFromUrl(u,{title:'Imprimir Ticket'});}else{window.open(u,'_blank');}})();</script>";
 					exit;
 				}
 ########################### FUNCION PARA REGISTRAR VENTAS EN DELIVERY #############################
@@ -8139,7 +8150,7 @@ if($num>0) {
 
 echo "<div class='alert alert-success'>";
 echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-echo "<span class='fa fa-check-square-o'></span> EL PEDIDO DE LA ".$_POST["nombremesa"].", FUE CONFIRMADO EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."' class='on-default' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda' target='_black'><strong>IMPRIMIR COMANDA</strong></a>";
+echo "<span class='fa fa-check-square-o'></span> EL PEDIDO DE LA ".$_POST["nombremesa"].", FUE CONFIRMADO EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."' class='on-default rs-print-link' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda'><strong>IMPRIMIR COMANDA</strong></a>";
 echo "<span id='venta-comanda-cod' data-codventa='".base64_encode($codventa)."' style='display:none;'></span>";
 echo "</div>";
 					exit;
@@ -8635,7 +8646,7 @@ if (strip_tags(isset($_POST['observaciones']))) { $observaciones = strip_tags($_
 
 echo "<div class='alert alert-success'>";
 echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-echo "<span class='fa fa-check-square-o'></span> LOS DETALLES FUERON AGREGADOS A LA ".$_POST["nombremesa"].", EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."&numerocomanda=".$numeroComandaLote."' class='on-default' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda' target='_black'><strong>IMPRIMIR COMANDA</strong></a>";
+echo "<span class='fa fa-check-square-o'></span> LOS DETALLES FUERON AGREGADOS A LA ".$_POST["nombremesa"].", EXITOSAMENTE <a href='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKETCOMANDA")."&numerocomanda=".$numeroComandaLote."' class='on-default rs-print-link' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Comanda'><strong>IMPRIMIR COMANDA</strong></a>";
 echo "<span id='venta-comanda-cod' data-codventa='".base64_encode($codventa)."' style='display:none;'></span>";
 echo "</div>";
 exit;
@@ -8883,7 +8894,7 @@ echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true
 echo "<span class='fa fa-check-square-o'></span> EL CIERRE DE MESA FUE REALIZADO EXITOSAMENTE <a href='view/inicio/sunat/enviar_sunat.php?id_venta=".$codventa."&id_cliente=".$codclientee."' class='on-default' data-placement='left' data-toggle='tooltip' data-original-title='Imprimir Factura' target='_black'><strong>IMPRIMIR TICKET</strong></a>";
 echo "</div>";
 
-echo "<script>window.open('reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKET")."', '_blank');</script>";
+echo "<script>(function(){var u='reportepdf?codventa=".base64_encode($codventa)."&tipo=".base64_encode("TICKET")."';if(window.RSPrintDialog&&typeof window.RSPrintDialog.openFromUrl==='function'){window.RSPrintDialog.openFromUrl(u,{title:'Imprimir Ticket'});}else{window.open(u,'_blank');}})();</script>";
 exit;
 }
 ############################## FUNCION PARA CERRAR MESAS EN VENTAS ###########################

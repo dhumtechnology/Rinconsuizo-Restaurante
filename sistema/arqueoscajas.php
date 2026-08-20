@@ -321,7 +321,7 @@ for($i=0;$i<sizeof($reg);$i++){
 
 <a href="reportepdf?codarqueo=<?php echo $reg[$i]["codarqueo"]; ?>&tipo=<?php echo base64_encode("ARQUEOCAJA") ?>" target="_black" rel="noopener noreferrer" class="btn btn-info btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Arqueo de caja"><i class="fa fa-print"></i></a>
 
-<?php if($reg[$i]["statusarqueo"]=='1'){ ?><a href="#" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Cerrar Arqueo de Caja" onClick="cerrarcaja('forcierrearqueo?codarqueo=<?php echo $reg[$i]["codarqueo"]; ?>')"><i class="fa fa-archive"></i></a>
+<?php if($reg[$i]["statusarqueo"]=='1'){ ?><a href="#" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Cerrar Arqueo de Caja" onClick="cerrarcaja('<?php echo (function_exists('sistema_url') ? sistema_url('forcierrearqueo') : 'forcierrearqueo'); ?>?codarqueo=<?php echo (int) $reg[$i]["codarqueo"]; ?>')"><i class="fa fa-archive"></i></a>
 
 
 <?php } ?>

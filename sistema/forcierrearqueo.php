@@ -1,21 +1,62 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador" || $_SESSION["acceso"] == "cajero") {
+require_once("class/class.php");
+
+$logoutUrl = function_exists('sistema_url') ? sistema_url('logout') : 'logout';
+$panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
+$arqueosUrl = function_exists('sistema_url') ? sistema_url('arqueoscajas') : 'arqueoscajas';
+
+if (!isset($_SESSION['acceso'])) {
+	header('Location: ' . $logoutUrl);
+	exit;
+}
+
+if ($_SESSION['acceso'] != "administrador" && $_SESSION["acceso"] != "cajero") {
+	?>
+	<script type='text/javascript' language='javascript'>
+	alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO');
+	document.location.href=<?php echo json_encode($panelUrl); ?>;
+	</script>
+	<?php
+	exit;
+}
+
+$tra = new Login();
+$tra->ExpiraSession();
+
+if (isset($_POST['btn-update']) || (isset($_POST['codarqueo']) && isset($_POST['codcaja']) && isset($_POST['dineroefectivo']) && isset($_POST['montoinicial']))) {
+	$tra->CerrarArqueoCaja();
+	exit;
+}
+
+$codarqueo = isset($_GET['codarqueo']) ? (int) $_GET['codarqueo'] : 0;
+if ($codarqueo <= 0) {
+	header('Location: ' . $arqueosUrl);
+	exit;
+}
+
+$reg = $tra->ArqueoCajaPorId($codarqueo);
+if (empty($reg) || !isset($reg[0]['codarqueo'])) {
+	?>
+	<script type='text/javascript' language='javascript'>
+	alert('NO SE ENCONTRO EL ARQUEO DE CAJA SOLICITADO.\nVERIFIQUE QUE EL ARQUEO EXISTA Y PERTENEZCA A ESTE RESTAURANTE.');
+	document.location.href=<?php echo json_encode($arqueosUrl); ?>;
+	</script>
+	<?php
+	exit;
+}
+
+if (!isset($reg[0]['statusarqueo']) || (string) $reg[0]['statusarqueo'] !== '1') {
+	?>
+	<script type='text/javascript' language='javascript'>
+	alert('ESTE ARQUEO DE CAJA YA ESTA CERRADO.');
+	document.location.href=<?php echo json_encode($arqueosUrl); ?>;
+	</script>
+	<?php
+	exit;
+}
 
 $con = new Login();
 $con = $con->ContarRegistros();
-
-$tra = new Login();
-$ses = $tra->ExpiraSession();
-
-$reg = $tra->ArqueoCajaPorId();
-
-if(isset($_POST['btn-update']) || (isset($_POST['codarqueo']) && isset($_POST['codcaja']) && isset($_POST['dineroefectivo']) && isset($_POST['montoinicial'])))
-{
-$reg = $tra->CerrarArqueoCaja();
-exit;
-}
 ?>
 <!DOCTYPE html>
 <html>
@@ -38,7 +79,7 @@ exit;
 <script type="text/javascript" src="assets/script/titulos.js"></script>
 <script type="text/javascript" src="assets/script/script2.js"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
-<script type="text/javascript" src="assets/script/script.js?v=cierrearqueo2"></script>
+<script type="text/javascript" src="assets/script/script.js?v=cierrearqueo3"></script>
 <!-- script jquery -->	
 	
 
@@ -377,14 +418,4 @@ exit;
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 
+<?php 
