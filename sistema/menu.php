@@ -242,7 +242,7 @@ if(isset($_SESSION['acceso'])) {
                 <?php } ?>
 
 <link rel="stylesheet" href="assets/css/teclado-tactil.css?v=dead3">
-<link rel="stylesheet" href="assets/css/print-dialog.css?v=4">
+<link rel="stylesheet" href="assets/css/print-dialog.css?v=6">
 <style>
   #teclado-tactil { display: none !important; visibility: hidden !important; pointer-events: none !important; height: 0 !important; overflow: hidden !important; }
 </style>
@@ -257,18 +257,17 @@ if(isset($_SESSION['acceso'])) {
   setInterval(wipeLegacyDom, 500);
 })();
 </script>
-<script src="assets/js/print-dialog.js?v=5"></script>
+<?php
+if (!function_exists('listarImpresorasRed')) {
+  require_once __DIR__ . '/class/impresoras_red.php';
+}
+$__rsPrinters = listarImpresorasRed();
+$__rsPrintEndpoint = function_exists('sistema_url') ? sistema_url('imprimir_red') : 'imprimir_red.php';
+?>
+<script>
+window.RS_PRINTERS = <?php echo json_encode(array_values($__rsPrinters)); ?>;
+window.RS_PRINT_ENDPOINT = <?php echo json_encode($__rsPrintEndpoint); ?>;
+</script>
+<script src="assets/js/print-dialog.js?v=8"></script>
 
-</body>
-</html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 
+<?php } } ?>

@@ -45,7 +45,7 @@ require_once("class/class.php");
       <script type="text/javascript" src="assets/script/script2.js"></script>
       <script type="text/javascript" src="assets/script/jsdeliver.js"></script>
       <script type="text/javascript" src="assets/script/validation.min.js"></script>
-      <script type="text/javascript" src="assets/script/script.js?v=delivery4"></script>
+      <script type="text/javascript" src="assets/script/script.js?v=arqueo-caja4"></script>
 <script type="text/javascript">
     jQuery.validator.addMethod("lettersonly", function(value, element) {
       return this.optional(element) || /^[a-zA-ZñÑáéíóúÁÉÍÓÚ,. ]+$/i.test(value);

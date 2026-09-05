@@ -3484,7 +3484,7 @@ $('document').ready(function()
 									$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN ARQUEO DE CAJA ABIERTO EN ESTE RESTAURANTE. DEBE CERRARLO ANTES DE ABRIR UNO NUEVO.</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN ARQUEO ABIERTO PARA ESTA CAJA. DEBE CERRARLO ANTES DE ABRIR OTRO EN LA MISMA CAJA.</div></center>');
 											
 										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
 										
@@ -3576,7 +3576,7 @@ $('document').ready(function()
 									$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN ARQUEO DE CAJA ABIERTO EN ESTE RESTAURANTE. DEBE CERRARLO ANTES DE CONTINUAR.</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN ARQUEO ABIERTO PARA ESA CAJA. DEBE CERRARLO ANTES DE CONTINUAR.</div></center>');
 											
 								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
 										
@@ -4337,7 +4337,7 @@ $('document').ready(function()
 								else if(resp=='NO_ARQUEO' || (typeof resp === 'string' && resp.indexOf('ARQUEO DE CAJA') !== -1))
 								{
 					$("#error").fadeIn(1000, function(){
-	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA ACTIVO PARA PROCESAR DELIVERY. DEBE INICIARLO PARA CONTINUAR.<br> SI DESEA REALIZAR UN ARQUEO DE CAJA HAZ CLIC <a href="forarqueo">AQUI</a></div></center>');
+	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO PUEDE REGISTRAR EL DELIVERY: SU USUARIO NO TIENE UNA CAJA CON ARQUEO ABIERTO. ABRA EL ARQUEO DE SU CAJA ASIGNADA.<br> SI DESEA REALIZAR UN ARQUEO DE CAJA HAZ CLIC <a href="forarqueo">AQUI</a></div></center>');
 					$("#btn-venta").html('<span class="fa fa-save"></span> Registrar Pedido');
 									});
 								}
@@ -4743,6 +4743,13 @@ $('document').ready(function()
 									});
 								}
 								
+								else if(data=='NO_ARQUEO' || (typeof data === 'string' && data.indexOf('ARQUEO DE CAJA') !== -1 && data.indexOf('<div') === -1))
+								{
+					$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO PUEDE COBRAR: SU USUARIO NO TIENE UNA CAJA CON ARQUEO ABIERTO. ABRA EL ARQUEO DE SU CAJA ASIGNADA.</div></center>');
+					$("#btn-cerrar").html('<span class="fa fa-save"></span> Cerrar Mesa');
+									});
+								}
 								else if(data=='5')
 								{
 									

@@ -1,7 +1,7 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador" || $_SESSION["acceso"] == "cajero") {
+require_once("class/class.php");
+
+pos_require_auth(array('administrador', 'cajero'));
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -10,7 +10,6 @@ $config = new Login();
 $config = $config->ConfiguracionPorId();
 
 $tra = new Login();
-$ses = $tra->ExpiraSession();
 $reg = $tra->ListarArqueoCaja();
 
 ?>
@@ -321,7 +320,10 @@ for($i=0;$i<sizeof($reg);$i++){
 
 <a href="reportepdf?codarqueo=<?php echo $reg[$i]["codarqueo"]; ?>&tipo=<?php echo base64_encode("ARQUEOCAJA") ?>" target="_black" rel="noopener noreferrer" class="btn btn-info btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Arqueo de caja"><i class="fa fa-print"></i></a>
 
-<?php if($reg[$i]["statusarqueo"]=='1'){ ?><a href="#" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Cerrar Arqueo de Caja" onClick="cerrarcaja('<?php echo (function_exists('sistema_url') ? sistema_url('forcierrearqueo') : 'forcierrearqueo'); ?>?codarqueo=<?php echo (int) $reg[$i]["codarqueo"]; ?>')"><i class="fa fa-archive"></i></a>
+<?php if($reg[$i]["statusarqueo"]=='1'){
+$cerrarHref = 'forcierrearqueo?codarqueo=' . (int) $reg[$i]['codarqueo'];
+?>
+<a href="<?php echo htmlspecialchars($cerrarHref, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Cerrar Arqueo de Caja" onclick="return confirm('ESTA SEGURO DE REALIZAR EL CIERRE DE ESTA CAJA ?');"><i class="fa fa-archive"></i></a>
 
 
 <?php } ?>
@@ -422,15 +424,4 @@ for($i=0;$i<sizeof($reg);$i++){
   
 
    </body>
-   </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 
+   </html> 

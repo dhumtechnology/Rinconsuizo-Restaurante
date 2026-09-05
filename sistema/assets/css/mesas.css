@@ -1,0 +1,260 @@
+/* Cuadrícula de mesas: baldosas cuadradas, nombre centrado, hover táctil */
+.mesas-grid,
+#salas-mesas .users-list,
+#salas-mesas-cocinero .users-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px 16px;
+    list-style: none;
+    padding: 10px 2px 6px;
+    margin: 0;
+}
+
+.mesas-grid > li,
+#salas-mesas .users-list > li,
+#salas-mesas-cocinero .users-list > li,
+.mesa-tile-wrap {
+    float: none !important;
+    display: block;
+    margin: 0 !important;
+    width: auto;
+    padding: 0;
+}
+
+.mesa-tile,
+.codMesa.mesa-tile,
+#salas-mesas .codMesa,
+#salas-mesas-cocinero .codMesa {
+    display: block;
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff !important;
+    width: 122px;
+    overflow: visible;
+}
+
+.mesa-tile:hover,
+.mesa-tile:focus,
+#salas-mesas .codMesa:hover,
+#salas-mesas-cocinero .codMesa:hover {
+    text-decoration: none;
+    color: #fff;
+}
+
+.miMesa {
+    position: relative;
+    width: 122px;
+    height: 122px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.miMesa::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 46%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.miMesa--libre {
+    background: linear-gradient(165deg, #62d062 0%, #3d9b3d 100%);
+}
+
+.miMesa--ocupada {
+    background: linear-gradient(165deg, #f15b5b 0%, #c9302c 100%);
+}
+
+.miMesa--listo {
+    background: linear-gradient(165deg, #ffc44d 0%, #e09a1f 100%);
+}
+
+.mesa-icon {
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: 52px;
+    height: auto;
+    margin: 0 auto 2px;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
+    transition: transform 0.2s ease;
+}
+
+.miMesa--con-meta .mesa-icon {
+    width: 44px;
+}
+
+.mesa-nombre {
+    position: relative;
+    z-index: 2;
+    display: block;
+    max-width: 100%;
+    padding: 0 8px;
+    font-size: 1.28rem;
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: 0.3px;
+    text-align: center;
+    color: #fff;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    word-break: break-word;
+    transition: transform 0.2s ease, letter-spacing 0.2s ease, text-shadow 0.2s ease;
+}
+
+.miMesa--con-meta .mesa-nombre {
+    padding-bottom: 16px;
+}
+
+.mesa-nombre--largo {
+    font-size: 1.15rem;
+    letter-spacing: 0;
+    line-height: 1.15;
+}
+
+.mesa-nombre--xlargo {
+    font-size: 0.92rem;
+    letter-spacing: 0;
+    line-height: 1.15;
+}
+
+.mesa-meta {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    pointer-events: none;
+}
+
+.mesa-espera {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 10px;
+    line-height: 1.4;
+    background: #333;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.mesa-chip {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 8px;
+    line-height: 1.3;
+}
+
+.mesa-chip--listo {
+    background: rgba(0, 0, 0, 0.28);
+    color: #fff;
+}
+
+.mesa-chip--union {
+    background: rgba(49, 176, 213, 0.95);
+    color: #fff;
+}
+
+.mesa-badge-count {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 4;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    background: #fff;
+    color: #c9302c;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 22px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.codMesa:hover .miMesa,
+.codMesa:focus .miMesa {
+    transform: translateY(-6px) scale(1.06);
+    box-shadow:
+        0 16px 28px rgba(0, 0, 0, 0.28),
+        0 0 0 3px rgba(255, 255, 255, 0.72);
+    filter: brightness(1.1) saturate(1.08);
+}
+
+.codMesa:hover .mesa-nombre,
+.codMesa:focus .mesa-nombre {
+    transform: scale(1.08);
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.codMesa:hover .mesa-icon,
+.codMesa:focus .mesa-icon {
+    transform: scale(1.08);
+}
+
+.codMesa:active .miMesa {
+    transform: translateY(-1px) scale(0.97);
+    filter: brightness(0.96);
+}
+
+.mesa-unible.mesa-seleccionada .miMesa {
+    transform: scale(1.04);
+}
+
+@media (max-width: 767px) {
+    .mesa-tile,
+    .codMesa.mesa-tile,
+    #salas-mesas .codMesa,
+    #salas-mesas-cocinero .codMesa,
+    .miMesa {
+        width: 100px;
+    }
+
+    .miMesa {
+        height: 100px;
+        border-radius: 12px;
+    }
+
+    .mesa-nombre {
+        font-size: 1.12rem;
+    }
+
+    .mesa-icon {
+        width: 42px;
+    }
+
+    .miMesa--con-meta .mesa-icon {
+        width: 36px;
+    }
+
+    .mesa-nombre--largo {
+        font-size: 0.98rem;
+    }
+
+    .mesa-nombre--xlargo {
+        font-size: 0.8rem;
+    }
+}

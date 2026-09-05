@@ -5,7 +5,7 @@
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   background: rgba(15, 23, 42, 0.72);
 }
 
@@ -14,7 +14,7 @@
 }
 
 .rs-print-card {
-  width: min(1100px, 96vw);
+  width: min(1180px, 96vw);
   max-height: 92vh;
   display: flex;
   flex-direction: column;
@@ -29,14 +29,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 22px;
+  padding: 16px 20px;
   color: #fff;
   background: linear-gradient(135deg, #334155, #0f172a);
+  flex-shrink: 0;
 }
 
 .rs-print-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
 }
 
@@ -59,57 +60,147 @@
 
 .rs-print-body {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   min-height: 0;
   flex: 1;
-}
-
-.rs-print-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  flex-wrap: wrap;
-}
-
-.rs-print-toolbar .btn {
-  min-width: 130px;
-}
-
-.rs-print-toolbar .rs-print-badge {
-  margin: 0 0 0 auto;
-}
-
-.rs-print-paper-label {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
-}
-
-.rs-print-paper-select {
-  width: auto;
-  min-width: 150px;
-  height: 34px;
-  padding: 4px 10px;
-  font-size: 13px;
-}
-
-.rs-print-toolbar .rs-print-status {
-  font-size: 12px;
-  color: #64748b;
-  margin: 0;
-  width: 100%;
 }
 
 .rs-print-preview {
   position: relative;
   background: #e2e8f0;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+.rs-print-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border-left: 1px solid #e2e8f0;
+  overflow: auto;
+}
+
+.rs-print-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rs-print-sidebar-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.rs-print-paper-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rs-print-paper-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.rs-print-paper-select {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.rs-print-printers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rs-print-printers-empty {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.rs-print-printer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.rs-print-printer:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.rs-print-printer.is-selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.rs-print-printer-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.rs-print-printer-ip {
+  margin-top: 2px;
+  font-size: 12px;
+  font-family: Consolas, "Courier New", monospace;
+  color: #64748b;
+}
+
+.rs-print-printer--browser .rs-print-printer-ip {
+  font-family: inherit;
+}
+
+.rs-print-send {
+  width: 100%;
+  min-height: 46px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.rs-print-sidebar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rs-print-sidebar-actions .btn {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.rs-print-status {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .rs-print-canvas-wrap {
@@ -122,7 +213,6 @@
   margin: 0 auto;
 }
 
-/* Simula ancho del ticket en la vista previa */
 .rs-print-canvas-wrap.rs-paper-58 {
   max-width: 240px;
 }
@@ -180,10 +270,9 @@
 
 .rs-print-badge {
   display: inline-block;
-  margin-top: 8px;
-  padding: 6px 10px;
+  padding: 5px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #0f172a;
   background: #dbeafe;
@@ -198,22 +287,26 @@
 @media (max-width: 900px) {
   .rs-print-card {
     width: 100%;
-    max-height: 95vh;
+    max-height: 96vh;
     border-radius: 10px;
   }
 
-  .rs-print-toolbar {
-    gap: 8px;
+  .rs-print-body {
+    flex-direction: column;
   }
 
-  .rs-print-toolbar .btn {
-    min-width: 0;
-    flex: 1;
-    font-size: 12px;
-    padding: 6px 8px;
+  .rs-print-preview {
+    min-height: 38vh;
+    max-height: 46vh;
+  }
+
+  .rs-print-sidebar {
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid #e2e8f0;
   }
 
   .rs-print-frame {
-    min-height: 55vh;
+    min-height: 38vh;
   }
 }

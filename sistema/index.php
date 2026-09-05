@@ -35,6 +35,12 @@ elseif(isset($_POST["btn-recuperar"]))
 	exit;
 }
 
+if (function_exists('posUsuarioAutenticado') && posUsuarioAutenticado() && empty($_POST['btn-login']) && empty($_POST['usuario'])) {
+	$panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
+	header('Location: ' . $panelUrl);
+	exit;
+}
+
 $loginRest = null;
 if ($loginSlug !== '' && function_exists('tenant_find_restaurante')) {
 	$loginRest = tenant_find_restaurante($loginSlug, null);
@@ -213,6 +219,14 @@ window.__DISABLE_TECLADO_TACTIL = true;
 			<div id="error">
 				<!-- error will be shown here ! -->
 			</div>
+			<?php
+			$loginMsg = isset($_GET['msg']) ? (string) $_GET['msg'] : '';
+			if ($loginMsg === 'requerida') {
+				echo '<div class="alert alert-warning"><span class="fa fa-info-circle"></span> Debe iniciar sesión para acceder a esa página.</div>';
+			} elseif ($loginMsg === 'expirada') {
+				echo '<div class="alert alert-warning"><span class="fa fa-info-circle"></span> Su sesión expiró. Inicie sesión nuevamente.</div>';
+			}
+			?>
 
 			<div class="form-group has-feedback">
 				<label class="control-label">Ingrese su Usuario: <span class="symbol required"></span></label>

@@ -101,6 +101,24 @@ Ejemplos con carpeta `resto`:
 
 Requisitos en XAMPP: `mod_rewrite` activo y `AllowOverride All` en el VirtualHost/`httpd.conf` para que funcione el `.htaccess`.
 
+### Impresoras de red (tickets / comandas)
+
+Las térmicas se configuran en el **`.env` de la raíz** (no en el navegador). El modal de impresión muestra un desplegable para elegir cuál usar.
+
+```env
+PRINTER_1_NAME=Caja
+PRINTER_1_IP=192.168.1.50
+PRINTER_1_PORT=9100
+
+PRINTER_2_NAME=Cocina
+PRINTER_2_IP=192.168.1.51
+PRINTER_2_PORT=9100
+```
+
+Puede agregar `PRINTER_3_*`, `PRINTER_4_*`, etc. (hasta 20). El PHP del contenedor/servidor debe alcanzar esas IP (misma LAN). Tras editar `.env`, recargue el panel; no hace falta reconstruir Docker.
+
+Si no hay impresoras configuradas, el botón Imprimir sigue usando el diálogo del navegador (opción “Navegador”).
+
 ### Credenciales de acceso al sistema
 
 Según documentación original (`sistema/db_sql/LEEME.txt`):

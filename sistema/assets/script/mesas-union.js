@@ -7,12 +7,13 @@
             '<style id="estilos-mesas-union">' +
             '#salas-mesas.modo-juntar-activo .mesa-unible { cursor: crosshair; }' +
             '.mesa-unible.mesa-seleccionada .miMesa {' +
-            '  box-shadow: 0 0 0 3px #fff, 0 0 14px 5px #5bc0de, 0 0 24px 8px rgba(91, 192, 222, 0.85);' +
+            '  box-shadow: 0 0 0 3px #fff, 0 0 0 6px #5bc0de, 0 10px 22px rgba(49, 176, 213, 0.55);' +
+            '  transform: scale(1.05);' +
             '  animation: mesa-seleccion-brillo 1.4s ease-in-out infinite;' +
             '}' +
             '@keyframes mesa-seleccion-brillo {' +
-            '  0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px #5bc0de, 0 0 20px 6px rgba(91, 192, 222, 0.65); }' +
-            '  50% { box-shadow: 0 0 0 4px #fff, 0 0 20px 8px #31b0d5, 0 0 32px 12px rgba(49, 176, 213, 1); }' +
+            '  0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #5bc0de, 0 8px 18px rgba(91, 192, 222, 0.45); }' +
+            '  50% { box-shadow: 0 0 0 3px #fff, 0 0 0 7px #31b0d5, 0 12px 26px rgba(49, 176, 213, 0.75); }' +
             '}' +
             '#btn-modo-juntar.active { box-shadow: 0 0 8px rgba(91, 192, 222, 0.8); }' +
             '</style>'

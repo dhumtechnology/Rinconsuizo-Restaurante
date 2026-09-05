@@ -454,7 +454,34 @@ function renderEsperaBadge($fechapedido)
     } else {
         $bg = '#333';
     }
-    return '<span class="mesa-espera" data-inicio-ts="' . (int) $inicioTs . '" style="display:inline-block;margin-top:3px;font-size:10px;background:' . $bg . ';color:#fff;padding:2px 7px;border-radius:12px;line-height:1.4;"><i class="fa fa-clock-o"></i> <span class="mesa-espera-text">' . $texto . '</span></span>';
+    return '<span class="mesa-espera" data-inicio-ts="' . (int) $inicioTs . '" style="background:' . $bg . ';"><i class="fa fa-clock-o"></i> <span class="mesa-espera-text">' . $texto . '</span></span>';
+}
+
+function mesaNombreExtraClass($nombreRaw)
+{
+    $len = function_exists('mb_strlen') ? mb_strlen($nombreRaw, 'UTF-8') : strlen($nombreRaw);
+    if ($len > 12) {
+        return ' mesa-nombre--xlargo';
+    }
+    if ($len > 8) {
+        return ' mesa-nombre--largo';
+    }
+    return '';
+}
+
+function mesaEstadoCssClass($color, $listo = false)
+{
+    if ($listo) {
+        return 'miMesa--listo';
+    }
+    $c = strtolower(trim((string) $color));
+    if ($c === 'red' || $c === '#d9534f' || strpos($c, 'red') !== false) {
+        return 'miMesa--ocupada';
+    }
+    if ($c === '#f0ad4e') {
+        return 'miMesa--listo';
+    }
+    return 'miMesa--libre';
 }
 
 function aplicarMapaUnionAMesas($mesas, $mapa)
@@ -529,6 +556,141 @@ function esSuperAdmin()
     return isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'superadministrador';
 }
 
+/**
+ * Usuario autenticado del POS (mostrador/caja), no SuperAdmin.
+ */
+function posUsuarioAutenticado()
+{
+    return isset($_SESSION['acceso'], $_SESSION['id_restaurante'])
+        && in_array($_SESSION['acceso'], array('administrador', 'cajero', 'mesero', 'cocinero', 'repartidor'), true)
+        && (int) $_SESSION['id_restaurante'] > 0;
+}
+
+/**
+ * Tras resolver tenant por URL, alinear contexto web con el restaurante del login POS.
+ * Evita tenantId()=0 cuando la URL trae otro slug pero la sesión es válida.
+ */
+function pos_sync_tenant_from_session()
+{
+    if (!posUsuarioAutenticado()) {
+        return;
+    }
+    $sessionId = (int) $_SESSION['id_restaurante'];
+    if ($sessionId <= 0) {
+        return;
+    }
+    $urlId = function_exists('url_tenant_id') ? (int) url_tenant_id() : 0;
+    if ($urlId > 0 && $urlId === $sessionId) {
+        return;
+    }
+    $_SESSION['url_id_restaurante'] = $sessionId;
+    $_SESSION['web_id_restaurante'] = $sessionId;
+    if (function_exists('tenant_db_pdo')) {
+        $pdo = tenant_db_pdo();
+        if ($pdo) {
+            $st = $pdo->prepare('SELECT * FROM restaurantes WHERE id_restaurante = ? LIMIT 1');
+            $st->execute(array($sessionId));
+            $row = $st->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $_SESSION['url_slug'] = $row['slug'];
+                $_SESSION['web_slug'] = $row['slug'];
+                $_SESSION['web_restaurante'] = $row;
+                if (function_exists('restaurant_brand_apply_session')) {
+                    restaurant_brand_apply_session($row);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Sesión POS con cookie path=/ (compatible con /{slug}/sistema/...).
+ */
+function pos_bootstrap_session()
+{
+    if (session_status() !== PHP_SESSION_NONE) {
+        return;
+    }
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params(array(
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => '',
+            'secure' => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ));
+    } else {
+        session_set_cookie_params(0, '/');
+    }
+    session_start();
+}
+
+function pos_redirect_login($msg = 'requerida')
+{
+    // Si la sesión POS sigue viva, no mandar al login (parece un deslogueo).
+    if (function_exists('posUsuarioAutenticado') && posUsuarioAutenticado()) {
+        $panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
+        header('Location: ' . $panelUrl);
+        exit;
+    }
+    $url = function_exists('pos_login_url') ? pos_login_url() : 'index';
+    $url = rtrim((string) $url, '/');
+    if ($msg !== '') {
+        $url .= (strpos($url, '?') !== false ? '&' : '?') . 'msg=' . rawurlencode($msg);
+    }
+    header('Location: ' . $url);
+    exit;
+}
+
+/**
+ * Auth POS: roles permitidos + ExpiraSession. Nunca redirige a logout (no destruye sesión).
+ */
+function pos_require_auth($roles = null)
+{
+    if (!isset($_SESSION['acceso'])) {
+        pos_redirect_login('requerida');
+    }
+    if ($roles !== null) {
+        $roles = is_array($roles) ? $roles : array($roles);
+        if (!in_array($_SESSION['acceso'], $roles, true)) {
+            $panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
+            echo '<script type="text/javascript">alert("NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO");document.location.href=';
+            echo json_encode($panelUrl);
+            echo ';</script>';
+            exit;
+        }
+    }
+    if (function_exists('pos_sync_tenant_from_session')) {
+        pos_sync_tenant_from_session();
+    }
+    if (class_exists('Login')) {
+        $tra = new Login();
+        $tra->ExpiraSession();
+    }
+}
+
+function pos_login_url()
+{
+    if (!empty($_SESSION['url_slug'])) {
+        $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug']));
+        if ($slug !== '' && function_exists('restaurant_login_url')) {
+            return restaurant_login_url($slug);
+        }
+    }
+    if (function_exists('restaurant_resolve_logout_slug')) {
+        $slug = restaurant_resolve_logout_slug();
+        if ($slug !== '' && function_exists('restaurant_login_url')) {
+            return restaurant_login_url($slug);
+        }
+    }
+    if (function_exists('sistema_url')) {
+        return rtrim(sistema_url(''), '/');
+    }
+    return 'index';
+}
+
 function tenantId()
 {
     if (esSuperAdmin()) {
@@ -538,10 +700,12 @@ function tenantId()
         return 0;
     }
     $id = (int) $_SESSION['id_restaurante'];
-    // Si la URL es de otro restaurante, no devolver datos (evita mezcla por sesión/URL)
     if ($id > 0 && function_exists('url_tenant_id')) {
         $urlId = (int) url_tenant_id();
         if ($urlId > 0 && $urlId !== $id) {
+            if (posUsuarioAutenticado()) {
+                return $id;
+            }
             return 0;
         }
     }
@@ -651,10 +815,10 @@ function renderMesaListItem($mesa, $imgStyle = 'display:inline;margin:18px;float
     $bg = $estado['color'];
     $timer = $estado['timer'] ? renderEsperaBadge($estado['fechapedido']) : '';
     $badgeListo = $estado['listo']
-        ? '<span class="label label-warning" style="display:inline-block;margin-top:3px;font-size:10px;"><i class="fa fa-check"></i> LISTO</span>'
+        ? '<span class="mesa-chip mesa-chip--listo"><i class="fa fa-check"></i> LISTO</span>'
         : '';
     $badgeUnion = !empty($mesa['es_union'])
-        ? '<span class="label label-info" style="display:inline-block;margin-top:3px;font-size:9px;"><i class="fa fa-link"></i> UNIDAS</span>'
+        ? '<span class="mesa-chip mesa-chip--union"><i class="fa fa-link"></i> UNIDAS</span>'
         : '';
     $pedidoActivo = ((int) $mesa['statusmesa'] !== 0)
         || (isset($mesa['pedidos_activos']) && (int) $mesa['pedidos_activos'] > 0)
@@ -668,17 +832,24 @@ function renderMesaListItem($mesa, $imgStyle = 'display:inline;margin:18px;float
     $onclick = puedeGestionarUnionMesas()
         ? "manejarClickMesa(this, '" . $codmesaEnc . "')"
         : "RecibeMesa('" . $codmesaEnc . "')";
+    $estadoClase = mesaEstadoCssClass($bg, !empty($estado['listo']));
+    $nombreClase = mesaNombreExtraClass($mesa['nombremesa']);
+    $metaHtml = $timer . $badgeListo . $badgeUnion;
+    $conMeta = ($metaHtml !== '') ? ' miMesa--con-meta' : '';
     ob_start();
     ?>
-            <li style="display:inline;float: left; margin-right: 4px;">
-<div class="users-list-name codMesa<?php echo $claseExtra; ?>" title="<?php echo $nombre; ?>" style="cursor:pointer;"
+            <li class="mesa-tile-wrap">
+<div class="users-list-name codMesa mesa-tile<?php echo $claseExtra; ?>" title="<?php echo $nombre; ?>"
      data-codmesa="<?php echo (int) $mesa['codmesa']; ?>"
      data-codsala="<?php echo (int) $mesa['codsala']; ?>"
      data-statusmesa="<?php echo (int) $mesa['statusmesa']; ?>"
      data-pedido-activo="<?php echo $pedidoActivo ? '1' : '0'; ?>"
      onclick="<?php echo $onclick; ?>">
-                    <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:<?php echo $bg; ?>" class="miMesa"><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
-                    <center><strong style="font-size:11px;"><?php echo $nombre; ?></strong><br><?php echo $timer . $badgeListo . $badgeUnion; ?></center>
+                    <div class="miMesa <?php echo $estadoClase . $conMeta; ?>">
+                        <img src="assets/images/mesa.png" alt="" class="mesa-icon">
+                        <span class="mesa-nombre<?php echo $nombreClase; ?>"><?php echo $nombre; ?></span>
+                        <?php if ($metaHtml !== '') { ?><span class="mesa-meta"><?php echo $metaHtml; ?></span><?php } ?>
+                    </div>
                 </div>
             </li>
     <?php
@@ -724,7 +895,7 @@ function renderMesasPanel($imgStyle = 'display:inline;margin:18px;float:left;wid
     ?>
     <div class="tab-pane <?php echo $i === 0 ? 'active' : ''; ?>" id="<?php echo $codigo_sala;?>">
         <p>
-        <ul class="users-list clearfix" id="listMesas">
+        <ul class="users-list clearfix mesas-grid" id="listMesas">
             <?php
                 $mesas = $mesaObj->ListarMesas();
                 if ($mesas == "") {
@@ -759,18 +930,21 @@ function renderMesaListItemCocinero($mesa, $imgStyle = 'display:inline;margin:18
     }
     $codmesaEnc = base64_encode($mesa['codmesa']);
     $nombre = htmlspecialchars($mesa['nombremesa'], ENT_QUOTES, 'UTF-8');
-    $bg = 'red';
     $timer = renderEsperaBadge(isset($mesa['fechapedido']) ? $mesa['fechapedido'] : '');
-    $badge = ($pendientes > 1) ? '<span class="label label-danger" style="position:absolute;top:0;right:0;border-radius:50%;padding:3px 6px;font-size:10px;">' . $pendientes . '</span>' : '';
+    $badge = ($pendientes > 1) ? '<span class="mesa-badge-count">' . $pendientes . '</span>' : '';
     $badgeUnion = !empty($mesa['es_union'])
-        ? '<span class="label label-info" style="display:inline-block;margin-top:3px;font-size:9px;"><i class="fa fa-link"></i></span>'
+        ? '<span class="mesa-chip mesa-chip--union"><i class="fa fa-link"></i></span>'
         : '';
+    $nombreClase = mesaNombreExtraClass($mesa['nombremesa']);
     ob_start();
     ?>
-            <li style="display:inline;float: left; margin-right: 4px;">
-<div class="users-list-name codMesa" title="<?php echo $nombre; ?>" style="cursor:pointer;position:relative;" onclick="RecibeMesaCocinero('<?php echo $codmesaEnc; ?>')">
-                    <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:<?php echo $bg; ?>;position:relative;" class="miMesa"><?php echo $badge; ?><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
-                    <center><strong style="font-size:11px;"><?php echo $nombre; ?></strong><br><?php echo $timer . $badgeUnion; ?></center>
+            <li class="mesa-tile-wrap">
+<div class="users-list-name codMesa mesa-tile" title="<?php echo $nombre; ?>" onclick="RecibeMesaCocinero('<?php echo $codmesaEnc; ?>')">
+                    <div class="miMesa miMesa--ocupada"><?php echo $badge; ?>
+                        <img src="assets/images/mesa.png" alt="" class="mesa-icon">
+                        <span class="mesa-nombre<?php echo $nombreClase; ?>"><?php echo $nombre; ?></span>
+                        <span class="mesa-meta"><?php echo $timer . $badgeUnion; ?></span>
+                    </div>
                 </div>
             </li>
     <?php
@@ -787,10 +961,13 @@ function renderDeliveryTileCocinero($deliveryInfo, $imgStyle = 'display:inline;m
     $timer = renderEsperaBadge(isset($deliveryInfo['fechapedido']) ? $deliveryInfo['fechapedido'] : '');
     ob_start();
     ?>
-            <li style="display:inline;float: left; margin-right: 4px;">
-<div class="users-list-name codMesa" title="Delivery" style="cursor:pointer;position:relative;" onclick="RecibeMesaCocinero('<?php echo $codmesaEnc; ?>')">
-                    <div style="width:110px;height:110px;-moz-border-radius:50%;-webkit-border-radius:50%;border-radius:50%;background:red;position:relative;" class="miMesa"><span class="label label-danger" style="position:absolute;top:0;right:0;border-radius:50%;padding:3px 6px;font-size:10px;"><?php echo $count; ?></span><img src="assets/images/mesa.png" style="<?php echo $imgStyle; ?>"></div>
-                    <center><strong>DELIVERY</strong><br><?php echo $timer; ?></center>
+            <li class="mesa-tile-wrap">
+<div class="users-list-name codMesa mesa-tile" title="Delivery" onclick="RecibeMesaCocinero('<?php echo $codmesaEnc; ?>')">
+                    <div class="miMesa miMesa--ocupada"><span class="mesa-badge-count"><?php echo $count; ?></span>
+                        <img src="assets/images/mesa.png" alt="" class="mesa-icon">
+                        <span class="mesa-nombre mesa-nombre--largo">DELIVERY</span>
+                        <span class="mesa-meta"><?php echo $timer; ?></span>
+                    </div>
                 </div>
             </li>
     <?php
@@ -857,7 +1034,7 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
     <?php if ($deliveryCount > 0) { ?>
     <div class="tab-pane" id="cocina-delivery">
         <p>
-        <ul class="users-list clearfix">
+        <ul class="users-list clearfix mesas-grid">
             <?php echo renderDeliveryTileCocinero($deliveryInfo, $imgStyle); ?>
         </ul>
         </p>
@@ -870,7 +1047,7 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
     ?>
     <div class="tab-pane <?php echo $i === 0 ? 'active' : ''; ?>" id="cocina-sala-<?php echo $codigo_sala;?>">
         <p>
-        <ul class="users-list clearfix" id="listMesasCocinero">
+        <ul class="users-list clearfix mesas-grid" id="listMesasCocinero">
             <?php
                 if (empty($mesasEnSala)) {
                     echo "<div class='alert alert-info'><center><span class='fa fa-info-circle'></span> NO HAY PEDIDOS EN ESTA SALA</center></div>";

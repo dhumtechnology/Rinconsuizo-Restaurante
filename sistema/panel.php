@@ -76,6 +76,7 @@
         <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
         <link href="assets/css/icons.css" rel="stylesheet" type="text/css">
         <link href="assets/css/style.css" rel="stylesheet" type="text/css">
+        <link href="assets/css/mesas.css?v=3" rel="stylesheet" type="text/css">
         <?php if (function_exists('sistema_brand_head_styles')) { sistema_brand_head_styles(); } ?>
         <!-- script jquery -->
         <script src="assets/js/jquery.min.js"></script> 
@@ -87,7 +88,7 @@
         <script type="text/javascript" src="assets/script/mesas-union.js"></script>
 <?php } ?>
         <script type="text/javascript" src="assets/script/validation.min.js"></script>
-        <script type="text/javascript" src="assets/script/script.js?v=comanda-preview1"></script>
+        <script type="text/javascript" src="assets/script/script.js?v=arqueo-caja4"></script>
         <!-- Teclado observaciones: solo panel / crear orden -->
         <link rel="stylesheet" href="assets/css/teclado-obs-pedido.css?v=3">
         <script src="assets/script/teclado-obs-pedido.js?v=3"></script>

@@ -4,14 +4,19 @@ ini_set('memory_limit', '-1');
 ini_set('max_execution_time', 800);
 date_default_timezone_set('America/Lima');
 require_once("classconexion.php");
-session_start();
 include_once('funciones_basicas.php');
+if (function_exists('pos_bootstrap_session')) {
+	pos_bootstrap_session();
+}
 
 $__tenantCtx = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'tenant_context.php';
 if (is_file($__tenantCtx)) {
 	require_once $__tenantCtx;
 	if (function_exists('tenant_resolve_request')) {
 		tenant_resolve_request();
+	}
+	if (function_exists('pos_sync_tenant_from_session')) {
+		pos_sync_tenant_from_session();
 	}
 }
 
@@ -111,23 +116,29 @@ class Login extends Db
 		}
 	}
 
-	if (!isset($_SESSION['acceso']) || !isset($_SESSION['usuario'])) {
-		header("Location: " . $logoutUrl);
+	if (!isset($_SESSION['acceso'])) {
+		if (function_exists('pos_redirect_login')) {
+			pos_redirect_login('requerida');
+		}
+		$dest = function_exists('pos_login_url') ? pos_login_url() : $logoutUrl;
+		header("Location: " . $dest);
 		exit;
 	}
 
-	//Verifico el tiempo si esta seteado, caso contrario lo seteo.
-	if(isset($_SESSION['time'])){
-		$tiempo = $_SESSION['time'];
-	}else{
-		$tiempo = strtotime(date("Y-m-d h:i:s"));
+	// Siempre unix timestamp (time()). No usar date("h:i:s"): a medianoche
+	// "12:xx" se interpreta como mediodía y la sesión "expira" al instante.
+	$now = time();
+	$tiempo = (isset($_SESSION['time']) && is_numeric($_SESSION['time']))
+		? (int) $_SESSION['time']
+		: 0;
+	if ($tiempo <= 0 || $tiempo > $now + 60) {
+		$_SESSION['time'] = $now;
+		return;
 	}
 
-	$inactividad =36000; 
+	$inactividad = 36000; // 10 horas
 
-	$actual =  strtotime(date("Y-m-d h:i:s"));
-
-	if( ($actual-$tiempo) >= $inactividad){
+	if (($now - $tiempo) >= $inactividad) {
 		?>					
 		<script type='text/javascript' language='javascript'>
 			alert('SU SESSION A EXPIRADO \nPOR FAVOR LOGUEESE DE NUEVO PARA ACCEDER AL SISTEMA') 
@@ -135,12 +146,9 @@ class Login extends Db
 		</script> 
 		<?php
 		exit;
+	}
 
-	}else{
-
-		$_SESSION['time'] =$actual;
-
-	} 
+	$_SESSION['time'] = $now;
 }
 
 	############  FIN DE FUNCION PARA EXPIRAR SESSION POR INACIVIDAD  ################
@@ -271,6 +279,10 @@ else
 		$f = ($_SESSION["id_restaurante"] > 0) ? $_SESSION["id_restaurante"] : null;
 		$stmt->execute();
 
+		if (function_exists('session_regenerate_id')) {
+			session_regenerate_id(true);
+		}
+		$_SESSION['time'] = time();
 		
 		$panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
 		$saPanelUrl = function_exists('app_url') ? app_url('/sistema/superadmin/panel') : '/sistema/superadmin/panel';
@@ -2606,22 +2618,10 @@ public function CajerosSessionPorId()
 	{
 		self::SetNames();
 		$this->p = array();
-		// Preferir la caja del arqueo activo usable (cajero/mesero: cualquier arqueo abierto)
-		$arq = $this->ObtenerArqueoAbiertoParaVentas();
-		if ($arq && !empty($arq['codcaja'])) {
-			$sql = "SELECT * FROM cajas WHERE codcaja = ? AND ".tenantWhere('cajas')." LIMIT 1";
-			$stmt = $this->dbh->prepare($sql);
-			$stmt->execute(array($arq['codcaja']));
-			if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-				$this->p[] = $row;
-				return $this->p;
-			}
-		}
-		$sql = "SELECT * FROM cajas WHERE codigo = ? AND ".tenantWhere('cajas')." LIMIT 1";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->execute(array($_SESSION["codigo"]));
-		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-			$this->p[] = $row;
+		// Caja asignada al usuario logueado (con o sin arqueo abierto)
+		$caja = $this->ObtenerCajaAsignadaUsuario();
+		if ($caja) {
+			$this->p[] = $caja;
 			return $this->p;
 		}
 		return $this->p;
@@ -5773,12 +5773,12 @@ public function RegistrarArqueoCaja()
 		exit;
 	}
 
-	// Solo un arqueo abierto por restaurante (cualquier caja)
-	$sql = "SELECT a.codarqueo, a.codcaja FROM arqueocaja a
-		WHERE a.statusarqueo = '1' AND a.id_restaurante = ?
+	// Solo un arqueo abierto por caja (pueden coexistir abiertos en cajas distintas)
+	$sql = "SELECT a.codarqueo FROM arqueocaja a
+		WHERE a.statusarqueo = '1' AND a.codcaja = ? AND a.id_restaurante = ?
 		LIMIT 1";
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute(array($id_restaurante));
+	$stmt->execute(array($_POST["codcaja"], $id_restaurante));
 	$abierto = $stmt->fetch(PDO::FETCH_ASSOC);
 	if ($abierto) {
 		echo "2";
@@ -5836,29 +5836,12 @@ public function ListarArqueoCaja()
 	$this->p = array();
 	$tw = " AND ".tenantWhere('arqueocaja')." AND ".tenantWhere('cajas');
 
-	if($_SESSION["acceso"] == "cajero") {
-
-
-    $sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE cajas.codigo = '".$_SESSION["codigo"]."'".$tw." ORDER BY arqueocaja.codarqueo DESC";
-	foreach ($this->dbh->query($sql) as $row)
-	{
-		$this->p[] = $row;
-	}
-	return $this->p;
-	$this->dbh=null;
-
-
-	} else {
-
 	$sql = " select * FROM arqueocaja INNER JOIN cajas ON arqueocaja.codcaja = cajas.codcaja WHERE 1=1".$tw." ORDER BY arqueocaja.codarqueo DESC";
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
 	}
 	return $this->p;
-	$this->dbh=null;
-
-	}
 }
 ########################## FUNCION PARA LISTAR ARQUEO DE CAJA #############################
 
@@ -5901,36 +5884,24 @@ public function ActualizarArqueoCaja()
 		echo "1";
 		exit;
 	}
-	$sql = " select codcaja from arqueocaja where codarqueo != ? and statusarqueo = '1' and id_restaurante = ? ";
+	$sql = " update arqueocaja set "
+	." montoinicial = ? "
+	." where "
+	." codarqueo = ? AND ".tenantWhere('arqueocaja').";
+	";
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array($_POST["codarqueo"], tenantId()) );
-	$num = $stmt->rowCount();
-	if($num == 0)
-	{
-		$sql = " update arqueocaja set "
-		." montoinicial = ? "
-		." where "
-		." codarqueo = ? AND ".tenantWhere('arqueocaja').";
-		";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->bindParam(1, $montoinicial);
-		$stmt->bindParam(2, $codarqueo);
+	$stmt->bindParam(1, $montoinicial);
+	$stmt->bindParam(2, $codarqueo);
 
-		$montoinicial = strip_tags($_POST["montoinicial"]);
-		$codarqueo = strip_tags($_POST["codarqueo"]);
-		$stmt->execute();
+	$montoinicial = strip_tags($_POST["montoinicial"]);
+	$codarqueo = strip_tags($_POST["codarqueo"]);
+	$stmt->execute();
 
-		echo "<div class='alert alert-info'>";
-		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-		echo "<span class='fa fa-check-square-o'></span> EL ARQUEO DE CAJA FUE ACTUALIZADO EXITOSAMENTE";
-		echo "</div>";		
-		exit;
-	}
-	else
-	{
-		echo "2";
-		exit;
-	}
+	echo "<div class='alert alert-info'>";
+	echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+	echo "<span class='fa fa-check-square-o'></span> EL ARQUEO DE CAJA FUE ACTUALIZADO EXITOSAMENTE";
+	echo "</div>";
+	exit;
 }
 ########################## FUNCION PARA ACTUALIZAR ARQUEO DE CAJA #############################
 
@@ -5939,7 +5910,7 @@ public function CerrarArqueoCaja()
 {
 
 	self::SetNames();
-	if (empty($_POST["codarqueo"]) || empty($_POST["codcaja"])
+	if (empty($_POST["codarqueo"])
 		|| !isset($_POST["montoinicial"]) || trim((string) $_POST["montoinicial"]) === ''
 		|| !isset($_POST["dineroefectivo"]) || trim((string) $_POST["dineroefectivo"]) === '')
 	{
@@ -5947,8 +5918,18 @@ public function CerrarArqueoCaja()
 		exit;
 	}
 
-	$codarqueo = strip_tags($_POST["codarqueo"]);
-	$codcaja = strip_tags($_POST["codcaja"]);
+	if (!isset($_SESSION['acceso']) || !in_array($_SESSION['acceso'], array('administrador', 'cajero'), true)) {
+		echo "1";
+		exit;
+	}
+
+	$codarqueo = (int) strip_tags($_POST["codarqueo"]);
+	$regArq = $this->ArqueoCajaPorId($codarqueo);
+	if (empty($regArq) || empty($regArq[0]['codarqueo']) || (string) $regArq[0]['statusarqueo'] !== '1') {
+		echo "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><span class='fa fa-info-circle'></span> NO SE PUDO CERRAR EL ARQUEO. VERIFIQUE QUE SIGA ABIERTO.</div>";
+		exit;
+	}
+	$codcaja = $regArq[0]['codcaja'];
 	$dineroefectivo = str_replace(',', '', trim(strip_tags($_POST["dineroefectivo"])));
 	if (!is_numeric($dineroefectivo) || (float) $dineroefectivo < 0) {
 		echo "1";
@@ -5971,10 +5952,10 @@ public function CerrarArqueoCaja()
 	$fechacierre = date("Y-m-d H:i:s");
 	$statusarqueo = "0";
 
-	// Solo bloquear si hay ventas de esta caja aún pendientes de cobro
-	$sql = "SELECT idventa FROM ventas WHERE codcaja = ? AND statuspago = '1' AND ".tenantWhere('ventas')." LIMIT 1";
+	// Solo bloquear si hay ventas pendientes de cobro ligadas a este arqueo
+	$sql = "SELECT idventa FROM ventas WHERE codarqueocaja = ? AND statuspago = '1' AND ".tenantWhere('ventas')." LIMIT 1";
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute(array($codcaja));
+	$stmt->execute(array($codarqueo));
 	if ($stmt->rowCount() > 0)
 	{
 		echo "2";
@@ -6705,13 +6686,13 @@ if($_SESSION["acceso"] == 'repartidor'){
 			return;
 		}
 
-		// Caja del arqueo abierto usable (admin puede usar cualquiera activo)
-		$rowArq = $this->ObtenerArqueoAbiertoParaVentas();
-		if (!$rowArq) {
-			echo $this->MensajeSinArqueoVentas();
-			return;
+		$cajaUser = $this->ObtenerCajaAsignadaUsuario();
+		if ($cajaUser && !empty($cajaUser['codcaja'])) {
+			$codcaja = $cajaUser['codcaja'];
+		} else {
+			$abiertas = $this->ListarCajasAbiertas();
+			$codcaja = (!empty($abiertas[0]['codcaja'])) ? $abiertas[0]['codcaja'] : 0;
 		}
-		$codcaja = $rowArq['codcaja'];
 
 $config = new Login();
 $config = $config->ConfiguracionPorId();
@@ -7200,13 +7181,12 @@ public function RegistrarDelivery()
 		}
 	}
 
-	$rowArq = $this->ObtenerArqueoAbiertoParaVentas();
+	$rowArq = $this->ObtenerArqueoParaCobro(isset($_POST['codcaja']) ? $_POST['codcaja'] : null);
 	if (!$rowArq) {
 		echo "NO_ARQUEO";
 		exit;
 	}
 	$codarqueocaja = $rowArq["codarqueo"];
-	// Forzar caja del arqueo activo (no confiar solo en el POST)
 	$codcajaArqueo = $rowArq["codcaja"];
 
 	$codventa = $this->GenerarSiguienteCodventa();
@@ -7250,10 +7230,7 @@ public function RegistrarDelivery()
 
 
 		
-		$codcaja = isset($_POST["codcaja"]) && $_POST["codcaja"] !== '' ? strip_tags($_POST["codcaja"]) : '0';
-		if ($codcaja === '0' || $codcaja === '' || (string) $codcaja !== (string) $codcajaArqueo) {
-			$codcaja = $codcajaArqueo;
-		}
+		$codcaja = $codcajaArqueo;
 
 		$comprobante = strip_tags('1');
 		$serie_doc = strip_tags('001');
@@ -7619,9 +7596,7 @@ echo "<script>(function(){var u='reportepdf?codventa=".base64_encode($codventa).
 	}
 
 	/**
-	 * ¿Hay arqueo abierto que permita ventas en mostrador?
-	 * Cajero y mesero: cualquier arqueo abierto del local (uno sirve para todos).
-	 * Administrador: solo si tiene su propio arqueo abierto (no hereda el de otro).
+	 * ¿Hay al menos un arqueo abierto en el restaurante? (habilita mostrador/mesas).
 	 */
 	public function TieneArqueoAbiertoParaVentas()
 	{
@@ -7629,30 +7604,19 @@ echo "<script>(function(){var u='reportepdf?codventa=".base64_encode($codventa).
 	}
 
 	/**
-	 * Devuelve el arqueo abierto usable para ventas/delivery: array(codarqueo, codcaja) o null.
-	 * Cajero/mesero: cualquier arqueo con statusarqueo=1.
-	 * Administrador: únicamente arqueo donde codigo = usuario logueado.
+	 * Cualquier arqueo abierto del restaurante (solo para saber si el local opera).
+	 * NO usar para asignar ventas: use ObtenerArqueoParaCobro().
 	 */
 	public function ObtenerArqueoAbiertoParaVentas()
 	{
 		self::SetNames();
-		if (!isset($_SESSION['acceso']) || !isset($_SESSION['codigo'])) {
+		if (!isset($_SESSION['acceso'])) {
 			return null;
 		}
 		if (!in_array($_SESSION['acceso'], array('administrador', 'cajero', 'mesero'), true)) {
 			return null;
 		}
 
-		// Admin: no activar mesas/delivery con el arqueo de otro usuario
-		if ($_SESSION['acceso'] == 'administrador') {
-			$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE codigo = ? AND statusarqueo = '1' AND ".tenantWhere('arqueocaja')." ORDER BY codarqueo DESC LIMIT 1";
-			$stmt = $this->dbh->prepare($sql);
-			$stmt->execute(array($_SESSION['codigo']));
-			$row = $stmt->fetch(PDO::FETCH_ASSOC);
-			return $row ? $row : null;
-		}
-
-		// Cajero y mesero: un arqueo abierto sirve para todos (del mismo restaurante)
 		$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE statusarqueo = '1' AND ".tenantWhere('arqueocaja')." ORDER BY codarqueo DESC LIMIT 1";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute();
@@ -7660,15 +7624,71 @@ echo "<script>(function(){var u='reportepdf?codventa=".base64_encode($codventa).
 		return $row ? $row : null;
 	}
 
+	/** Caja asignada al usuario (cajas.codigo = usuario). */
+	public function ObtenerCajaAsignadaUsuario($codigo = null)
+	{
+		self::SetNames();
+		if ($codigo === null) {
+			$codigo = isset($_SESSION['codigo']) ? $_SESSION['codigo'] : null;
+		}
+		if ($codigo === null || $codigo === '' || (string) $codigo === '0') {
+			return null;
+		}
+		$sql = "SELECT * FROM cajas WHERE codigo = ? AND ".tenantWhere('cajas')." LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codigo));
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $row ? $row : null;
+	}
+
+	/** Arqueo abierto de una caja concreta. */
+	public function ObtenerArqueoAbiertoPorCaja($codcaja)
+	{
+		self::SetNames();
+		$codcaja = (int) $codcaja;
+		if ($codcaja <= 0) {
+			return null;
+		}
+		$sql = "SELECT codarqueo, codcaja FROM arqueocaja WHERE codcaja = ? AND statusarqueo = '1' AND ".tenantWhere('arqueocaja')." ORDER BY codarqueo DESC LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute(array($codcaja));
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $row ? $row : null;
+	}
+
+	/**
+	 * Arqueo al cobrar / registrar venta pagada:
+	 * 1) Caja asignada al usuario logueado, si tiene arqueo abierto.
+	 * 2) Si no tiene caja propia (p.ej. admin), la caja indicada ($codcajaPost) si tiene arqueo abierto.
+	 */
+	public function ObtenerArqueoParaCobro($codcajaPost = null)
+	{
+		$cajaUser = $this->ObtenerCajaAsignadaUsuario();
+		if ($cajaUser && !empty($cajaUser['codcaja'])) {
+			$arq = $this->ObtenerArqueoAbiertoPorCaja($cajaUser['codcaja']);
+			if ($arq) {
+				return $arq;
+			}
+			// Tiene caja asignada pero sin arqueo abierto: no usar otra caja
+			return null;
+		}
+		if ($codcajaPost !== null && $codcajaPost !== '' && (string) $codcajaPost !== '0') {
+			return $this->ObtenerArqueoAbiertoPorCaja($codcajaPost);
+		}
+		return null;
+	}
+
 	public function MensajeSinArqueoVentas()
 	{
-		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] == 'cajero') {
+		if (isset($_SESSION['acceso']) && ($_SESSION['acceso'] == 'cajero' || $_SESSION['acceso'] == 'administrador')) {
 			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA ABIERTO PARA PROCESAR VENTAS.<br> DEBE HABER AL MENOS UN ARQUEO INICIADO EN EL LOCAL. SI DESEA REALIZARLO HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
 		}
-		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] == 'administrador') {
-			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, PARA USAR EL MOSTRADOR COMO ADMINISTRADOR DEBE ABRIR SU PROPIO ARQUEO DE CAJA (EL ARQUEO DE OTRO USUARIO NO ACTIVA SUS MESAS).<br> SI DESEA INICIARLO HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
-		}
 		return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS.<br>EL MESERO NO PUEDE TOMAR PEDIDOS HASTA QUE EL CAJERO O ADMINISTRADOR INICIE EL ARQUEO DE CAJA.</center></div>";
+	}
+
+	public function MensajeSinArqueoCobro()
+	{
+		return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> NO PUEDE COBRAR: SU USUARIO NO TIENE UNA CAJA CON ARQUEO ABIERTO.<br>ABRA EL ARQUEO DE SU CAJA ASIGNADA O SELECCIONE UNA CAJA ABIERTA.</center></div>";
 	}
 
 	public function VerificaArqueo()
@@ -7867,12 +7887,8 @@ public function RegistrarVentas()
 			exit;                           }
 		}
 
-	$rowArq = $this->ObtenerArqueoAbiertoParaVentas();
-	if (!$rowArq) {
-		echo "NO_ARQUEO";
-		exit;
-	}
-	$codarqueocaja = $rowArq["codarqueo"];
+		// Pedido pendiente: aún no se cobra; caja/arqueo se asignan al cerrar mesa
+		$codarqueocaja = 0;
 
 
 	$codventa = $this->GenerarSiguienteCodventa();
@@ -8669,11 +8685,13 @@ public function CerrarMesa()
 		exit;
 	}
 
-	if($_POST["codcaja"]=="")
-	{
-		echo "5";
+	$rowArq = $this->ObtenerArqueoParaCobro(isset($_POST['codcaja']) ? $_POST['codcaja'] : null);
+	if (!$rowArq) {
+		echo "NO_ARQUEO";
 		exit;
 	}
+	$codcaja = $rowArq['codcaja'];
+	$codarqueocaja = $rowArq['codarqueo'];
 
 	if ($_POST["tipopagove"] == "CREDITO" && $_POST["cliente"] == '0') { 
 
@@ -8715,9 +8733,10 @@ public function CerrarMesa()
 	." statuspago = ?, "
 	." codigo = ?, "
 	." cocinero = ?, "
-	." comprobante = ? "
+	." comprobante = ?, "
+	." codarqueocaja = ? "
 	." where "
-	." codventa = ?;
+	." codventa = ? AND ".tenantWhere('ventas').";
 	";
 	$stmt = $this->dbh->prepare($sql);
 	$stmt->bindParam(1, $codcaja);
@@ -8740,11 +8759,11 @@ public function CerrarMesa()
 	$stmt->bindParam(18, $codigo);
 	$stmt->bindParam(19, $cocinero);
 	$stmt->bindParam(20, $comprobante);
-	$stmt->bindParam(21, $codventa);
+	$stmt->bindParam(21, $codarqueocaja);
+	$stmt->bindParam(22, $codventa);
 	
 
 	$codmesa = strip_tags($_POST["codmesa"]);
-	$codcaja = strip_tags($_POST["codcaja"]);
 	$codcliente = strip_tags(isset($_POST["cliente"]) ? $_POST["cliente"] : '0');
 	if ($codcliente === '' || !is_numeric($codcliente)) {
 		$codcliente = 0;
@@ -8827,27 +8846,7 @@ public function CerrarMesa()
 
 #################### AQUI AGREGAMOS EL INGRESO A ARQUEO DE CAJA ####################
 	if ($_POST["tipopagove"]=="CONTADO"){
-
-		$sql = "select ingresos from arqueocaja where codcaja = '".$_POST["codcaja"]."' and statusarqueo = '1'";
-		foreach ($this->dbh->query($sql) as $row)
-		{
-			$this->p[] = $row;
-		}
-		$ingreso = $row['ingresos'];
-
-		$sql = " update arqueocaja set "
-		." ingresos = ? "
-		." where "
-		." codcaja = ? and statusarqueo = '1';
-		";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->bindParam(1, $txtTotal);
-		$stmt->bindParam(2, $codcaja);
-
-		//$txtTotal = strip_tags($_POST["txtTotall"]+$ingreso,2);
-		$codcaja = strip_tags($_POST["codcaja"]);
-		$txtTotal= rount($_POST["txtTotall"]+$ingreso,2);
-		$stmt->execute();
+		$this->SumarIngresoArqueo($codarqueocaja, isset($_POST["txtTotall"]) ? $_POST["txtTotall"] : 0);
 	}
 #################### AQUI AGREGAMOS EL INGRESO A ARQUEO DE CAJA ####################
 
@@ -8868,7 +8867,6 @@ public function CerrarMesa()
 		$montoabono = strip_tags($_POST["montoabono"]);
 		$fechaabono = strip_tags(date("Y-m-d h:i:s"));
 		$codigo = strip_tags($_SESSION["codigo"]);
-		$codcaja = strip_tags($_POST["codcaja"]);
 		$stmt->execute();
 	}
 ############## REGISTRO DE ABONOS EN VENTAS ##################
@@ -11102,7 +11100,7 @@ public function VerificaArqueoCreditos()
 {
 	self::SetNames();
 
-	$arq = $this->ObtenerArqueoAbiertoParaVentas();
+	$arq = $this->ObtenerArqueoParaCobro(null);
 	if ($arq === null)
 	{
     echo "<div class='alert alert-danger'>";
@@ -11240,6 +11238,14 @@ public function RegistrarAbonos()
 
 	} else {
 
+		$rowArq = $this->ObtenerArqueoParaCobro(isset($_POST['codcaja']) ? $_POST['codcaja'] : null);
+		if (!$rowArq) {
+			echo "NO_ARQUEO";
+			exit;
+		}
+		$codcaja = $rowArq['codcaja'];
+		$codarqueocaja = $rowArq['codarqueo'];
+
 		$query = " insert into abonoscreditos values (null, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $codventa);
@@ -11254,29 +11260,9 @@ public function RegistrarAbonos()
 		$montoabono = strip_tags($_POST["montoabono"]);
 		$fechaabono = strip_tags(date("Y-m-d h:i:s"));
 		$codigo = strip_tags($_SESSION["codigo"]);
-		$codcaja = strip_tags($_POST["codcaja"]);
 		$stmt->execute();
 
-
-$sql = "select ingresos from arqueocaja where codcaja = '".$_POST["codcaja"]."' and statusarqueo = '1'";
-		foreach ($this->dbh->query($sql) as $row)
-		{
-			$this->p[] = $row;
-		}
-		$ingreso = $row['ingresos'];
-
-		$sql = " update arqueocaja set "
-		." ingresos = ? "
-		." where "
-		." codcaja = ? and statusarqueo = '1';
-		";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->bindParam(1, $txtTotal);
-		$stmt->bindParam(2, $codcaja);
-
-		$txtTotal = strip_tags($_POST["montoabono"]+$ingreso);
-		$codcaja = strip_tags($_POST["codcaja"]);
-		$stmt->execute();
+		$this->SumarIngresoArqueo($codarqueocaja, $montoabono);
 
 
 ############## ACTUALIZAMOS EL STATUS DE LA FACTURA ##################

@@ -5,7 +5,10 @@
  * - Personal de restaurante → /{slug}/sistema/
  */
 require_once __DIR__ . '/class/classconexion.php';
-if (session_status() === PHP_SESSION_NONE) {
+require_once __DIR__ . '/class/funciones_basicas.php';
+if (function_exists('pos_bootstrap_session')) {
+	pos_bootstrap_session();
+} elseif (session_status() === PHP_SESSION_NONE) {
 	session_start();
 }
 

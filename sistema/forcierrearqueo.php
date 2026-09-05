@@ -1,27 +1,12 @@
 <?php
 require_once("class/class.php");
 
-$logoutUrl = function_exists('sistema_url') ? sistema_url('logout') : 'logout';
 $panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
 $arqueosUrl = function_exists('sistema_url') ? sistema_url('arqueoscajas') : 'arqueoscajas';
 
-if (!isset($_SESSION['acceso'])) {
-	header('Location: ' . $logoutUrl);
-	exit;
-}
-
-if ($_SESSION['acceso'] != "administrador" && $_SESSION["acceso"] != "cajero") {
-	?>
-	<script type='text/javascript' language='javascript'>
-	alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO');
-	document.location.href=<?php echo json_encode($panelUrl); ?>;
-	</script>
-	<?php
-	exit;
-}
+pos_require_auth(array('administrador', 'cajero'));
 
 $tra = new Login();
-$tra->ExpiraSession();
 
 if (isset($_POST['btn-update']) || (isset($_POST['codarqueo']) && isset($_POST['codcaja']) && isset($_POST['dineroefectivo']) && isset($_POST['montoinicial']))) {
 	$tra->CerrarArqueoCaja();
@@ -293,20 +278,9 @@ $con = $con->ContarRegistros();
         <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
                 <label class="control-label">Caja N°: <span class="symbol required"></span></label>
- <input type="hidden" name="codarqueo" id="codarqueo" <?php if (isset($reg[0]['codarqueo'])) { ?> value="<?php echo $reg[0]['codarqueo']; ?>"<?php } ?>>
-<?php if ($_SESSION["acceso"]=="cajero") { ?><input type="hidden" class="form-control" name="codcaja" id="codcaja" value="<?php echo $reg[0]['codcaja']; ?>" ><input type="text" class="form-control" name="nrocaja" id="nrocaja" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" value="<?php echo $reg[0]['nrocaja'].": ".$reg[0]['nombrecaja']; ?>" readonly="readonly"><?php } else { ?>
-            <i class="fa fa-bars form-control-feedback"></i>
-							  <select name="codcaja" id="codcaja" class="form-control" required="" aria-required="true">
-												<option value="">SELECCIONE</option>
-			<?php
-			$caja = new Login();
-			$caja = $caja->ListarCajas();
-			for($i=0;$i<sizeof($caja);$i++){
-		              ?>
-	<option value="<?php echo $caja[$i]['codcaja']; ?>"<?php if (!(strcmp($reg[0]['codcaja'], htmlentities($caja[$i]['codcaja'])))) {echo "selected=\"selected\"";} ?>><?php echo $caja[$i]['nombrecaja']; ?></option>			  
-                      <?php } ?>
-							    </select>
-								<?php } ?>  
+ <input type="hidden" name="codarqueo" id="codarqueo" value="<?php echo (int) $reg[0]['codarqueo']; ?>">
+ <input type="hidden" class="form-control" name="codcaja" id="codcaja" value="<?php echo htmlspecialchars($reg[0]['codcaja']); ?>">
+ <input type="text" class="form-control" name="nrocaja" id="nrocaja" autocomplete="off" value="<?php echo htmlspecialchars($reg[0]['nombrecaja']); ?>" readonly="readonly">  
                               </div> 
                         </div>
 						

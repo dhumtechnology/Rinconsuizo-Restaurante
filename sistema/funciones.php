@@ -1927,7 +1927,17 @@ for($i=0;$i<sizeof($arqueo);$i++){
 
 <input type="hidden" name="codventa" id="codventa" value="<?php echo $arqueo[0]['codventa'] ?>">
 <input type="hidden" name="codmesa" id="codmesa" value="<?php echo $arqueo[0]['codmesa'] ?>">
-<input type="hidden" name="codcaja" id="codcaja" value="<?php echo $cajero[0]['codcaja'] ?>">
+<?php
+$codCajaCobro = (!empty($cajero[0]['codcaja'])) ? $cajero[0]['codcaja'] : '';
+if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'administrador') {
+	$cajasAb = new Login();
+	$cajasAb = $cajasAb->ListarCajasAbiertas();
+	if (!empty($cajasAb[0]['codcaja'])) {
+		$codCajaCobro = $cajasAb[0]['codcaja'];
+	}
+}
+?>
+<input type="hidden" name="codcaja" id="codcaja" value="<?php echo htmlspecialchars($codCajaCobro); ?>">
 <input type="hidden" name="nombremesa" id="nombremesa" value="<?php echo $arqueo[0]['nombremesa'] ?>">
 <input type="hidden" name="cliente" id="cliente" value="<?php echo isset($arqueo[0]['cliente']) && $arqueo[0]['cliente'] !== '' ? $arqueo[0]['cliente'] : '0'; ?>">
 <input type="hidden" name="tipo" id="tipo" value="0">

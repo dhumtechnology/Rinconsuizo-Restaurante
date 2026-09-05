@@ -52,7 +52,7 @@ if (isset($_GET['salas_mesas'])): ?>
             ?>
         <p>
             <!--AQUI LISTO LAS MESAS--> 
-        <ul class="users-list clearfix" id="listMesas">
+        <ul class="users-list clearfix mesas-grid" id="listMesas">
             <?php
                 $mesa = new Login();
                 $mesa = $mesa->ListarMesas();
