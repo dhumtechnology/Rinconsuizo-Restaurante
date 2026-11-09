@@ -21,96 +21,55 @@ if (isset($_POST['btn-login']) || (isset($_POST['usuario']) && isset($_POST['pas
 <title>SuperAdmin · Acceso</title>
 <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
 <link href="../assets/css/icons.css" rel="stylesheet">
-<link href="assets/sa.css" rel="stylesheet">
+<link href="assets/sa.css?v=17" rel="stylesheet">
 <script src="../assets/js/jquery.min.js"></script>
-<style>
-body.sa-login {
-  margin: 0;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(ellipse at 20% 20%, #1a2a40 0%, #0f1419 55%, #0a0e14 100%);
-  color: var(--sa-text);
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-}
-.sa-login-box {
-  width: 100%;
-  max-width: 400px;
-  background: var(--sa-panel);
-  border: 1px solid var(--sa-border);
-  border-radius: 12px;
-  padding: 36px 32px;
-  box-shadow: 0 24px 48px rgba(0,0,0,0.35);
-}
-.sa-login-box h1 {
-  margin: 0 0 6px;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-.sa-login-box .sub {
-  color: var(--sa-muted);
-  font-size: 0.9rem;
-  margin-bottom: 28px;
-}
-.sa-login-box label {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--sa-muted);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.sa-login-box .form-control {
-  background: #121a26;
-  border: 1px solid var(--sa-border);
-  color: var(--sa-text);
-  height: 44px;
-  margin-bottom: 16px;
-}
-.sa-login-box .form-control:focus {
-  border-color: var(--sa-accent);
-  box-shadow: 0 0 0 2px rgba(61,156,253,0.2);
-}
-.sa-login-box .btn-sa {
-  width: 100%;
-  height: 46px;
-  background: var(--sa-accent);
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  border-radius: 8px;
-  margin-top: 8px;
-}
-.sa-login-box .btn-sa:hover { background: #5aadff; color: #fff; }
-#error { margin-bottom: 12px; }
-</style>
 </head>
 <body class="sa-login">
-  <div class="sa-login-box">
-    <h1>Plataforma</h1>
-    <p class="sub">Acceso SuperAdministrador</p>
-    <form name="loginform" id="loginform" action="" method="post">
-      <input type="hidden" name="login_mode" value="superadmin">
-      <div id="error"></div>
-      <label for="usuario">Usuario</label>
-      <input type="text" class="form-control" name="usuario" id="usuario" autocomplete="username" required
-             onKeyUp="this.value=this.value.toUpperCase();">
-      <label for="password">Password</label>
-      <input type="password" class="form-control" name="password" id="password" autocomplete="current-password" required>
-      <button class="btn btn-sa" name="btn-login" id="btn-login" type="submit">
-        <span class="fa fa-sign-in"></span> Acceder
-      </button>
-    </form>
+  <div class="sa-login-shell">
+    <aside class="sa-login-aside">
+      <div>
+        <div class="sa-mark" style="width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.16);display:inline-flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V7l8-4 8 4v12"/><path d="M4 11h16"/><path d="M9 19v-5h6v5"/></svg>
+        </div>
+        <h2>Una consola para todos los locales</h2>
+        <p>Administra restaurantes, personal y ventas desde un solo lugar.</p>
+        <ul>
+          <li>Alta de locales y marca del menú</li>
+          <li>Administradores por restaurante</li>
+          <li>Ventas globales del día y del mes</li>
+        </ul>
+      </div>
+      <p style="font-size:.82rem;opacity:.75;margin:0;">Acceso exclusivo de SuperAdministrador</p>
+    </aside>
+    <div class="sa-login-box">
+      <h1>Iniciar sesión</h1>
+      <p class="sub">Usa tu usuario de plataforma. El personal de cada restaurante entra por la URL de su local.</p>
+      <form name="loginform" id="loginform" action="" method="post">
+        <input type="hidden" name="login_mode" value="superadmin">
+        <div id="error"></div>
+        <label for="usuario">Usuario</label>
+        <input type="text" class="form-control" name="usuario" id="usuario" autocomplete="username" required
+               onKeyUp="this.value=this.value.toUpperCase();" placeholder="SUPERADMIN">
+        <label for="password">Contraseña</label>
+        <div class="sa-pass-wrap">
+          <input type="password" class="form-control" name="password" id="password" autocomplete="current-password" required>
+          <button type="button" class="sa-pass-toggle" data-target="password">Mostrar</button>
+        </div>
+        <button class="btn btn-sa" name="btn-login" id="btn-login" type="submit">
+          Acceder
+        </button>
+      </form>
+    </div>
   </div>
   <script src="../assets/js/bootstrap.min.js"></script>
+  <script src="assets/sa.js?v=9"></script>
   <script>
   $(function () {
     $('#loginform').on('submit', function (e) {
       e.preventDefault();
       var data = $(this).serialize();
       if (data.indexOf('btn-login=') === -1) data += (data ? '&' : '') + 'btn-login=1';
-      $('#btn-login').prop('disabled', true).html('<i class="fa fa-refresh"></i> Verificando...');
+      $('#btn-login').prop('disabled', true).text('Verificando…');
       $.ajax({
         type: 'POST',
         url: 'login.php',
@@ -121,20 +80,20 @@ body.sa-login {
               window.location.href = response.redirect;
               return;
             }
-            $('#error').html('<div style="color:#ff8a8a;margin-bottom:12px">' + (response.html || 'Datos incorrectos') + '</div>');
-            $('#btn-login').prop('disabled', false).html('<span class="fa fa-sign-in"></span> Acceder');
+            $('#error').html(response.html || '<div class="alert alert-danger">Datos incorrectos</div>');
+            $('#btn-login').prop('disabled', false).text('Acceder');
             return;
           }
           if (typeof response === 'string' && response.indexOf('window.location') !== -1) {
             $('body').append(response);
             return;
           }
-          $('#error').html('<div style="color:#ff8a8a;margin-bottom:12px">' + response + '</div>');
-          $('#btn-login').prop('disabled', false).html('<span class="fa fa-sign-in"></span> Acceder');
+          $('#error').html(typeof response === 'string' ? response : '<div class="alert alert-danger">Datos incorrectos</div>');
+          $('#btn-login').prop('disabled', false).text('Acceder');
         },
         error: function () {
-          $('#error').html('<div style="color:#ff8a8a">Error de conexión</div>');
-          $('#btn-login').prop('disabled', false).html('<span class="fa fa-sign-in"></span> Acceder');
+          $('#error').html('<div class="alert alert-danger">Error de conexión. Revisa que el servidor esté en marcha.</div>');
+          $('#btn-login').prop('disabled', false).text('Acceder');
         }
       });
     });

@@ -2,77 +2,94 @@
 require_once('_bootstrap.php');
 $tra = sa_gate();
 
-if (isset($_POST['btn-restaurante'])) {
-	$tra->RegistrarRestaurante();
-	exit;
-}
-if (isset($_POST['btn-actualizar'])) {
-	$tra->ActualizarRestaurante();
-	exit;
-}
-if (isset($_POST['btn-admin'])) {
-	$tra->RegistrarAdminRestaurante();
-	exit;
-}
-if (isset($_POST['btn-config'])) {
-	$tra->ActualizarConfiguracionRestaurante();
-	exit;
-}
-
 $dash = $tra->DashboardSuperAdmin();
-sa_header('Dashboard');
+$ticketMes = ((int) $dash['ordenes_mes'] > 0)
+	? ((float) $dash['ventas_mes'] / (int) $dash['ordenes_mes'])
+	: 0;
+$inactivos = max(0, (int) $dash['total_restaurantes'] - (int) $dash['activos']);
+sa_header('Inicio', sa_saludo() . ' · ' . sa_fecha_larga());
 ?>
 <div class="sa-toolbar">
-  <a class="sa-btn" href="forrestaurante.php">+ Nuevo restaurante</a>
-  <a class="sa-btn secondary" href="restaurantes.php">Ver todos</a>
-  <a class="sa-btn secondary" href="ventas.php">Ventas</a>
+  <a class="sa-btn" href="forrestaurante.php"><?php echo sa_icon('plus'); ?> Nuevo restaurante</a>
+  <a class="sa-btn secondary" href="restaurantes.php">Ver restaurantes</a>
+  <a class="sa-btn secondary" href="ventas.php">Ventas globales</a>
 </div>
 
-<p class="sa-section-title">Resumen</p>
-<div class="sa-cards">
-  <div class="sa-card"><div class="label">Restaurantes</div><div class="value"><?php echo (int)$dash['total_restaurantes']; ?></div></div>
-  <div class="sa-card accent-ok"><div class="label">Activos</div><div class="value"><?php echo (int)$dash['activos']; ?></div></div>
-  <div class="sa-card"><div class="label">Usuarios</div><div class="value"><?php echo (int)$dash['usuarios']; ?></div></div>
-  <div class="sa-card accent-warn"><div class="label">Ventas hoy</div><div class="value">S/ <?php echo number_format($dash['ventas_hoy'], 2); ?></div></div>
-  <div class="sa-card"><div class="label">Órdenes hoy</div><div class="value"><?php echo (int)$dash['ordenes_hoy']; ?></div></div>
-  <div class="sa-card"><div class="label">Ventas mes</div><div class="value">S/ <?php echo number_format($dash['ventas_mes'], 2); ?></div></div>
-  <div class="sa-card"><div class="label">Órdenes mes</div><div class="value"><?php echo (int)$dash['ordenes_mes']; ?></div></div>
+<div class="sa-kpis">
+  <div class="sa-kpi">
+    <div class="sa-kpi-top">
+      <div class="label">Ventas de hoy</div>
+      <span class="sa-kpi-ico amber"><?php echo sa_icon('coin'); ?></span>
+    </div>
+    <div class="value"><?php echo sa_money($dash['ventas_hoy']); ?></div>
+    <div class="foot"><?php echo (int) $dash['ordenes_hoy']; ?> órdenes pagadas</div>
+  </div>
+  <div class="sa-kpi">
+    <div class="sa-kpi-top">
+      <div class="label">Ventas del mes</div>
+      <span class="sa-kpi-ico green"><?php echo sa_icon('chart'); ?></span>
+    </div>
+    <div class="value"><?php echo sa_money($dash['ventas_mes']); ?></div>
+    <div class="foot"><?php echo (int) $dash['ordenes_mes']; ?> órdenes · ticket <?php echo sa_money($ticketMes); ?></div>
+  </div>
+  <div class="sa-kpi">
+    <div class="sa-kpi-top">
+      <div class="label">Restaurantes</div>
+      <span class="sa-kpi-ico rose"><?php echo sa_icon('store'); ?></span>
+    </div>
+    <div class="value"><?php echo (int) $dash['activos']; ?><span class="sa-muted" style="font-size:1rem;font-family:var(--sa-font);font-weight:600"> / <?php echo (int) $dash['total_restaurantes']; ?></span></div>
+    <div class="foot"><?php echo $inactivos === 0 ? 'Todos activos' : $inactivos . ' inactivos'; ?></div>
+  </div>
+  <div class="sa-kpi">
+    <div class="sa-kpi-top">
+      <div class="label">Usuarios</div>
+      <span class="sa-kpi-ico blue"><?php echo sa_icon('users'); ?></span>
+    </div>
+    <div class="value"><?php echo (int) $dash['usuarios']; ?></div>
+    <div class="foot">Personal de todos los locales</div>
+  </div>
 </div>
 
-<p class="sa-section-title">Por restaurante</p>
-<div class="sa-table-wrap">
-<table class="sa-table">
-<thead>
-<tr>
-  <th>ID</th><th>Nombre</th><th>Estado</th><th>Usuarios</th>
-  <th>Ventas hoy</th><th>Ventas mes</th><th>Órdenes mes</th><th>Ticket prom.</th><th></th>
-</tr>
-</thead>
-<tbody>
+<div class="sa-section-head">
+  <div>
+    <h2>Por restaurante</h2>
+    <p>Actividad del mes y accesos rápidos</p>
+  </div>
+  <a class="sa-btn secondary" href="forrestaurante.php">Añadir</a>
+</div>
+
+<?php if (empty($dash['por_restaurante'])) {
+  sa_empty('Aún no hay restaurantes', 'Crea el primero para publicar su menú y abrir el POS.', 'forrestaurante.php', 'Crear restaurante');
+} else { ?>
+<div class="sa-rest-grid">
 <?php foreach ($dash['por_restaurante'] as $r) {
-  $ord = (int)$r['ordenes_mes'];
-  $prom = $ord > 0 ? ((float)$r['ventas_mes'] / $ord) : 0;
+  $ord = (int) $r['ordenes_mes'];
+  $prom = $ord > 0 ? ((float) $r['ventas_mes'] / $ord) : 0;
+  $id = (int) $r['id_restaurante'];
+  $hero = !empty($r['color_acento']) ? $r['color_acento'] : '#9b2c2c';
 ?>
-<tr>
-  <td><?php echo (int)$r['id_restaurante']; ?></td>
-  <td>
-    <?php if (!empty($r['logo'])) { ?><img class="sa-logo-preview" src="<?php echo htmlspecialchars(function_exists('restaurant_logo_url') ? restaurant_logo_url($r['logo']) : '../'.$r['logo']); ?>" alt=""> <?php } ?>
-    <?php echo htmlspecialchars($r['nombre']); ?>
-  </td>
-  <td><span class="sa-badge <?php echo $r['status']==='ACTIVO'?'ok':'off'; ?>"><?php echo htmlspecialchars($r['status']); ?></span></td>
-  <td><?php echo (int)$r['usuarios']; ?></td>
-  <td>S/ <?php echo number_format($r['ventas_hoy'], 2); ?></td>
-  <td>S/ <?php echo number_format($r['ventas_mes'], 2); ?></td>
-  <td><?php echo $ord; ?></td>
-  <td>S/ <?php echo number_format($prom, 2); ?></td>
-  <td class="sa-actions">
-    <a href="forrestaurante.php?id_restaurante=<?php echo base64_encode($r['id_restaurante']); ?>">Editar</a>
-    <a href="config_restaurante.php?id_restaurante=<?php echo (int)$r['id_restaurante']; ?>">Config</a>
-    <a href="ventas.php?id_restaurante=<?php echo (int)$r['id_restaurante']; ?>">Ventas</a>
-  </td>
-</tr>
+  <article class="sa-rest-card" data-sa-row="<?php echo htmlspecialchars($r['nombre']); ?>">
+    <div class="sa-rest-card-hero" style="background: <?php echo htmlspecialchars($hero); ?>;">
+      <?php echo sa_logo_html(isset($r['logo']) ? $r['logo'] : '', $r['nombre'], 'sa-logo-lg'); ?>
+      <span class="sa-badge <?php echo $r['status'] === 'ACTIVO' ? 'ok' : 'off'; ?>"><?php echo htmlspecialchars($r['status']); ?></span>
+    </div>
+    <div class="sa-rest-card-body">
+      <h3><?php echo htmlspecialchars($r['nombre']); ?></h3>
+      <div class="sa-rest-stats">
+        <div><span>Hoy</span><b><?php echo sa_money($r['ventas_hoy']); ?></b></div>
+        <div><span>Mes</span><b><?php echo sa_money($r['ventas_mes']); ?></b></div>
+        <div><span>Ticket</span><b><?php echo sa_money($prom); ?></b></div>
+      </div>
+      <div class="sa-rest-meta"><?php echo (int) $r['usuarios']; ?> usuarios · <?php echo $ord; ?> órdenes este mes</div>
+      <div class="sa-rest-card-actions">
+        <a href="forrestaurante.php?id_restaurante=<?php echo base64_encode($id); ?>">Editar</a>
+        <a href="config_restaurante.php?id_restaurante=<?php echo $id; ?>">Config POS</a>
+        <a href="ventas.php?id_restaurante=<?php echo $id; ?>">Ventas</a>
+        <a href="usuarios.php?id_restaurante=<?php echo $id; ?>">Usuarios</a>
+      </div>
+    </div>
+  </article>
 <?php } ?>
-</tbody>
-</table>
 </div>
+<?php } ?>
 <?php sa_footer(); ?>

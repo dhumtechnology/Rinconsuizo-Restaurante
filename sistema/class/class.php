@@ -98,7 +98,9 @@ class Login extends Db
 	public function ExpiraSession(){
 
 	$logoutUrl = 'logout.php';
-	if (function_exists('sistema_url')) {
+	if (function_exists('esSuperAdmin') && esSuperAdmin()) {
+		$logoutUrl = function_exists('app_url') ? app_url('/sistema/superadmin/logout.php') : 'logout.php';
+	} elseif (function_exists('sistema_url')) {
 		$slugOut = function_exists('restaurant_resolve_logout_slug') ? restaurant_resolve_logout_slug() : '';
 		if ($slugOut === '' && !empty($_SESSION['url_slug'])) {
 			$slugOut = preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['url_slug']));
@@ -755,6 +757,11 @@ public function RegistrarUsuarios()
 				$status = strip_tags(strtoupper($_POST["status"]));
 				$stmt->execute();
 
+				$envio = array('ok' => false, 'error' => '');
+				if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+					$envio = $this->enviarCredencialesAdminRestaurante($idRest, $nombres, $email, $usuario, $passPlain, $nivel);
+				}
+
 ##################  SUBIR FOTO DE USUARIOS ######################################
 //datos del arhivo  
 				if (isset($_FILES['imagen']['name'])) { $nombre_archivo = $_FILES['imagen']['name']; } else { $nombre_archivo =''; }
@@ -774,7 +781,16 @@ public function RegistrarUsuarios()
 				echo "<div class='alert alert-success'>";
 				echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
 				echo "<span class='fa fa-check-square-o'></span> EL USUARIO FUE REGISTRADO EXITOSAMENTE";
-				echo "</div>";		
+				if (!empty($envio['ok'])) {
+					echo ". Se enviaron las credenciales al correo indicado.";
+				}
+				echo "</div>";
+				if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL) && empty($envio['ok'])) {
+					echo "<div class='alert alert-warning'>";
+					echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+					echo "No se pudo enviar el correo: " . htmlspecialchars(isset($envio['error']) ? $envio['error'] : 'error desconocido') . ". Comparta las credenciales manualmente.";
+					echo "</div>";
+				}
 				exit;
 			}
 			else
@@ -11644,7 +11660,7 @@ $sql = "select
 	{
 		self::SetNames();
 		if (empty($_POST['nombre'])) {
-			echo "1";
+			echo "<div class='alert alert-warning'>Escribe el nombre del restaurante.</div>";
 			exit;
 		}
 		$nombre = strip_tags($_POST['nombre']);
@@ -11701,7 +11717,7 @@ $sql = "select
 
 		$menuHint = function_exists('app_url') ? app_url('/'.$slug.'/') : '/'.$slug.'/';
 		$posHint = function_exists('app_url') ? app_url('/'.$slug.'/sistema/') : '/'.$slug.'/sistema/';
-		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> RESTAURANTE REGISTRADO (#".$idNuevo.") — Menú: ".$menuHint." — POS: ".$posHint."</div>";
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button> Restaurante registrado (#".$idNuevo."). Menú: ".$menuHint." · POS: ".$posHint."</div>";
 		exit;
 	}
 
@@ -11709,7 +11725,7 @@ $sql = "select
 	{
 		self::SetNames();
 		if (empty($_POST['id_restaurante']) || empty($_POST['nombre'])) {
-			echo "1";
+			echo "<div class='alert alert-warning'>Faltan el nombre o el identificador del restaurante.</div>";
 			exit;
 		}
 		$id = (int) $_POST['id_restaurante'];
@@ -11770,7 +11786,7 @@ $sql = "select
 
 		$menuHint = function_exists('app_url') ? app_url('/'.$slug.'/') : '/'.$slug.'/';
 		$posHint = function_exists('app_url') ? app_url('/'.$slug.'/sistema/') : '/'.$slug.'/sistema/';
-		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> RESTAURANTE ACTUALIZADO — Menú: ".$menuHint." — POS: ".$posHint." — Colores aplicados</div>";
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button> Restaurante actualizado. Menú: ".$menuHint." · POS: ".$posHint."</div>";
 		exit;
 	}
 
@@ -11862,10 +11878,28 @@ $sql = "select
 	{
 		self::SetNames();
 		$this->p = array();
+		$idRest = (int) $idRest;
 		$stmt = $this->dbh->prepare("SELECT * FROM configuracion WHERE id_restaurante = ? LIMIT 1");
-		$stmt->execute(array((int) $idRest));
+		$stmt->execute(array($idRest));
 		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 			$this->p[] = $row;
+			return $this->p;
+		}
+		$rest = $this->RestaurantePorId($idRest);
+		$this->p = array();
+		if (!empty($rest)) {
+			$this->sembrarConfiguracionRestaurante(
+				$idRest,
+				$rest[0]['nombre'],
+				isset($rest[0]['ruc']) ? $rest[0]['ruc'] : '',
+				isset($rest[0]['telefono']) ? $rest[0]['telefono'] : '',
+				isset($rest[0]['email']) ? $rest[0]['email'] : '',
+				isset($rest[0]['direccion']) ? $rest[0]['direccion'] : ''
+			);
+			$stmt->execute(array($idRest));
+			if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+				$this->p[] = $row;
+			}
 		}
 		return $this->p;
 	}
@@ -11874,7 +11908,7 @@ $sql = "select
 	{
 		self::SetNames();
 		if (empty($_POST['id_restaurante']) || empty($_POST['nomempresa'])) {
-			echo "1";
+			echo "<div class='alert alert-warning'>Complete el nombre de la empresa.</div>";
 			exit;
 		}
 		$idRest = (int) $_POST['id_restaurante'];
@@ -11895,7 +11929,7 @@ $sql = "select
 			strip_tags($_POST['simbolo']),
 			$idRest
 		));
-		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> CONFIGURACIÓN ACTUALIZADA</div>";
+		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button> Configuración del POS actualizada.</div>";
 		exit;
 	}
 
@@ -11903,15 +11937,24 @@ $sql = "select
 	{
 		self::SetNames();
 		if (empty($_POST['nombres']) || empty($_POST['usuario']) || empty($_POST['password']) || empty($_POST['id_restaurante'])) {
-			echo "1";
+			echo "<div class='alert alert-warning'>Complete restaurante, nombres, usuario y contraseña.</div>";
+			exit;
+		}
+		$email = trim(strip_tags(isset($_POST['email']) ? $_POST['email'] : ''));
+		if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			echo "<div class='alert alert-warning'>Indique un correo electrónico válido. Las credenciales se envían por email.</div>";
 			exit;
 		}
 		$idRest = (int) $_POST['id_restaurante'];
 		$nivel = 'ADMINISTRADOR';
+		$cargo = 'ADMINISTRADOR';
+		$nombres = strip_tags($_POST['nombres']);
+		$usuarioLogin = strip_tags($_POST['usuario']);
+		$passwordPlain = (string) $_POST['password'];
 		$chk = $this->dbh->prepare("SELECT codigo FROM usuarios WHERE usuario = ? AND id_restaurante = ?");
-		$chk->execute(array(strip_tags($_POST['usuario']), $idRest));
+		$chk->execute(array($usuarioLogin, $idRest));
 		if ($chk->rowCount() > 0) {
-			echo "4";
+			echo "<div class='alert alert-warning'>Ese usuario ya existe en este restaurante.</div>";
 			exit;
 		}
 		if (function_exists('usuarios_ensure_password_plain')) {
@@ -11920,19 +11963,66 @@ $sql = "select
 		$stmt = $this->dbh->prepare("INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, password_plain, nivel, status, id_restaurante) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
 		$stmt->execute(array(
 			strip_tags($_POST['cedula']),
-			strip_tags($_POST['nombres']),
+			$nombres,
 			strip_tags(isset($_POST['nrotelefono']) ? $_POST['nrotelefono'] : ''),
-			strip_tags(isset($_POST['cargo']) ? $_POST['cargo'] : 'ADMINISTRADOR'),
-			strip_tags(isset($_POST['email']) ? $_POST['email'] : ''),
-			strip_tags($_POST['usuario']),
+			$cargo,
+			$email,
+			$usuarioLogin,
 			sha1(md5($_POST['password'])),
-			(string) $_POST['password'],
+			$passwordPlain,
 			$nivel,
 			'ACTIVO',
 			$idRest
 		));
-		echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><span class='fa fa-check-square-o'></span> ADMINISTRADOR CREADO</div>";
+		$envio = $this->enviarCredencialesAdminRestaurante($idRest, $nombres, $email, $usuarioLogin, $passwordPlain, $nivel);
+		if ($envio['ok']) {
+			echo "<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button> Administrador creado. Se enviaron las credenciales a " . htmlspecialchars($email) . ".</div>";
+		} else {
+			echo "<div class='alert alert-warning'><button type='button' class='close' data-dismiss='alert'>&times;</button> Administrador creado, pero no se pudo enviar el correo: " . htmlspecialchars($envio['error']) . ". Revise SMTP en .env o comparta las credenciales manualmente.</div>";
+		}
 		exit;
+	}
+
+	private function enviarCredencialesAdminRestaurante($idRest, $nombres, $email, $usuario, $password, $rol = 'ADMINISTRADOR')
+	{
+		$mailFile = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'mail' . DIRECTORY_SEPARATOR . 'enviar_correo.php';
+		if (!is_file($mailFile)) {
+			return array('ok' => false, 'error' => 'Módulo de correo no disponible');
+		}
+		require_once $mailFile;
+
+		$st = $this->dbh->prepare("SELECT nombre, slug FROM restaurantes WHERE id_restaurante = ? LIMIT 1");
+		$st->execute(array((int) $idRest));
+		$rest = $st->fetch(PDO::FETCH_ASSOC);
+		if (!$rest) {
+			return array('ok' => false, 'error' => 'Restaurante no encontrado');
+		}
+
+		$slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($rest['slug']));
+		$nomRest = $rest['nombre'];
+		if (function_exists('app_url')) {
+			$posUrl = app_url('/' . $slug . '/sistema/');
+		} else {
+			$posUrl = '/' . $slug . '/sistema/';
+		}
+
+		$he = function ($s) {
+			return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+		};
+		$asunto = 'Acceso al POS — ' . $nomRest;
+		$html = '<div style="font-family:Segoe UI,Arial,sans-serif;font-size:15px;color:#222;max-width:540px;line-height:1.5;">'
+			. '<p>Hola ' . $he($nombres) . ',</p>'
+			. '<p>Se creó su cuenta (<strong>' . $he($rol) . '</strong>) para <strong>' . $he($nomRest) . '</strong>.</p>'
+			. '<p style="margin:18px 0 8px;font-size:13px;color:#555;text-transform:uppercase;letter-spacing:.05em;">Datos de acceso</p>'
+			. '<table style="border-collapse:collapse;width:100%;background:#f8f6f2;border-radius:8px;">'
+			. '<tr><td style="padding:10px 12px;color:#666;vertical-align:top;width:120px;">URL POS</td><td style="padding:10px 12px;"><a href="' . $he($posUrl) . '">' . $he($posUrl) . '</a></td></tr>'
+			. '<tr><td style="padding:10px 12px;color:#666;">Usuario</td><td style="padding:10px 12px;"><strong>' . $he($usuario) . '</strong></td></tr>'
+			. '<tr><td style="padding:10px 12px;color:#666;">Contraseña</td><td style="padding:10px 12px;"><strong>' . $he($password) . '</strong></td></tr>'
+			. '</table>'
+			. '<p style="margin-top:16px;font-size:13px;color:#666;">La contraseña distingue mayúsculas y minúsculas. Guarde este mensaje en un lugar seguro.</p>'
+			. '</div>';
+
+		return enviar_correo_web($email, $asunto, $html, $nombres, $nomRest . ' — Plataforma');
 	}
 
 	public function ListarUsuariosPlataforma($id_restaurante = null, $cargo = null)
