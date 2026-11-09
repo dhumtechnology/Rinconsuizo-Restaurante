@@ -168,7 +168,7 @@
     var html = '';
     var i;
     if (!printersCache.length) {
-      html += '<p class="rs-print-printers-empty">No hay impresoras de red en el .env. Puede usar el navegador o configure PRINTER_1_IP.</p>';
+      html += '<p class="rs-print-printers-empty">No hay impresoras de red para este restaurante. El administrador puede registrarlas en Administración → Impresoras, o use el navegador.</p>';
     }
     for (i = 0; i < printersCache.length; i++) {
       var p = printersCache[i];

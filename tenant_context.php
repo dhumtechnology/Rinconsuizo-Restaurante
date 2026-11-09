@@ -295,6 +295,34 @@ if (!function_exists('web_tenant_row')) {
 	}
 }
 
+if (!function_exists('web_tenant_telefono')) {
+	function web_tenant_telefono()
+	{
+		$row = function_exists('web_tenant_row') ? web_tenant_row() : null;
+		if (!$row || !isset($row['telefono'])) {
+			return '';
+		}
+		return trim((string) $row['telefono']);
+	}
+}
+
+if (!function_exists('web_header_phone_html')) {
+	function web_header_phone_html()
+	{
+		$tel = web_tenant_telefono();
+		if ($tel === '') {
+			return '';
+		}
+		$esc = htmlspecialchars($tel, ENT_QUOTES, 'UTF-8');
+		$href = preg_replace('/[^\d+]/', '', $tel);
+		if ($href === '') {
+			return '';
+		}
+		$hrefEsc = htmlspecialchars($href, ENT_QUOTES, 'UTF-8');
+		return '<a class="nav2-icon-phone" href="tel:' . $hrefEsc . '" title="' . $esc . '"><i class="icon-nqt-phone"></i><span>' . $esc . '</span></a>';
+	}
+}
+
 if (!function_exists('web_brand_colors')) {
 	/** Colores de marca del restaurante actual (menú / tienda). */
 	function web_brand_colors()

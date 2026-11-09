@@ -19,6 +19,15 @@ else if(isset($_POST['btn-update']))
 $reg = $tra->ActualizarUsuarios();
 exit;
 }
+
+$reg = null;
+if (isset($_GET['codigo'])) {
+	$reg = $tra->UsuariosPorId();
+	if (empty($reg)) {
+		header('Location: usuarios?mesage=4');
+		exit;
+	}
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -251,9 +260,7 @@ exit;
 <div class="col-sm-12 col-xs-12"> 
             <div class="box-body">
 			
-<?php  if (isset($_GET['codigo'])) {
-			
-			$reg = $tra->UsuariosPorId(); ?>
+<?php  if (isset($_GET['codigo']) && !empty($reg)) { ?>
 			
 <form class="form" name="updateusuario" id="updateusuario" method="post" data-id="<?php echo $reg[0]["codigo"] ?>" action="#" enctype="multipart/form-data" >
 				
@@ -323,7 +330,7 @@ exit;
                            <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
   <label class="control-label">Password de Acceso: <span class="symbol required"></span></label> 
-   <input name="password" class="form-control" type="text" id="password" onKeyUp="this.value=this.value.toUpperCase();" placeholder="Ingrese Password de Acceso" autocomplete="off" required="required"/>
+   <input name="password" class="form-control" type="password" id="password" placeholder="Ingrese Password de Acceso" autocomplete="new-password" required="required"/>
                         <i class="fa fa-unlock form-control-feedback"></i>  
                               </div> 
                         </div> 	
@@ -331,7 +338,7 @@ exit;
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
     <label class="control-label">Repita Password: <span class="symbol required"></span></label>
-                                  <input type="text" class="form-control" name="password2" id="password2" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Password de Acceso" required="" aria-required="true">
+                                  <input type="password" class="form-control" name="password2" id="password2" autocomplete="new-password" placeholder="Ingrese Password de Acceso" required="" aria-required="true">
                         <i class="fa fa-unlock form-control-feedback"></i>  
                               </div> 
                         </div>
@@ -340,7 +347,10 @@ exit;
                               <div class="form-group has-feedback"> 
      <label class="control-label">Nivel de Acceso: <span class="symbol required"></span></label>
             <i class="fa fa-bars form-control-feedback"></i>
-                              <?php if (isset($reg[0]['nivel'])) { ?>
+                              <?php if (isset($reg[0]['nivel']) && $reg[0]['nivel'] === 'ADMINISTRADOR') { ?>
+			 <input type="hidden" name="nivel" id="nivel" value="ADMINISTRADOR">
+			 <input type="text" class="form-control" value="ADMINISTRADOR" readonly="readonly" disabled="disabled">
+                              <?php } elseif (isset($reg[0]['nivel'])) { ?>
 			 <select name="nivel" id="nivel" class="form-control" required="" aria-required="true">
 												<option value="">SELECCIONE</option>
 <option value="CAJERO"<?php if (!(strcmp('CAJERO', $reg[0]['nivel']))) {echo "selected=\"selected\"";} ?>>CAJERO(A)</option>

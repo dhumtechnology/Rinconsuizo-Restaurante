@@ -103,21 +103,9 @@ Requisitos en XAMPP: `mod_rewrite` activo y `AllowOverride All` en el VirtualHos
 
 ### Impresoras de red (tickets / comandas)
 
-Las térmicas se configuran en el **`.env` de la raíz** (no en el navegador). El modal de impresión muestra un desplegable para elegir cuál usar.
+Cada restaurante configura las suyas en el POS: **Administración → Impresoras** (solo el rol administrador). El CRUD guarda nombre, IP, puerto (típico 9100) y estado. Cajeros, meseros, cocineros y demás usuarios de ese restaurante ven las impresoras **activas** en el modal de impresión.
 
-```env
-PRINTER_1_NAME=Caja
-PRINTER_1_IP=192.168.1.50
-PRINTER_1_PORT=9100
-
-PRINTER_2_NAME=Cocina
-PRINTER_2_IP=192.168.1.51
-PRINTER_2_PORT=9100
-```
-
-Puede agregar `PRINTER_3_*`, `PRINTER_4_*`, etc. (hasta 20). El PHP del contenedor/servidor debe alcanzar esas IP (misma LAN). Tras editar `.env`, recargue el panel; no hace falta reconstruir Docker.
-
-Si no hay impresoras configuradas, el botón Imprimir sigue usando el diálogo del navegador (opción “Navegador”).
+El PHP del contenedor/servidor debe alcanzar esas IP (misma LAN). Si no hay impresoras activas, el modal sigue ofreciendo el diálogo del navegador.
 
 ### Credenciales de acceso al sistema
 

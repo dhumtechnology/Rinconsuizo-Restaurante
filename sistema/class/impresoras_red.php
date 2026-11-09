@@ -1,44 +1,8 @@
 <?php
 /**
  * Impresoras térmicas de red (ESC/POS, puerto 9100).
- * Se configuran en el .env de la raíz del proyecto.
+ * Se configuran por restaurante en Administración → Impresoras.
  */
-
-function cargar_env_impresoras_si_falta()
-{
-    static $cargado = false;
-    if ($cargado) {
-        return;
-    }
-    $cargado = true;
-
-    $envFile = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . '.env';
-    if (!is_readable($envFile)) {
-        return;
-    }
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($lines === false) {
-        return;
-    }
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
-            continue;
-        }
-        list($key, $value) = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value, " \t\"'");
-        if ($key === '') {
-            continue;
-        }
-        $actual = getenv($key);
-        if ($actual !== false && $actual !== '') {
-            continue;
-        }
-        putenv($key . '=' . $value);
-        $_ENV[$key] = $value;
-    }
-}
 
 function impresora_red_slug($nombre, $fallback)
 {
@@ -82,63 +46,30 @@ function impresora_red_normalizar($id, $nombre, $ip, $port)
 
 function listarImpresorasRed()
 {
-    cargar_env_impresoras_si_falta();
     $out = array();
-    $vistos = array();
-
-    for ($i = 1; $i <= 20; $i++) {
-        $ip = getenv('PRINTER_' . $i . '_IP');
-        if ($ip === false || trim((string) $ip) === '') {
-            continue;
-        }
-        $nombre = getenv('PRINTER_' . $i . '_NAME');
-        $port = getenv('PRINTER_' . $i . '_PORT');
-        $id = getenv('PRINTER_' . $i . '_ID');
-        $item = impresora_red_normalizar(
-            $id !== false ? $id : '',
-            $nombre !== false ? $nombre : ('Impresora ' . $i),
-            $ip,
-            $port !== false ? $port : 9100
-        );
-        if ($item === null) {
-            continue;
-        }
-        $clave = $item['ip'] . ':' . $item['port'];
-        if (isset($vistos[$clave])) {
-            continue;
-        }
-        $vistos[$clave] = true;
-        $out[] = $item;
+    if (!class_exists('Login')) {
+        return $out;
     }
-
-    $compact = getenv('PRINTERS');
-    if ($compact !== false && trim((string) $compact) !== '') {
-        $partes = explode(',', $compact);
-        foreach ($partes as $parte) {
-            $parte = trim($parte);
-            if ($parte === '') {
-                continue;
-            }
-            $bits = explode(':', $parte);
-            if (count($bits) < 2) {
-                continue;
-            }
-            $nombre = trim($bits[0]);
-            $ip = trim($bits[1]);
-            $port = isset($bits[2]) ? trim($bits[2]) : 9100;
-            $item = impresora_red_normalizar('', $nombre, $ip, $port);
-            if ($item === null) {
-                continue;
-            }
-            $clave = $item['ip'] . ':' . $item['port'];
-            if (isset($vistos[$clave])) {
-                continue;
-            }
-            $vistos[$clave] = true;
+    try {
+        $tra = new Login();
+        $rows = $tra->ListarImpresoras(true);
+    } catch (Exception $e) {
+        return $out;
+    }
+    if (!is_array($rows)) {
+        return $out;
+    }
+    foreach ($rows as $row) {
+        $item = impresora_red_normalizar(
+            isset($row['id_impresora']) ? (string) $row['id_impresora'] : '',
+            isset($row['nombre']) ? $row['nombre'] : '',
+            isset($row['ip']) ? $row['ip'] : '',
+            isset($row['puerto']) ? $row['puerto'] : 9100
+        );
+        if ($item !== null) {
             $out[] = $item;
         }
     }
-
     return $out;
 }
 
@@ -200,7 +131,7 @@ function imprimirImagenEnImpresoraRed($printerId, $pngPath, $paper = '80')
 {
     $impresora = impresoraRedPorId($printerId);
     if ($impresora === null) {
-        throw new Exception('Impresora no encontrada. Revisa el .env.');
+        throw new Exception('Impresora no encontrada. Revise Administración → Impresoras.');
     }
     if (!is_file($pngPath) || !is_readable($pngPath)) {
         throw new Exception('No hay imagen para imprimir.');

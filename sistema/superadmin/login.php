@@ -116,7 +116,16 @@ body.sa-login {
         url: 'login.php',
         data: data,
         success: function (response) {
-          if (response.indexOf('window.location') !== -1) {
+          if (typeof response === 'object' && response !== null) {
+            if (response.ok && response.redirect) {
+              window.location.href = response.redirect;
+              return;
+            }
+            $('#error').html('<div style="color:#ff8a8a;margin-bottom:12px">' + (response.html || 'Datos incorrectos') + '</div>');
+            $('#btn-login').prop('disabled', false).html('<span class="fa fa-sign-in"></span> Acceder');
+            return;
+          }
+          if (typeof response === 'string' && response.indexOf('window.location') !== -1) {
             $('body').append(response);
             return;
           }

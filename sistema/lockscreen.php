@@ -66,7 +66,7 @@ if (isset($_SESSION['cedula'])) {
 <div class="form-group has-feedback">
                 <label class="control-label">Ingrese su Password: <span class="symbol required"></span></label>
               <input type="hidden" name="usuario" id="usuario" value="<?php echo $_SESSION['usuario'] ?>">
-<input class="form-control" type="password" placeholder="Ingrese su Password" name="password" id="password" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" required="" aria-required="true">
+<input class="form-control" type="password" placeholder="Ingrese su Password" name="password" id="password" autocomplete="current-password" required="" aria-required="true">
                         <i class="fa fa-lock form-control-feedback"></i>			
 					</div>
 					

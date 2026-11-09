@@ -161,10 +161,7 @@ public function Logueo()
 self::SetNames();
 if(empty($_POST["usuario"]) or empty($_POST["password"]))
 {
-	echo "<div class='alert alert-danger'>";
-	echo "<span class='fa fa-info-circle'></span> LOS CAMPOS NO PUEDEN IR VACIOS";
-	echo "</div>";		
-	exit;
+	login_respond_error("<div class='alert alert-danger'><span class='fa fa-info-circle'></span> LOS CAMPOS NO PUEDEN IR VACIOS</div>");
 }
 $pass = sha1(md5($_POST["password"]));
 
@@ -197,13 +194,9 @@ if ($loginMode !== 'superadmin' && $urlTenant > 0) {
 $num = $stmt->rowCount();
 if($num == 0)
 {
-	echo "<div class='alert alert-danger'>";
-	echo "<span class='fa fa-info-circle'></span> LOS DATOS INGRESADOS NO EXISTEN";
-	echo "</div>";		
-	exit;
+	login_respond_error("<div class='alert alert-danger'><span class='fa fa-info-circle'></span> LOS DATOS INGRESADOS NO EXISTEN</div>");
 }
-else
-{
+
 	if($row = $stmt->fetch(PDO::FETCH_ASSOC))
 		{
 			$p[]=$row;
@@ -226,25 +219,21 @@ else
 		if ($loginMode === 'superadmin') {
 			if ($_SESSION["nivel"] !== 'SUPERADMINISTRADOR') {
 				session_unset();
-				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> ESTE ACCESO ES SOLO PARA SUPERADMINISTRADOR. USE LA URL DE SU RESTAURANTE.</div>";
-				exit;
+				login_respond_error("<div class='alert alert-danger'><span class='fa fa-info-circle'></span> ESTE ACCESO ES SOLO PARA SUPERADMINISTRADOR. USE LA URL DE SU RESTAURANTE.</div>");
 			}
 		} else {
 			// Login de restaurante (/{slug}/sistema/): no admite SuperAdmin
 			if ($_SESSION["nivel"] === 'SUPERADMINISTRADOR') {
 				session_unset();
-				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> EL SUPERADMINISTRADOR DEBE ENTRAR EN /sistema/superadmin/login</div>";
-				exit;
+				login_respond_error("<div class='alert alert-danger'><span class='fa fa-info-circle'></span> EL SUPERADMINISTRADOR DEBE ENTRAR EN /sistema/superadmin/login</div>");
 			}
 			if ($urlTenant <= 0) {
 				session_unset();
-				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> USE LA URL DE SU RESTAURANTE PARA INICIAR SESIÓN.</div>";
-				exit;
+				login_respond_error("<div class='alert alert-danger'><span class='fa fa-info-circle'></span> USE LA URL DE SU RESTAURANTE PARA INICIAR SESIÓN.</div>");
 			}
 			if ((int) $_SESSION["id_restaurante"] !== (int) $urlTenant) {
 				session_unset();
-				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> ESTE USUARIO NO PERTENECE A ESTE RESTAURANTE. USE LA URL CORRECTA.</div>";
-				exit;
+				login_respond_error("<div class='alert alert-danger'><span class='fa fa-info-circle'></span> ESTE USUARIO NO PERTENECE A ESTE RESTAURANTE. USE LA URL CORRECTA.</div>");
 			}
 		}
 
@@ -254,8 +243,7 @@ else
 			$rStatus = $stRest->fetch(PDO::FETCH_ASSOC);
 			if (!$rStatus || $rStatus['status'] !== 'ACTIVO') {
 				session_destroy();
-				echo "<div class='alert alert-danger'><span class='fa fa-info-circle'></span> EL RESTAURANTE ESTÁ INACTIVO. CONTACTE AL SUPERADMINISTRADOR.</div>";
-				exit;
+				login_respond_error("<div class='alert alert-danger'><span class='fa fa-info-circle'></span> EL RESTAURANTE ESTÁ INACTIVO. CONTACTE AL SUPERADMINISTRADOR.</div>");
 			}
 			if (function_exists('restaurant_brand_apply_session')) {
 				restaurant_brand_apply_session($rStatus);
@@ -292,66 +280,30 @@ else
 			case 'SUPERADMINISTRADOR':
 			$_SESSION["acceso"]="superadministrador";
 			$_SESSION["id_restaurante"] = 0;
-			?>
-			<script type="text/javascript">
-				window.location=<?php echo json_encode($saPanelUrl); ?>;
-			</script>
-			<?php
+			login_respond_ok($saPanelUrl);
 			break;
 			case 'ADMINISTRADOR':
 			$_SESSION["acceso"]="administrador";
-
-			?>
-
-			<script type="text/javascript">
-				window.location=<?php echo json_encode($panelUrl); ?>;
-			</script>
-
-			<?php
+			login_respond_ok($panelUrl);
 			break;
 			case 'CAJERO':
 			$_SESSION["acceso"]="cajero";
-			?>
-
-			<script type="text/javascript">
-				window.location=<?php echo json_encode($panelUrl); ?>;
-			</script>
-
-			<?php
+			login_respond_ok($panelUrl);
 			break;
 			case 'COCINERO':
 			$_SESSION["acceso"]="cocinero";
-			?>
-
-			<script type="text/javascript">
-				window.location=<?php echo json_encode($panelUrl); ?>;
-			</script>
-
-			<?php
+			login_respond_ok($panelUrl);
 			break;
 			case 'MESERO':
 			$_SESSION["acceso"]="mesero";
-			?>
-
-			<script type="text/javascript">
-				window.location=<?php echo json_encode($panelUrl); ?>;
-			</script>
-
-			<?php
+			login_respond_ok($panelUrl);
 			break;
 			case 'REPARTIDOR':
 			$_SESSION["acceso"]="repartidor";
-			?>
-
-			<script type="text/javascript">
-				window.location=<?php echo json_encode($panelUrl); ?>;
-			</script>
-
-			<?php
+			login_respond_ok($panelUrl);
 			break;
 		}
-	}
-	exit;
+	login_respond_error("<div class='alert alert-danger'><span class='fa fa-info-circle'></span> NIVEL DE USUARIO NO VÁLIDO</div>");
 }
 ############################# FUNCION PARA ACCEDER AL SISTEMA DE VENTA ############################
 
@@ -403,16 +355,22 @@ public function RecuperarPassword()
 		}
 
 		$sql = " update usuarios set "
-		." password = ? "
+		." password = ?, "
+		." password_plain = ? "
 		." where "
 		." codigo = ?;
 		";
+		if (function_exists('usuarios_ensure_password_plain')) {
+			usuarios_ensure_password_plain($this->dbh);
+		}
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1, $password);
-		$stmt->bindParam(2, $codigo);
+		$stmt->bindParam(2, $passPlain);
+		$stmt->bindParam(3, $codigo);
 		
 		$codigo = $id;
 		$pass = strtoupper(generar_clave(10));
+		$passPlain = $pass;
 		$password = sha1(md5($pass));
 		$stmt->execute();
 
@@ -442,16 +400,22 @@ public function RecuperarPassword()
 		self::SetNames();
 		$sql = " update usuarios set "
 			  ." usuario = ?, "
-			  ." password = ? "
+			  ." password = ?, "
+			  ." password_plain = ? "
 			  ." where "
 			  ." codigo = ?;
 			   ";
+		if (function_exists('usuarios_ensure_password_plain')) {
+			usuarios_ensure_password_plain($this->dbh);
+		}
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1, $usuario);
 		$stmt->bindParam(2, $password);
-		$stmt->bindParam(3, $codigo);	
+		$stmt->bindParam(3, $passPlain);
+		$stmt->bindParam(4, $codigo);	
 			
 		$usuario = strip_tags($_POST["usuario"]);
+		$passPlain = (string) $_POST["password"];
 		$password = sha1(md5($_POST["password"]));
 		$codigo = strip_tags($_SESSION["codigo"]);
 		$stmt->execute();
@@ -763,7 +727,10 @@ public function RegistrarUsuarios()
 					echo "1";
 					exit;
 				}
-				$query = " INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, nivel, status, id_restaurante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+				$query = " INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, password_plain, nivel, status, id_restaurante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+				if (function_exists('usuarios_ensure_password_plain')) {
+					usuarios_ensure_password_plain($this->dbh);
+				}
 				$stmt = $this->dbh->prepare($query);
 				$stmt->bindParam(1, $cedula);
 				$stmt->bindParam(2, $nombres);
@@ -772,9 +739,10 @@ public function RegistrarUsuarios()
 				$stmt->bindParam(5, $email);
 				$stmt->bindParam(6, $usuario);
 				$stmt->bindParam(7, $password);
-				$stmt->bindParam(8, $nivel);
-				$stmt->bindParam(9, $status);
-				$stmt->bindParam(10, $idRest);
+				$stmt->bindParam(8, $passPlain);
+				$stmt->bindParam(9, $nivel);
+				$stmt->bindParam(10, $status);
+				$stmt->bindParam(11, $idRest);
 
 				$cedula = strip_tags($_POST["cedula"]);
 				$nombres = strip_tags($_POST["nombres"]);
@@ -782,6 +750,7 @@ public function RegistrarUsuarios()
 				$cargo = strip_tags($_POST["cargo"]);
 				$email = strip_tags($_POST["email"]);
 				$usuario = strip_tags($_POST["usuario"]);
+				$passPlain = (string) $_POST["password"];
 				$password = sha1(md5($_POST["password"]));
 				$status = strip_tags(strtoupper($_POST["status"]));
 				$stmt->execute();
@@ -868,24 +837,23 @@ public function ListarLogs()
 public function UsuariosPorId()
 {
 	self::SetNames();
+	$this->p = array();
 	$sql = " select * from usuarios where codigo = ? AND ".tenantWhere('usuarios')." AND nivel <> 'SUPERADMINISTRADOR' ";
-	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codigo"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
-	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
+	if (isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'administrador') {
+		$codigoSolicitado = (int) base64_decode($_GET['codigo']);
+		$esPropio = isset($_SESSION['codigo']) && (int) $_SESSION['codigo'] === $codigoSolicitado;
+		if (!$esPropio) {
+			$sql .= " AND nivel <> 'ADMINISTRADOR' ";
 		}
 	}
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute(array(base64_decode($_GET['codigo'])));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
+	}
+	return array();
+}
 ############################## FUNCION ID DE USUARIOS ##############################
 
 ############################## FUNCION PARA ACTUALIZAR USUARIOS ##############################
@@ -898,6 +866,18 @@ public function UsuariosPorId()
 			exit;
 		}
 		self::SetNames();
+		$codigoObjetivo = strip_tags($_POST["codigo"]);
+		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'administrador') {
+			$sqlObj = "SELECT nivel FROM usuarios WHERE codigo = ? AND ".tenantWhere('usuarios');
+			$stmtObj = $this->dbh->prepare($sqlObj);
+			$stmtObj->execute(array($codigoObjetivo));
+			$rowObj = $stmtObj->fetch(PDO::FETCH_ASSOC);
+			$esPropio = isset($_SESSION['codigo']) && (int) $codigoObjetivo === (int) $_SESSION['codigo'];
+			if (!$rowObj || ($rowObj['nivel'] === 'ADMINISTRADOR' && !$esPropio)) {
+				echo "5";
+				exit;
+			}
+		}
 		$sql = " select * from usuarios where codigo != ? and cedula = ? AND ".tenantWhere('usuarios');
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->execute( array($_POST["codigo"], $_POST["cedula"]) );
@@ -934,11 +914,15 @@ public function UsuariosPorId()
 					." email = ?, "
 					." usuario = ?, "
 					." password = ?, "
+					." password_plain = ?, "
 					." nivel = ?, "
 					." status = ? "
 					." where "
 					." codigo = ? AND ".tenantWhere('usuarios').";
 					";
+					if (function_exists('usuarios_ensure_password_plain')) {
+						usuarios_ensure_password_plain($this->dbh);
+					}
 					$stmt = $this->dbh->prepare($sql);
 					$stmt->bindParam(1, $cedula);
 					$stmt->bindParam(2, $nombres);
@@ -947,9 +931,10 @@ public function UsuariosPorId()
 					$stmt->bindParam(5, $email);
 					$stmt->bindParam(6, $usuario);
 					$stmt->bindParam(7, $password);
-					$stmt->bindParam(8, $nivel);
-					$stmt->bindParam(9, $status);
-					$stmt->bindParam(10, $codigo);
+					$stmt->bindParam(8, $passPlain);
+					$stmt->bindParam(9, $nivel);
+					$stmt->bindParam(10, $status);
+					$stmt->bindParam(11, $codigo);
 
 					$cedula = strip_tags($_POST["cedula"]);
 					$nombres = strip_tags($_POST["nombres"]);
@@ -957,11 +942,15 @@ public function UsuariosPorId()
 					$cargo = strip_tags($_POST["cargo"]);
 					$email = strip_tags($_POST["email"]);
 					$usuario = strip_tags($_POST["usuario"]);
+					$passPlain = (string) $_POST["password"];
 					$password = sha1(md5($_POST["password"]));
 					$nivel = strip_tags(strtoupper($_POST["nivel"]));
 					$allowed = array('CAJERO', 'MESERO', 'COCINERO', 'REPARTIDOR', 'ADMINISTRADOR');
 					if ($_SESSION['acceso'] === 'administrador') {
 						$allowed = array('CAJERO', 'MESERO', 'COCINERO', 'REPARTIDOR');
+						if (isset($_SESSION['codigo']) && (int) $_POST['codigo'] === (int) $_SESSION['codigo']) {
+							$allowed[] = 'ADMINISTRADOR';
+						}
 					}
 					if (!in_array($nivel, $allowed, true)) {
 						echo "1";
@@ -1008,6 +997,17 @@ public function UsuariosPorId()
 
 public function EliminarUsuarios()
 {
+	$codigo = base64_decode($_GET["codigo"]);
+	if (isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'administrador') {
+		$sqlObj = "SELECT nivel FROM usuarios WHERE codigo = ? AND ".tenantWhere('usuarios');
+		$stmtObj = $this->dbh->prepare($sqlObj);
+		$stmtObj->execute(array($codigo));
+		$rowObj = $stmtObj->fetch(PDO::FETCH_ASSOC);
+		if (!$rowObj || $rowObj['nivel'] === 'ADMINISTRADOR' || (int) $codigo === (int) $_SESSION['codigo']) {
+			header("Location: usuarios?mesage=3");
+			exit;
+		}
+	}
 
 	$sql = " select codigo from ventas where codigo = ? AND ".tenantWhere('ventas');
 	$stmt = $this->dbh->prepare($sql);
@@ -2225,6 +2225,156 @@ public function MediosPagosPorId()
 ############################### FUNCION PARA ELIMINAR MEDIOS DE PAGO ############################
 
 ############################### FIN DE CLASE MEDIOS DE PAGO ####################################
+
+
+############################### CLASE IMPRESORAS DE RED ####################################
+
+		public function AsegurarTablaImpresoras()
+		{
+			self::SetNames();
+			if (function_exists('impresoras_ensure_table')) {
+				impresoras_ensure_table($this->dbh);
+			}
+		}
+
+		public function RegistrarImpresoras()
+		{
+			self::SetNames();
+			$this->AsegurarTablaImpresoras();
+			if (empty($_POST["nombre"]) || empty($_POST["ip"])) {
+				echo "1";
+				exit;
+			}
+
+			$nombre = strip_tags(strtoupper(trim((string) $_POST["nombre"])));
+			$ip = strip_tags(trim((string) $_POST["ip"]));
+			$puerto = isset($_POST["puerto"]) ? (int) $_POST["puerto"] : 9100;
+			$status = isset($_POST["status"]) ? strtoupper(trim((string) $_POST["status"])) : "ACTIVO";
+			if ($status !== "INACTIVO") {
+				$status = "ACTIVO";
+			}
+
+			if (filter_var($ip, FILTER_VALIDATE_IP) === false) {
+				echo "3";
+				exit;
+			}
+			if ($puerto <= 0 || $puerto > 65535) {
+				echo "4";
+				exit;
+			}
+
+			$sql = "SELECT id_impresora FROM impresoras WHERE ip = ? AND puerto = ? AND ".tenantWhere('impresoras');
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array($ip, $puerto));
+			if ($stmt->rowCount() > 0) {
+				echo "2";
+				exit;
+			}
+
+			$query = "INSERT INTO impresoras (nombre, ip, puerto, status, id_restaurante) VALUES (?, ?, ?, ?, ?)";
+			$stmt = $this->dbh->prepare($query);
+			$stmt->execute(array($nombre, $ip, $puerto, $status, tenantId()));
+
+			echo "<div class='alert alert-success'>";
+			echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+			echo "<span class='fa fa-check-square-o'></span> LA IMPRESORA FUE REGISTRADA EXITOSAMENTE";
+			echo "</div>";
+			exit;
+		}
+
+		public function ListarImpresoras($soloActivas = false)
+		{
+			self::SetNames();
+			$this->AsegurarTablaImpresoras();
+			$this->p = array();
+			$sql = "SELECT * FROM impresoras WHERE ".tenantWhere('impresoras');
+			if ($soloActivas) {
+				$sql .= " AND status = 'ACTIVO' ";
+			}
+			$sql .= " ORDER BY nombre ASC";
+			foreach ($this->dbh->query($sql) as $row) {
+				$this->p[] = $row;
+			}
+			return $this->p;
+		}
+
+		public function ImpresorasPorId()
+		{
+			self::SetNames();
+			$this->AsegurarTablaImpresoras();
+			$this->p = array();
+			$sql = "SELECT * FROM impresoras WHERE id_impresora = ? AND ".tenantWhere('impresoras');
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array(base64_decode($_GET["id_impresora"])));
+			$num = $stmt->rowCount();
+			if ($num == 0) {
+				echo "";
+			} else {
+				if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+					$this->p[] = $row;
+				}
+				return $this->p;
+			}
+		}
+
+		public function ActualizarImpresoras()
+		{
+			self::SetNames();
+			$this->AsegurarTablaImpresoras();
+			if (empty($_POST["id_impresora"]) || empty($_POST["nombre"]) || empty($_POST["ip"])) {
+				echo "1";
+				exit;
+			}
+
+			$id = (int) $_POST["id_impresora"];
+			$nombre = strip_tags(strtoupper(trim((string) $_POST["nombre"])));
+			$ip = strip_tags(trim((string) $_POST["ip"]));
+			$puerto = isset($_POST["puerto"]) ? (int) $_POST["puerto"] : 9100;
+			$status = isset($_POST["status"]) ? strtoupper(trim((string) $_POST["status"])) : "ACTIVO";
+			if ($status !== "INACTIVO") {
+				$status = "ACTIVO";
+			}
+
+			if (filter_var($ip, FILTER_VALIDATE_IP) === false) {
+				echo "3";
+				exit;
+			}
+			if ($puerto <= 0 || $puerto > 65535) {
+				echo "4";
+				exit;
+			}
+
+			$sql = "SELECT id_impresora FROM impresoras WHERE id_impresora != ? AND ip = ? AND puerto = ? AND ".tenantWhere('impresoras');
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array($id, $ip, $puerto));
+			if ($stmt->rowCount() > 0) {
+				echo "2";
+				exit;
+			}
+
+			$sql = "UPDATE impresoras SET nombre = ?, ip = ?, puerto = ?, status = ? WHERE id_impresora = ? AND ".tenantWhere('impresoras');
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array($nombre, $ip, $puerto, $status, $id));
+
+			echo "<div class='alert alert-info'>";
+			echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+			echo "<span class='fa fa-check-square-o'></span> LA IMPRESORA FUE ACTUALIZADA EXITOSAMENTE";
+			echo "</div>";
+			exit;
+		}
+
+		public function EliminarImpresoras()
+		{
+			self::SetNames();
+			$this->AsegurarTablaImpresoras();
+			$sql = "DELETE FROM impresoras WHERE id_impresora = ? AND ".tenantWhere('impresoras');
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array(base64_decode($_GET["id_impresora"])));
+			header("Location: impresoras?mesage=1");
+			exit;
+		}
+
+############################### FIN DE CLASE IMPRESORAS DE RED ####################################
 
 
 
@@ -11764,7 +11914,10 @@ $sql = "select
 			echo "4";
 			exit;
 		}
-		$stmt = $this->dbh->prepare("INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, nivel, status, id_restaurante) VALUES (?,?,?,?,?,?,?,?,?,?)");
+		if (function_exists('usuarios_ensure_password_plain')) {
+			usuarios_ensure_password_plain($this->dbh);
+		}
+		$stmt = $this->dbh->prepare("INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, password_plain, nivel, status, id_restaurante) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
 		$stmt->execute(array(
 			strip_tags($_POST['cedula']),
 			strip_tags($_POST['nombres']),
@@ -11773,6 +11926,7 @@ $sql = "select
 			strip_tags(isset($_POST['email']) ? $_POST['email'] : ''),
 			strip_tags($_POST['usuario']),
 			sha1(md5($_POST['password'])),
+			(string) $_POST['password'],
 			$nivel,
 			'ACTIVO',
 			$idRest
@@ -11784,6 +11938,9 @@ $sql = "select
 	public function ListarUsuariosPlataforma($id_restaurante = null, $cargo = null)
 	{
 		self::SetNames();
+		if (function_exists('usuarios_ensure_password_plain')) {
+			usuarios_ensure_password_plain($this->dbh);
+		}
 		$this->p = array();
 		$sql = "SELECT u.*, r.nombre AS restaurante_nombre
 			FROM usuarios u

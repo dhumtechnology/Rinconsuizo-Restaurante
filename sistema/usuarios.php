@@ -286,6 +286,20 @@ $reg = $tra->ListarUsuarios();
 		echo "<center><span class='fa fa-info-circle'></span> ESTE USUARIO NO PUEDE SER ELIMINADO, TIENE VENTAS ASOCIADAS ACTUALMENTE </center>";  
 		echo "</div>"; 
 		break;
+
+		case 3:
+		echo "<div class='alert alert-warning'>";
+		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+		echo "<center><span class='fa fa-info-circle'></span> NO PUEDE ELIMINAR UN USUARIO ADMINISTRADOR NI SU PROPIA CUENTA </center>";
+		echo "</div>";
+		break;
+
+		case 4:
+		echo "<div class='alert alert-warning'>";
+		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+		echo "<center><span class='fa fa-info-circle'></span> NO TIENE PERMISO PARA EDITAR ESE USUARIO </center>";
+		echo "</div>";
+		break;
 		
 	}
 }		
@@ -323,15 +337,20 @@ for($i=0;$i<sizeof($reg);$i++){
  
  <a href="#" class="btn btn-success btn-xs" data-placement="left" title="Ver Usuario" data-original-title="" data-href="#" data-toggle="modal" data-target="#panel-modal" data-backdrop="static" data-keyboard="false" onClick="VerUsuario('<?php echo base64_encode($reg[$i]["codigo"]); ?>')"><i class="fa fa-search-plus"></i></a>
 
-<a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="No tiene permisos" ><i class="fa fa-pencil"></i></a>
-
-<a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="No tiene permisos" ><i class="fa fa-trash-o"></i></a>
-
-<!--								  
+<?php
+$esPropio = isset($_SESSION['codigo']) && (int) $reg[$i]['codigo'] === (int) $_SESSION['codigo'];
+$puedeEditar = ($reg[$i]['nivel'] !== 'ADMINISTRADOR') || $esPropio;
+$puedeEliminar = ($reg[$i]['nivel'] !== 'ADMINISTRADOR') && !$esPropio;
+if ($puedeEditar) { ?>
 <a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Usuario" onClick="actualizar('forusuario?codigo=<?php echo base64_encode($reg[$i]["codigo"]) ?>')"><i class="fa fa-pencil"></i></a>
-                                 
+<?php } else { ?>
+<a href="#" class="btn btn-primary btn-xs disabled" style="pointer-events:none;opacity:.45;" data-toggle="tooltip" data-placement="left" title="" data-original-title="No se puede editar otro administrador"><i class="fa fa-pencil"></i></a>
+<?php }
+if ($puedeEliminar) { ?>
 <a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Usuario" onClick="eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codigo=<?php echo base64_encode($reg[$i]["codigo"]) ?>&tipo=<?php echo base64_encode("USUARIOS") ?>')"><i class="fa fa-trash-o"></i></a>
---></td>
+<?php } else { ?>
+<a href="#" class="btn btn-danger btn-xs disabled" style="pointer-events:none;opacity:.45;" data-toggle="tooltip" data-placement="left" title="" data-original-title="<?php echo $esPropio ? 'No puede eliminar su propia cuenta' : 'No se puede eliminar un administrador'; ?>"><i class="fa fa-trash-o"></i></a>
+<?php } ?></td>
 											   </tr>
 											   <?php } } ?>
 											   </tbody>

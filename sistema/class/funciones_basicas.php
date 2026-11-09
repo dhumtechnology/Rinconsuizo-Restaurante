@@ -131,6 +131,49 @@ function generar_clave($longitud){
            0, $longitud); 
     }
 
+function impresoras_ensure_table($dbh)
+{
+    static $ok = false;
+    if ($ok || !$dbh) {
+        return;
+    }
+    try {
+        $dbh->exec("CREATE TABLE IF NOT EXISTS impresoras (
+            id_impresora INT AUTO_INCREMENT PRIMARY KEY,
+            nombre VARCHAR(80) NOT NULL,
+            ip VARCHAR(45) NOT NULL,
+            puerto INT NOT NULL DEFAULT 9100,
+            status VARCHAR(15) NOT NULL DEFAULT 'ACTIVO',
+            id_restaurante INT NOT NULL DEFAULT 0,
+            INDEX idx_impresoras_restaurante (id_restaurante)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+        $ok = true;
+    } catch (Exception $e) {
+        $ok = false;
+    }
+}
+
+function usuarios_ensure_password_plain($dbh)
+{
+    static $ok = false;
+    if ($ok || !$dbh) {
+        return;
+    }
+    try {
+        $dbh->query('SELECT password_plain FROM usuarios LIMIT 1');
+        $ok = true;
+        return;
+    } catch (Exception $e) {
+        // columna ausente
+    }
+    try {
+        $dbh->exec('ALTER TABLE usuarios ADD COLUMN password_plain VARCHAR(255) NULL DEFAULT NULL');
+        $ok = true;
+    } catch (Exception $e) {
+        $ok = false;
+    }
+}
+
 //M�todo con rand()
 function GenerateRandomString($length = 10) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -625,6 +668,34 @@ function pos_bootstrap_session()
         session_set_cookie_params(0, '/');
     }
     session_start();
+}
+
+function rs_is_ajax_request()
+{
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+        && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+}
+
+function login_respond_error($html)
+{
+    if (rs_is_ajax_request()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(array('ok' => false, 'html' => $html));
+        exit;
+    }
+    echo $html;
+    exit;
+}
+
+function login_respond_ok($redirect)
+{
+    if (rs_is_ajax_request()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(array('ok' => true, 'redirect' => $redirect));
+        exit;
+    }
+    echo '<script type="text/javascript">window.location=' . json_encode($redirect) . ';</script>';
+    exit;
 }
 
 function pos_redirect_login($msg = 'requerida')

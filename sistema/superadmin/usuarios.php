@@ -52,6 +52,7 @@ sa_header('Usuarios de restaurantes');
     <th>Código</th>
     <th>Nombre</th>
     <th>Usuario</th>
+    <th>Contraseña</th>
     <th>Cargo</th>
     <th>Nivel</th>
     <th>Restaurante</th>
@@ -61,7 +62,7 @@ sa_header('Usuarios de restaurantes');
 <tbody>
 <?php
 if (empty($lista)) {
-  echo '<tr><td colspan="7">No hay usuarios con esos filtros.</td></tr>';
+  echo '<tr><td colspan="8">No hay usuarios con esos filtros.</td></tr>';
 } else {
   for ($i = 0; $i < count($lista); $i++) {
     $u = $lista[$i];
@@ -70,6 +71,14 @@ if (empty($lista)) {
   <td><?php echo (int)$u['codigo']; ?></td>
   <td><?php echo htmlspecialchars($u['nombres']); ?></td>
   <td><?php echo htmlspecialchars($u['usuario']); ?></td>
+  <td><?php
+    $plain = isset($u['password_plain']) ? trim((string) $u['password_plain']) : '';
+    if ($plain !== '') {
+      echo '<code class="sa-pass">'.htmlspecialchars($plain).'</code>';
+    } else {
+      echo '<span class="sa-muted" title="Se mostrará al crear o cambiar la clave">—</span>';
+    }
+  ?></td>
   <td><?php echo htmlspecialchars(isset($u['cargo']) && $u['cargo'] !== '' ? $u['cargo'] : '—'); ?></td>
   <td><?php echo htmlspecialchars($u['nivel']); ?></td>
   <td><?php echo htmlspecialchars(isset($u['restaurante_nombre']) ? $u['restaurante_nombre'] : '—'); ?></td>

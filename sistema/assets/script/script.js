@@ -14,6 +14,64 @@ jQuery.validator.addMethod("lettersonly", function(value, element) {
     return this.optional(element) || /^[a-zA-Z????????????,. ]+$/i.test(value);
 });
 
+function rsLoginEndpoint() {
+	if (typeof window.RS_LOGIN_ENDPOINT === 'string' && window.RS_LOGIN_ENDPOINT) {
+		return window.RS_LOGIN_ENDPOINT;
+	}
+	var path = window.location.pathname || '';
+	if (path && /\/sistema(\/|$)/i.test(path)) {
+		return path;
+	}
+	return path || 'index.php';
+}
+
+function rsHandleLoginAjax(response, $btn, $error) {
+	var btnHtml = '<i class="fa fa-sign-in"></i> Acceder';
+	if (typeof response === 'object' && response !== null) {
+		if (response.ok && response.redirect) {
+			window.location.href = response.redirect;
+			return;
+		}
+		if (response.html) {
+			$error.fadeIn(400, function () {
+				$error.html('<center> ' + response.html + ' </center>');
+				setTimeout(function () { $error.html(''); }, 8000);
+				$btn.html(btnHtml);
+			});
+			return;
+		}
+	}
+	if (typeof response === 'string') {
+		if (/<!DOCTYPE|<html[\s>]/i.test(response)) {
+			$error.fadeIn(400, function () {
+				$error.html('<center><div class="alert alert-danger"><span class="fa fa-info-circle"></span> No se pudo iniciar sesión. Recargue la página e intente de nuevo.</div></center>');
+				$btn.html(btnHtml);
+			});
+			return;
+		}
+		var trimmed = $.trim(response);
+		if (trimmed === 'ok') {
+			window.location.href = 'panel';
+			return;
+		}
+		var m = response.match(/window\.location\s*=\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/);
+		if (m) {
+			window.location.href = m[1].slice(1, -1).replace(/\\"/g, '"');
+			return;
+		}
+		$error.fadeIn(400, function () {
+			$error.html('<center> ' + response + ' </center>');
+			setTimeout(function () { $error.html(''); }, 8000);
+			$btn.html(btnHtml);
+		});
+		return;
+	}
+	$error.fadeIn(400, function () {
+		$error.html('<center><div class="alert alert-danger"><span class="fa fa-info-circle"></span> No se pudo iniciar sesión.</div></center>');
+		$btn.html(btnHtml);
+	});
+}
+
 /* FUNCION JQUERY PARA VALIDAR ACCESO DE USUARIOS*/
 $('document').ready(function() {
 
@@ -49,7 +107,7 @@ $('document').ready(function() {
 			$.ajax({
 				
 			type : 'POST',
-			url  : 'index.php',
+			url  : rsLoginEndpoint(),
 			data : data,
 			beforeSend: function()
 			{	
@@ -57,20 +115,15 @@ $('document').ready(function() {
 				$("#btn-login").html('<i class="fa fa-refresh"></i> Verificando...');
 			},
 			success :  function(response)
-			   {						
-					if(response=="ok"){
-									
+			   {
+					rsHandleLoginAjax(response, $("#btn-login"), $("#error"));
+			  },
+			error : function()
+			   {
+					$("#error").fadeIn(400, function(){
+						$("#error").html('<center><div class="alert alert-danger"><span class="fa fa-info-circle"></span> No se pudo iniciar sesión. Recargue la página e intente de nuevo.</div></center>');
 						$("#btn-login").html('<i class="fa fa-sign-in"></i> Acceder');
-						setTimeout(' window.location.href = "panel.php"; ',4000);
-					}
-					else{
-				
-				$("#error").fadeIn(1000, function(){	
-				$("#error").html('<center> '+response+' </center>');
-				setTimeout(function() { $("#error").html(""); }, 8000);
-				$("#btn-login").html('<i class="fa fa-sign-in"></i> Acceder');
-									});
-					}
+					});
 			  }
 			});
 				return false;
@@ -108,7 +161,7 @@ $('document').ready(function()
 			$.ajax({
 				
 			type : 'POST',
-			url  : 'lockscreen.php',
+			url  : rsLoginEndpoint(),
 			data : data,
 			beforeSend: function()
 			{	
@@ -116,20 +169,15 @@ $('document').ready(function()
 				$("#btn-login").html('<i class="fa fa-refresh"></i> Verificando...');
 			},
 			success :  function(response)
-			   {						
-					if(response=="ok"){
-									
-						$("#btn-login").html('<i class="fa"></i> Acceder');
-						setTimeout(' window.location.href = "panel"; ',4000);
-					}
-					else{
-				
-				$("#error").fadeIn(1000, function(){	
-				$("#error").html('<center> '+response+' </center>');
-				setTimeout(function() { $("#error").html(""); }, 5000);
-				$("#btn-login").html('<i class="fa fa-sign-in"></i> Acceder');
-									});
-					}
+			   {
+					rsHandleLoginAjax(response, $("#btn-login"), $("#error"));
+			  },
+			error : function()
+			   {
+					$("#error").fadeIn(400, function(){
+						$("#error").html('<center><div class="alert alert-danger"><span class="fa fa-info-circle"></span> No se pudo iniciar sesión. Recargue la página e intente de nuevo.</div></center>');
+						$("#btn-login").html('<i class="fa fa-sign-in"></i> Acceder');
+					});
 			  }
 			});
 				return false;
@@ -178,7 +226,7 @@ $('document').ready(function()
 				$.ajax({
 				
 				type : 'POST',
-				url  : 'index.php',
+				url  : rsLoginEndpoint(),
 				data : data,
 				beforeSend: function()
 				{	
@@ -712,6 +760,13 @@ $('document').ready(function()
 											
 								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
 										
+									});
+								}
+								else if(data=='5')
+								{
+					$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO TIENE PERMISO PARA EDITAR ESE USUARIO</div></center>');
+								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
 									});
 								}
 								else{
@@ -1330,6 +1385,160 @@ $('document').ready(function()
 	   /* form submit */	   
 });
 /* FIN DE  FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE MEDIOS DE PAGOS */
+
+
+/* FUNCION JQUERY PARA VALIDAR REGISTRO DE IMPRESORAS */
+$('document').ready(function()
+{
+	 $("#impresora").validate({
+      rules:
+	  {
+			nombre: { required: true },
+			ip: { required: true },
+			puerto: { required: true, number: true, min: 1, max: 65535 },
+			status: { required: true }
+	   },
+       messages:
+	   {
+			nombre:{ required: "Ingrese el nombre de la impresora" },
+			ip:{ required: "Ingrese la dirección IP" },
+			puerto:{ required: "Ingrese el puerto", number: "Puerto inválido", min: "Puerto inválido", max: "Puerto inválido" },
+			status:{ required: "Seleccione el estado" }
+       },
+	   submitHandler: submitForm
+       });
+
+	  function submitForm()
+	   {
+				var data = $("#impresora").serialize();
+
+				$.ajax({
+				type : 'POST',
+				url  : 'forimpresora.php',
+				data : data,
+				beforeSend: function()
+				{
+					$("#error").fadeOut();
+					$("#btn-submit").html('<i class="fa fa-refresh"></i> Verificando...');
+				},
+				success :  function(data)
+						   {
+								if(data==1){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LOS CAMPOS NO PUEDEN IR VACIOS, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+									});
+								}
+								else if(data=='2'){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UNA IMPRESORA CON ESA IP Y PUERTO EN ESTE RESTAURANTE !</div></center>');
+										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+									});
+								}
+								else if(data=='3'){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LA DIRECCIÓN IP NO ES VÁLIDA, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+									});
+								}
+								else if(data=='4'){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> EL PUERTO DEBE ESTAR ENTRE 1 Y 65535 (típico: 9100) !</div></center>');
+										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+									});
+								}
+								else{
+									$("#error").fadeIn(1000, function(){
+						$("#error").html('<center> '+data+' </center>');
+						$("#impresora")[0].reset();
+						$("#puerto").val(9100);
+						setTimeout(function() { $("#error").html(""); }, 5000);
+						$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+									});
+								}
+						   }
+				});
+				return false;
+		}
+});
+/*  FIN DE FUNCION PARA VALIDAR REGISTRO DE IMPRESORAS */
+
+
+/* FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE IMPRESORAS */
+$('document').ready(function()
+{
+	 $("#updateimpresora").validate({
+      rules:
+	  {
+			nombre: { required: true },
+			ip: { required: true },
+			puerto: { required: true, number: true, min: 1, max: 65535 },
+			status: { required: true }
+	   },
+       messages:
+	   {
+			nombre:{ required: "Ingrese el nombre de la impresora" },
+			ip:{ required: "Ingrese la dirección IP" },
+			puerto:{ required: "Ingrese el puerto", number: "Puerto inválido", min: "Puerto inválido", max: "Puerto inválido" },
+			status:{ required: "Seleccione el estado" }
+       },
+	   submitHandler: submitForm
+       });
+
+	  function submitForm()
+	   {
+				var data = $("#updateimpresora").serialize();
+				var id= $("#updateimpresora").attr("data-id");
+
+				$.ajax({
+				type : 'POST',
+				url  : 'forimpresora.php?id_impresora='+id,
+				data : data,
+				beforeSend: function()
+				{
+					$("#error").fadeOut();
+					$("#btn-update").html('<i class="fa fa-refresh"></i> Verificando ...');
+				},
+				success :  function(data)
+						   {
+								if(data==1){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LOS CAMPOS NO PUEDEN IR VACIOS, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+									});
+								}
+								else if(data=='2'){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UNA IMPRESORA CON ESA IP Y PUERTO EN ESTE RESTAURANTE !</div></center>');
+								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+									});
+								}
+								else if(data=='3'){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LA DIRECCIÓN IP NO ES VÁLIDA, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+									});
+								}
+								else if(data=='4'){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> EL PUERTO DEBE ESTAR ENTRE 1 Y 65535 (típico: 9100) !</div></center>');
+								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+									});
+								}
+								else{
+						$("#error").fadeIn(1000, function(){
+						$("#error").html('<center> '+data+' </center>');
+						$('#btn-update').attr("disabled", true);
+						$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+					    setTimeout("location.href='impresoras'", 5000);
+									});
+								}
+						   }
+				});
+				return false;
+		}
+});
+/* FIN DE  FUNCION JQUERY PARA VALIDAR ACTUALIZACION DE IMPRESORAS */
 
  
  

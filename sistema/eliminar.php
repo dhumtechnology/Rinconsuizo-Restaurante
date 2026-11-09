@@ -24,6 +24,11 @@ $tra->EliminarMediosPagos();
 exit;
 break;
 
+case 'IMPRESORA':
+$tra->EliminarImpresoras();
+exit;
+break;
+
 case 'CATEGORIAS':
 $tra->EliminarCategorias();
 exit;

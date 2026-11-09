@@ -64,7 +64,7 @@ include "db/core/app/model/CarritoData.php";
 <div  class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-xs-12 col-sp-12  ApColumn ">
 
 <div class="block ApRawHtml">
-    <a class="nav2-icon-phone" href="tel:(+829)841-7721" title="(+829)841-7721"><i class="icon-nqt-phone"></i><span>(+829)841-7721</span></a>      
+    <?php echo function_exists('web_header_phone_html') ? web_header_phone_html() : ''; ?>      
 </div>
 
 <div id="leo_block_top" class="popup-over e-scale float-md-right">

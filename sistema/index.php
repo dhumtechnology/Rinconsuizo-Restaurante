@@ -151,7 +151,10 @@ window.__DISABLE_TECLADO_TACTIL = true;
 <script src="assets/js/jquery.min.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
-<script type="text/javascript" src="assets/script/script.js?v=salogin3"></script>
+<script>
+window.RS_LOGIN_ENDPOINT = <?php echo json_encode(function_exists('sistema_url') ? rtrim(sistema_url(''), '/') . '/' : ''); ?>;
+</script>
+<script type="text/javascript" src="assets/script/script.js?v=salogin4"></script>
 <!-- script jquery -->
 </head>
 <body>
@@ -211,7 +214,7 @@ window.__DISABLE_TECLADO_TACTIL = true;
   		</div>
 
 	<div class="panel-body">
-		<form class="form-horizontal m-t-20" name="loginform" id="loginform" action="">
+		<form class="form-horizontal m-t-20" name="loginform" id="loginform" method="post" action="<?php echo htmlspecialchars(function_exists('sistema_url') ? rtrim(sistema_url(''), '/') . '/' : ''); ?>">
 			<?php if ($loginSlug !== '') { ?>
 			<input type="hidden" name="r_slug" value="<?php echo htmlspecialchars($loginSlug); ?>">
 			<?php } ?>

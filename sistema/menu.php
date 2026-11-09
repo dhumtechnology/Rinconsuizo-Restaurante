@@ -43,6 +43,7 @@ if(isset($_SESSION['acceso'])) {
  <li><a href="salas">Salas</a></li>
  <li><a href="mesas">Mesas</a></li>
  <li><a href="mediospagos">Medios de Pago</a></li>
+ <li><a href="impresoras">Impresoras</a></li>
  <li><a href="categorias">Categorias</a></li>
  <li class="has_sub"><a href="javascript:void(0);"><span>Seguridad</span><i class="pull-right fa fa-angle-double-right"></i></a>
                                 <ul style="">
@@ -268,6 +269,6 @@ $__rsPrintEndpoint = function_exists('sistema_url') ? sistema_url('imprimir_red'
 window.RS_PRINTERS = <?php echo json_encode(array_values($__rsPrinters)); ?>;
 window.RS_PRINT_ENDPOINT = <?php echo json_encode($__rsPrintEndpoint); ?>;
 </script>
-<script src="assets/js/print-dialog.js?v=8"></script>
+<script src="assets/js/print-dialog.js?v=9"></script>
 
 <?php } } ?>

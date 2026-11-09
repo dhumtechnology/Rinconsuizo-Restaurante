@@ -263,7 +263,7 @@ exit;
                             <div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
       <label class="control-label">Ingrese Nuevo Password: <span class="symbol required"></span></label> 
-   <input name="password" class="form-control" type="text" id="password" onKeyUp="this.value=this.value.toUpperCase();" placeholder="Ingrese Nuevo Password de Acceso" autocomplete="off" required="" aria-required="true"/>
+   <input name="password" class="form-control" type="password" id="password" placeholder="Ingrese Nuevo Password de Acceso" autocomplete="new-password" required="" aria-required="true"/>
                         <i class="fa fa-unlock form-control-feedback"></i>   
                                                                 </div> 
                                                             </div> 
@@ -271,7 +271,7 @@ exit;
 							<div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
                 <label class="control-label">Repita Nuevo Password: <span class="symbol required"></span></label> 
-   <input name="password2" class="form-control" type="text" id="password2" onKeyUp="this.value=this.value.toUpperCase();" placeholder="Repita Nuevo Password de Acceso" autocomplete="off" required="" aria-required="true"/>
+   <input name="password2" class="form-control" type="password" id="password2" placeholder="Repita Nuevo Password de Acceso" autocomplete="new-password" required="" aria-required="true"/>
                         <i class="fa fa-unlock form-control-feedback"></i>   
                                                                 </div> 
                                                             </div> 	
