@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/php_compat.php';
 /**
  * Sesión compartida para la tienda web (index, carrito, agregar_tmp, etc.)
  */

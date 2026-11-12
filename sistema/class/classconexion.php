@@ -1,5 +1,8 @@
 <?php
-class Db{
+require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'php_compat.php';
+
+#[\AllowDynamicProperties]
+class Db {
 		
 	private $dbHost;
     private $dbUsername;

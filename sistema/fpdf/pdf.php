@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'php_compat.php';
 define('FPDF_FONTPATH','fpdf/font/');
 require('fpdf.php');
 

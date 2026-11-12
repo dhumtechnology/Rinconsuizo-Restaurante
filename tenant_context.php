@@ -1019,6 +1019,35 @@ if (!function_exists('restaurant_slug_normalize')) {
 	}
 }
 
+if (!function_exists('pos_resolve_login_slug')) {
+	/**
+	 * Slug del restaurante para login POS cuando la URL es /sistema/ sin rewrite
+	 * (cookie rs_slug, sesión, r_slug en query, path /{slug}/sistema/).
+	 */
+	function pos_resolve_login_slug()
+	{
+		if (!empty($_GET['r_slug'])) {
+			$slug = tenant_normalize_slug($_GET['r_slug']);
+			if ($slug !== '') {
+				return $slug;
+			}
+		}
+		if (!empty($_REQUEST['r_slug'])) {
+			$slug = tenant_normalize_slug($_REQUEST['r_slug']);
+			if ($slug !== '') {
+				return $slug;
+			}
+		}
+		if (function_exists('restaurant_resolve_logout_slug')) {
+			$slug = restaurant_resolve_logout_slug();
+			if ($slug !== '') {
+				return $slug;
+			}
+		}
+		return '';
+	}
+}
+
 if (!function_exists('restaurant_login_url')) {
 	/** URL del login POS del restaurante (o SuperAdmin si no hay slug). */
 	function restaurant_login_url($slug = null)

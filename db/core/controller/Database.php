@@ -1,16 +1,31 @@
 <?php
 
+require_once dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'php_compat.php';
+
+#[\AllowDynamicProperties]
 class Database {
 	public static $db;
 	public static $con;
 	public static $con1;
-	
-	function Database(){
+
+	public $host;
+	public $user;
+	public $pass;
+	public $ddbb;
+
+	public function __construct()
+	{
 		$this->host = getenv('DB_HOST') ?: 'localhost';
 		$this->user = getenv('DB_USER') ?: 'root';
 		$this->pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
 		$this->ddbb = getenv('DB_NAME') ?: 'rinconsuizo';
-	} 
+	}
+
+	/** @deprecated PHP 4 style; use __construct */
+	public function Database()
+	{
+		$this->__construct();
+	}
 
 	
     

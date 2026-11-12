@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'php_compat.php';
 /**
  * Envío de correo vía SMTP (PHPMailer).
  * Requiere variables SMTP_* en .env / entorno del contenedor.

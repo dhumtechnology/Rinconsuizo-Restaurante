@@ -47,7 +47,7 @@ El proyecto acumula varios dumps SQL de distintas etapas. **La base de datos act
 
 ```mermaid
 flowchart LR
-    Browser[ Navegador ] --> Web[ web :8080\nPHP 7.4 + Apache ]
+    Browser[ Navegador ] --> Web[ web :8080\nPHP 8.3 + Apache ]
     Browser --> PMA[ phpMyAdmin :8081 ]
     Web --> DB[( db\nMariaDB 10.6\nrinconsuizo )]
     PMA --> DB
@@ -150,7 +150,7 @@ Tras cambiar `.env`, reinicie: `docker compose up -d --force-recreate web`
 
 ## Instalación manual (sin Docker)
 
-1. PHP >= 7.4 con extensiones: `pdo_mysql`, `mysqli`, `gd`, `mbstring`, `zip`
+1. PHP **8.2–8.5** (recomendado **8.3** en Docker; Hostinger: elige 8.3). Extensiones: `pdo_mysql`, `mysqli`, `gd`, `mbstring`, `zip`
 2. Apache con `mod_rewrite`
 3. MySQL/MariaDB
 4. Crear BD `rinconsuizo` e importar `rinconsuizo.sql`

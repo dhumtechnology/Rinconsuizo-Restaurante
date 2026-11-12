@@ -21,7 +21,7 @@ if (is_file($__tenantCtx)) {
 }
 
 // Inyectar colores de marca del restaurante en el <head> de páginas del POS
-// (sin ob_start anidado: en PHP 7.4 vacía toda la salida)
+// (sin ob_start anidado: en PHP 7.4+ vacía toda la salida del buffer)
 if (!defined('RS_BRAND_OB') && PHP_SAPI !== 'cli') {
 	define('RS_BRAND_OB', 1);
 	$__scriptName = isset($_SERVER['SCRIPT_NAME']) ? str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME']) : '';
@@ -96,6 +96,7 @@ if (!defined('RS_BRAND_OB') && PHP_SAPI !== 'cli') {
 
 ####################################### CLASE LOGIN #######################################
 
+#[\AllowDynamicProperties]
 class Login extends Db
 {
 	

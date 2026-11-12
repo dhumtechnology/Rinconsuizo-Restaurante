@@ -2,18 +2,43 @@
 require_once("class/class.php");
 $tra = new Login();
 
-// Solo por URL (?r_slug= o rewrite /{slug}/sistema/), no por sesión previa
-$loginSlug = '';
-if (!empty($_GET['r_slug'])) {
+// Slug: URL /{slug}/sistema/, ?r_slug=, cookie rs_slug o sesión previa
+$loginSlug = function_exists('pos_resolve_login_slug') ? pos_resolve_login_slug() : '';
+if ($loginSlug === '' && !empty($_GET['r_slug'])) {
 	$loginSlug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_GET['r_slug']));
-} elseif (!empty($_REQUEST['r_slug']) && (isset($_POST['btn-login']) || isset($_POST['usuario']))) {
+}
+if ($loginSlug === '' && !empty($_REQUEST['r_slug']) && (isset($_POST['btn-login']) || isset($_POST['usuario']))) {
 	$loginSlug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_REQUEST['r_slug']));
 }
 
-// Sin slug: el login de restaurante no aplica → SuperAdmin
-if ($loginSlug === '' && !(isset($_POST['btn-login']) || (isset($_POST['usuario']) && isset($_POST['password'])))) {
+$isLoginAttempt = isset($_POST['btn-login']) || (isset($_POST['usuario']) && isset($_POST['password']));
+
+// Ya autenticado en el POS → panel (no mandar a SuperAdmin por entrar a /sistema/)
+if (!$isLoginAttempt && function_exists('posUsuarioAutenticado') && posUsuarioAutenticado()) {
+	$panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel.php';
+	header('Location: ' . $panelUrl);
+	exit;
+}
+
+// Sin slug: solo SuperAdmin en /sistema/ (nunca confundir con login de local)
+if ($loginSlug === '' && !$isLoginAttempt) {
 	header('Location: ' . (function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php'));
 	exit;
+}
+
+// Canonicalizar: /sistema/ sin prefijo de slug → /{slug}/sistema/
+if ($loginSlug !== '' && !$isLoginAttempt && function_exists('restaurant_login_url') && function_exists('sistema_request_path')) {
+	$path = str_replace('\\', '/', sistema_request_path());
+	$app = function_exists('app_base_path') ? app_base_path() : '';
+	$needle = '/' . $loginSlug . '/sistema';
+	$onTenantPos = (stripos($path, $needle . '/') === 0 || stripos($path, $needle) === 0);
+	if ($app !== '' && !$onTenantPos) {
+		$onTenantPos = (stripos($path, $app . $needle . '/') === 0 || stripos($path, $app . $needle) === 0);
+	}
+	if (!$onTenantPos) {
+		header('Location: ' . restaurant_login_url($loginSlug), true, 302);
+		exit;
+	}
 }
 
 if (isset($_POST['btn-login']) || (isset($_POST['usuario']) && isset($_POST['password']) && !isset($_POST['btn-recuperar'])))
@@ -55,7 +80,14 @@ if ($loginSlug !== '' && function_exists('tenant_find_restaurante')) {
 	}
 }
 if (!$loginRest) {
-	header('Location: ' . (function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php'));
+	$msg = $loginSlug !== ''
+		? 'RESTAURANTE NO ENCONTRADO O INACTIVO (slug: ' . $loginSlug . '). Verifique el enlace en SuperAdmin → Restaurantes.'
+		: 'USE LA URL DE SU RESTAURANTE: /{slug}/sistema/';
+	if (function_exists('rs_dialog_redirect')) {
+		rs_dialog_redirect($msg, function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php');
+	}
+	echo '<p>' . htmlspecialchars($msg) . '</p>';
+	echo '<p><a href="' . htmlspecialchars(function_exists('app_url') ? app_url('/sistema/superadmin/login.php') : '/sistema/superadmin/login.php') . '">Volver a plataforma</a></p>';
 	exit;
 }
 
