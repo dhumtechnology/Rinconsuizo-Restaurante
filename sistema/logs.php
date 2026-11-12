@@ -30,7 +30,7 @@ $reg = $tra->ListarLogs();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <!-- script jquery -->
 
 </head>

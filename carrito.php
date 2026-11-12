@@ -16,13 +16,16 @@ include "db/core/app/model/ClientesData.php";
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <title>Carrito</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <?php if (function_exists('web_tenant_slug') && web_tenant_slug() !== '') { ?>
+  <base href="<?php echo htmlspecialchars(web_base_href()); ?>">
+  <?php } ?>
   <link rel="stylesheet" href="css/estilos.css" type="text/css" media="all">
 
 <link rel="stylesheet" href="css/bos.css" type="text/css" media="all">
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
-<link rel="stylesheet" href="css/tienda-mejoras.css?v=5" type="text/css" media="all">
+<link rel="stylesheet" href="css/tienda-mejoras.css?v=8" type="text/css" media="all">
   <?php if (function_exists('web_brand_head_styles')) { web_brand_head_styles(); } ?>
 
 </head>
@@ -436,17 +439,15 @@ include "db/core/app/model/ClientesData.php";
     </div>
   </section>
 
-  <section class="featured-products clearfix block">
-  <h2 class="h2 products-section-title text-uppercase title_block">
-    Productos populares
-  </h2>
-  <div class="block_content">
-    
-    <a class="all-product-link float-xs-left float-md-right btn btn-outline" href="productos.php">
-      Ir a productos en la carta<i class="material-icons">&#xE315;</i>
-    </a>
-  </div>
-</section>
+  <?php
+    $rsPopulares = class_exists('ProductoData') ? ProductoData::getPopulares(5) : array();
+    if (is_array($rsPopulares) && count($rsPopulares) > 0) {
+      echo '<section class="featured-products clearfix block">';
+      require __DIR__ . '/web_menu_populares.php';
+      echo '<div class="block_content"><a class="all-product-link float-xs-left float-md-right btn btn-outline" href="productos.php">Ir a productos en la carta<i class="material-icons">&#xE315;</i></a></div>';
+      echo '</section>';
+    }
+  ?>
 
 
     
@@ -533,7 +534,8 @@ include "db/core/app/model/ClientesData.php";
 </main>
 
   <script src="css/jquery.js"></script>
-<script src="js/tienda-nav.js"></script>  
+<script src="js/tienda-nav.js"></script>
+<script src="js/carrito-home.js?v=4"></script>  
 <script type="text/javascript">
     var _carritoBusy = false;
 

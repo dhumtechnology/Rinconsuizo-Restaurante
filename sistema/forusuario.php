@@ -1,7 +1,10 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador") {
+require_once("class/class.php");
+if (!isset($_SESSION['acceso'])) {
+	echo '<script type="text/javascript">alert("NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\\nDEBERA DE INICIAR SESION");document.location.href="logout.php";</script>';
+	exit;
+}
+pos_require_administrador_pos("Solo el Administrador puede gestionar usuarios.");
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -21,11 +24,15 @@ exit;
 }
 
 $reg = null;
+$claveEdicion = '';
 if (isset($_GET['codigo'])) {
 	$reg = $tra->UsuariosPorId();
 	if (empty($reg)) {
-		header('Location: usuarios?mesage=4');
+		header('Location: usuarios.php?mesage=4');
 		exit;
+	}
+	if (!empty($reg[0]['password_plain'])) {
+		$claveEdicion = (string) $reg[0]['password_plain'];
 	}
 }
 ?>
@@ -51,12 +58,43 @@ if (isset($_GET['codigo'])) {
 <script src="assets/plugins/fileupload/bootstrap-fileupload.min.js"></script>
 <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <script type="text/javascript">
 	$(document).ready(function() {
 	$("#nrotelefono").mask("999 999 9999");
+	function generarPasswordUsuario() {
+		var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+		var pass = '';
+		for (var i = 0; i < 12; i++) {
+			pass += chars.charAt(Math.floor(Math.random() * chars.length));
+		}
+		return pass;
+	}
+	$('#btn-generar-password').on('click', function(e) {
+		e.preventDefault();
+		var p = generarPasswordUsuario();
+		$('#password').val(p);
+		$('#password2').val(p);
+		$('#generar_password').val('1');
+	});
+	$(document).on('click', '.btn-toggle-pass', function(e) {
+		e.preventDefault();
+		var id = $(this).data('target');
+		var $inp = $('#' + id);
+		if (!$inp.length) return;
+		var $icon = $(this).find('i');
+		if ($inp.attr('type') === 'password') {
+			$inp.attr('type', 'text');
+			$icon.removeClass('fa-eye').addClass('fa-eye-slash');
+			$(this).attr('title', 'Ocultar contraseña');
+		} else {
+			$inp.attr('type', 'password');
+			$icon.removeClass('fa-eye-slash').addClass('fa-eye');
+			$(this).attr('title', 'Mostrar contraseña');
+		}
+	});
 	});
 </script>
 <!-- script jquery -->	
@@ -266,7 +304,7 @@ if (isset($_GET['codigo'])) {
 				
 		<?php } else { ?>
 				
-		<form class="form" method="post"  action="#" name="usuario" id="usuario" enctype="multipart/form-data">	
+		<form class="form" method="post"  action="#" name="usuario" id="form-registro-usuario" enctype="multipart/form-data">	
 			
 		<?php } ?>
                                                   <div id="error">
@@ -278,7 +316,7 @@ if (isset($_GET['codigo'])) {
                               <div class="form-group has-feedback"> 
       <label class="control-label">Nit de Usuario: <span class="symbol required"></span></label> 
  <input type="hidden" name="codigo" id="codigo" <?php if (isset($reg[0]['codigo'])) { ?> value="<?php echo $reg[0]['codigo']; ?>"<?php } ?>>
-			  <input type="text" class="form-control" name="cedula" id="cedula" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nit de Usuario" <?php if (isset($reg[0]['cedula'])) { ?> value="<?php echo $reg[0]['cedula']; ?>"<?php } ?> required="" aria-required="true">
+			  <input type="text" class="form-control" name="cedula" id="cedula" autocomplete="off" placeholder="Ingrese Nit de Usuario" <?php if (isset($reg[0]['cedula'])) { ?> value="<?php echo $reg[0]['cedula']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>  
                               </div> 
                         </div>
@@ -286,7 +324,7 @@ if (isset($_GET['codigo'])) {
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
      <label class="control-label">Nombre de Usuario: <span class="symbol required"></span></label> 
-  <input type="text" class="form-control" name="nombres" id="nombres" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Usuario" <?php if (isset($reg[0]['nombres'])) { ?> value="<?php echo $reg[0]['nombres']; ?>"<?php } ?> required="" aria-required="true">
+  <input type="text" class="form-control" name="nombres" id="nombres" autocomplete="off" placeholder="Ingrese Nombre de Usuario" <?php if (isset($reg[0]['nombres'])) { ?> value="<?php echo $reg[0]['nombres']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>  
                               </div> 
                         </div>
@@ -294,7 +332,7 @@ if (isset($_GET['codigo'])) {
                             <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
       <label class="control-label">N° de Teléfono: <span class="symbol required"></span></label> 
- <input type="text" class="form-control" name="nrotelefono" id="nrotelefono" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese N° de Teléfono" <?php if (isset($reg[0]['nrotelefono'])) { ?> value="<?php echo $reg[0]['nrotelefono']; ?>"<?php } ?> required="" aria-required="true">
+ <input type="text" class="form-control" name="nrotelefono" id="nrotelefono" autocomplete="off" placeholder="Ingrese N° de Teléfono" <?php if (isset($reg[0]['nrotelefono'])) { ?> value="<?php echo $reg[0]['nrotelefono']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-phone form-control-feedback"></i>  
                               </div> 
                         </div>	
@@ -305,14 +343,14 @@ if (isset($_GET['codigo'])) {
               <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
     <label class="control-label">Cargo de Usuario: <span class="symbol required"></span></label> 
-    <input type="text" class="form-control" name="cargo" id="cargo" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Cargo de Usuario" <?php if (isset($reg[0]['cargo'])) { ?> value="<?php echo $reg[0]['cargo']; ?>"<?php } ?> required="" aria-required="true">
+    <input type="text" class="form-control" name="cargo" id="cargo" autocomplete="off" placeholder="Ingrese Cargo de Usuario" <?php if (isset($reg[0]['cargo'])) { ?> value="<?php echo $reg[0]['cargo']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>  
                               </div> 
                         </div> 
                             <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
   <label class="control-label">Correo de Usuario: <span class="symbol required"></span></label> 
- <input type="text" class="form-control" name="email" id="email" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Correo de Usuario" <?php if (isset($reg[0]['email'])) { ?> value="<?php echo $reg[0]['email']; ?>"<?php } ?> required="" aria-required="true">
+ <input type="text" class="form-control" name="email" id="email" autocomplete="off" placeholder="Ingrese Correo de Usuario" <?php if (isset($reg[0]['email'])) { ?> value="<?php echo $reg[0]['email']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-envelope-o form-control-feedback"></i>  
                               </div> 
                         </div>
@@ -320,7 +358,7 @@ if (isset($_GET['codigo'])) {
 							<div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
   <label class="control-label">Usuarios de Acceso: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="usuario" id="usuario" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Usuario de Acceso" <?php if (isset($reg[0]['usuario'])) { ?> value="<?php echo $reg[0]['usuario']; ?>"<?php } ?> required="" aria-required="true">
+<input type="text" class="form-control" name="usuario" id="usuario_acceso" autocomplete="off" placeholder="Ingrese Usuario de Acceso" <?php if (isset($reg[0]['usuario'])) { ?> value="<?php echo htmlspecialchars($reg[0]['usuario'], ENT_QUOTES, 'UTF-8'); ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-user form-control-feedback"></i>  
                               </div> 
                     </div> 	
@@ -329,17 +367,33 @@ if (isset($_GET['codigo'])) {
 					<div class="row"> 
                            <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
-  <label class="control-label">Password de Acceso: <span class="symbol required"></span></label> 
-   <input name="password" class="form-control" type="password" id="password" placeholder="Ingrese Password de Acceso" autocomplete="new-password" required="required"/>
-                        <i class="fa fa-unlock form-control-feedback"></i>  
+  <label class="control-label">Password de Acceso: <span class="symbol required"></span></label>
+   <div class="input-group">
+   <input name="password" class="form-control" type="password" id="password" placeholder="Ingrese o genere contraseña" autocomplete="new-password" <?php if ($claveEdicion !== '') { ?> value="<?php echo htmlspecialchars($claveEdicion, ENT_QUOTES, 'UTF-8'); ?>"<?php } ?> <?php if (isset($_GET['codigo'])) { ?>required="required"<?php } ?>/>
+   <span class="input-group-btn">
+   <button type="button" class="btn btn-default btn-toggle-pass" data-target="password" title="Mostrar contraseña" tabindex="-1"><i class="fa fa-eye"></i></button>
+   </span>
+   </div>
+                        <?php if (!isset($_GET['codigo'])) { ?>
+                        <p class="help-block" style="margin-top:8px;">
+                          <button type="button" class="btn btn-default btn-sm" id="btn-generar-password"><i class="fa fa-random"></i> Generar contraseña automática</button>
+                          <input type="hidden" name="generar_password" id="generar_password" value="0">
+                        </p>
+                        <?php } elseif ($claveEdicion === '') { ?>
+                        <p class="help-block text-warning" style="margin-top:8px;"><small>Este usuario no tiene contraseña almacenada en el sistema. Ingrese una nueva (mín. 8 caracteres) para poder guardar.</small></p>
+                        <?php } ?>
                               </div> 
                         </div> 	
 															
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
     <label class="control-label">Repita Password: <span class="symbol required"></span></label>
-                                  <input type="password" class="form-control" name="password2" id="password2" autocomplete="new-password" placeholder="Ingrese Password de Acceso" required="" aria-required="true">
-                        <i class="fa fa-unlock form-control-feedback"></i>  
+   <div class="input-group">
+                                  <input type="password" class="form-control" name="password2" id="password2" autocomplete="new-password" placeholder="Repita la contraseña" <?php if ($claveEdicion !== '') { ?> value="<?php echo htmlspecialchars($claveEdicion, ENT_QUOTES, 'UTF-8'); ?>"<?php } ?> <?php if (isset($_GET['codigo'])) { ?>required="" aria-required="true"<?php } ?>>
+   <span class="input-group-btn">
+   <button type="button" class="btn btn-default btn-toggle-pass" data-target="password2" title="Mostrar contraseña" tabindex="-1"><i class="fa fa-eye"></i></button>
+   </span>
+   </div>
                               </div> 
                         </div>
 
@@ -385,8 +439,7 @@ if (isset($_GET['codigo'])) {
                       </select>
                              <?php } else { ?>
                <select name="status" id="status" class="form-control" required="" aria-required="true">
-                        <option value="">SELECCIONE</option>
-                        <option value="ACTIVO">ACTIVO</option>
+                        <option value="ACTIVO" selected="selected">ACTIVO</option>
                         <option value="INACTIVO">INACTIVO</option>
                       </select>
                    <?php } ?> 
@@ -465,14 +518,3 @@ if (isset($_GET['codigo'])) {
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 

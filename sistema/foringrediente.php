@@ -1,7 +1,6 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador") {
+require_once("class/class.php");
+require_once(__DIR__ . "/inc/pos_for_admin.php");
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -18,6 +17,14 @@ else if(isset($_POST['btn-update']))
 {
 $reg = $tra->ActualizarIngredientes();
 exit;
+}
+
+$reg = null;
+if (isset($_GET['codingrediente'])) {
+	$reg = $tra->IngredientesPorId();
+	if (empty($reg)) {
+		pos_redirect_edit_not_found('ingredientes.php');
+	}
 }
 ?>
 <!DOCTYPE html>
@@ -40,7 +47,7 @@ exit;
 <script src="assets/js/jquery.min.js"></script> 
 <!-- Custom file upload -->
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->	
@@ -244,9 +251,7 @@ exit;
 <div class="col-sm-12 col-xs-12"> 
             <div class="box-body">
 			
-<?php  if (isset($_GET['codingrediente'])) {
-			
-			$reg = $tra->IngredientesPorId(); ?>
+<?php  if (!empty($reg)) { ?>
 			
 <form class="form" name="updateingredientes" id="updateingredientes" method="post" data-id="<?php echo $reg[0]["codingrediente"] ?>" action="#">
 				
@@ -266,14 +271,14 @@ exit;
 <label class="control-label">Nombre de Ingrediente: <span class="symbol required"></span></label>
 <input type="hidden" class="form-control" name="codingrediente" id="codingrediente" <?php if (isset($reg[0]['codingrediente'])) { ?> value="<?php echo $reg[0]['codingrediente']; ?>"<?php } ?>>
 
-<input type="text" class="form-control" name="nomingrediente" id="nomingrediente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Ingrediente" <?php if (isset($reg[0]['nomingrediente'])) { ?> value="<?php echo $reg[0]['nomingrediente']; ?>"<?php } ?> required="" aria-required="true">
+<input type="text" class="form-control" name="nomingrediente" id="nomingrediente" autocomplete="off" placeholder="Ingrese Nombre de Ingrediente" <?php if (isset($reg[0]['nomingrediente'])) { ?> value="<?php echo $reg[0]['nomingrediente']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>  
                               </div> 
                         </div> 
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
 <label class="control-label">Cantidad de Ingredientes: <span class="symbol required"></span></label>
-                <input type="text" class="form-control" name="cantingrediente" id="cantingrediente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Cantidad de Ingredientes" <?php if (isset($reg[0]['cantingrediente'])) { ?> value="<?php echo $reg[0]['cantingrediente']; ?>"<?php } ?>>
+                <input type="text" class="form-control" name="cantingrediente" id="cantingrediente" autocomplete="off" placeholder="Ingrese Cantidad de Ingredientes" <?php if (isset($reg[0]['cantingrediente'])) { ?> value="<?php echo $reg[0]['cantingrediente']; ?>"<?php } ?>>
                         <i class="fa fa-pencil form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -307,7 +312,7 @@ exit;
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
  <label class="control-label">Costo de Ingrediente: <span class="symbol required"></span></label>
-                 <input type="text" class="form-control" name="costoingrediente" id="costoingrediente" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Costo de Ingrediente" <?php if (isset($reg[0]['costoingrediente'])) { ?> value="<?php echo $reg[0]['costoingrediente']; ?>"<?php } ?>>
+                 <input type="text" class="form-control" name="costoingrediente" id="costoingrediente" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Costo de Ingrediente" <?php if (isset($reg[0]['costoingrediente'])) { ?> value="<?php echo $reg[0]['costoingrediente']; ?>"<?php } ?>>
                         <i class="fa fa-money form-control-feedback"></i> 
                               </div> 
                         </div> 
@@ -345,7 +350,7 @@ exit;
                             <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
 <label class="control-label">Stock Minimo: <span class="symbol required"></span></label>
-                                  <input type="text" class="form-control" name="stockminimoingrediente" id="stockminimoingrediente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Stock Minimo" <?php if (isset($reg[0]['stockminimoingrediente'])) { ?> value="<?php echo $reg[0]['stockminimoingrediente']; ?>"<?php } ?>>
+                                  <input type="text" class="form-control" name="stockminimoingrediente" id="stockminimoingrediente" autocomplete="off" placeholder="Ingrese Stock Minimo" <?php if (isset($reg[0]['stockminimoingrediente'])) { ?> value="<?php echo $reg[0]['stockminimoingrediente']; ?>"<?php } ?>>
                         <i class="fa fa-pencil form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -353,7 +358,7 @@ exit;
 					
 			  
             <div class="modal-footer"> 
-<?php  if (isset($_GET['codingrediente'])) { ?>
+<?php  if (!empty($reg)) { ?>
 <button type="submit" name="btn-update" id="btn-update" class="btn btn-primary"><span class="fa fa-edit"></span> Actualizar</button>
 <button class="btn btn-danger" type="reset"><span class="fa fa-trash-o"></span> Cancelar</button>
     <?php } else { ?>
@@ -399,14 +404,3 @@ exit;
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 

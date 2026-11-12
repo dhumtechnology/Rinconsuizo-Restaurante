@@ -36,9 +36,13 @@ elseif(isset($_POST["btn-recuperar"]))
 }
 
 if (function_exists('posUsuarioAutenticado') && posUsuarioAutenticado() && empty($_POST['btn-login']) && empty($_POST['usuario'])) {
-	$panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
-	header('Location: ' . $panelUrl);
-	exit;
+	$script = isset($_SERVER['SCRIPT_NAME']) ? basename(str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME'])) : '';
+	$isRestaurantLoginIndex = ($script === 'index.php' && $loginSlug !== '');
+	if ($isRestaurantLoginIndex) {
+		$panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel.php';
+		header('Location: ' . $panelUrl);
+		exit;
+	}
 }
 
 $loginRest = null;
@@ -174,7 +178,7 @@ window.RS_LOGIN_ENDPOINT = <?php echo json_encode(function_exists('sistema_url')
            <div class="col-sm-12">
              <div class="form-group has-feedback">
               <label class="control-label">Ingrese su Email: <span class="symbol required"></span></label>
-              <input class="form-control no-teclado" type="email" placeholder="Ingrese su Email" name="email" id="email" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" required="" aria-required="true">
+              <input class="form-control no-teclado" type="email" placeholder="Ingrese su Email" name="email" id="email" autocomplete="off" required="" aria-required="true">
               <i class="fa fa-envelope form-control-feedback"></i>
               </div>
             </div>
@@ -233,7 +237,7 @@ window.RS_LOGIN_ENDPOINT = <?php echo json_encode(function_exists('sistema_url')
 
 			<div class="form-group has-feedback">
 				<label class="control-label">Ingrese su Usuario: <span class="symbol required"></span></label>
-				<input type="text" class="form-control no-teclado" placeholder="Ingrese su Usuario" name="usuario" id="usuario" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="username" required="" aria-required="true" inputmode="text">
+				<input type="text" class="form-control no-teclado" placeholder="Ingrese su Usuario" name="usuario" id="usuario" autocomplete="username" required="" aria-required="true" inputmode="text">
 				<i class="fa fa-user form-control-feedback"></i>
 			</div>
 

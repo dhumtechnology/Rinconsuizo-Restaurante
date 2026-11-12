@@ -1,44 +1,31 @@
 <?php
-session_start();
-?>
-
-<?php
+require_once __DIR__ . '/web_session.php';
 include "db/core/autoload.php";
 include "db/core/app/model/ClientesData.php";
-$base = new Database();
-$con = $base->connect();
 
-$username = $_POST['email']; 
-$password = $_POST['password'];
- 
-$sql = "SELECT * FROM clientes WHERE emailcliente = '$username'";
+$destLogin = function_exists('web_url') ? web_url('micuenta.php') : 'micuenta.php';
+$destOk = $destLogin;
 
-$result = $con->query($sql);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+	header('Location: ' . $destLogin);
+	exit;
+}
 
+$email = isset($_POST['email']) ? $_POST['email'] : '';
+$password = isset($_POST['password']) ? $_POST['password'] : '';
+$cli = ClientesData::authenticate($email, $password);
 
-if ($result->num_rows > 0) {     
- }
- $row = $result->fetch_array(MYSQLI_ASSOC);
- if ($row['password']==$_POST['password'] ) { 
-    $_SESSION['loggedin'] = true;
-    $_SESSION['username'] = $username;
-    $_SESSION['id_cliente'] = $row['codcliente'];
-    $_SESSION['start'] = time();
-    $_SESSION['expire'] = $_SESSION['start'] + (5 * 60);
+if ($cli) {
+	ClientesData::startWebSession($cli);
+	if (isset($_POST['checkout'])) {
+		$destOk = function_exists('web_url') ? web_url('micuenta.php') : 'micuenta.php';
+	} else {
+		$destOk = function_exists('web_url') ? web_url('carrito.php') : 'carrito.php';
+	}
+	header('Location: ' . $destOk);
+	exit;
+}
 
-    echo "Bienvenido! " . $_SESSION['username'];
-    if(isset($_POST['checkout'])){
-    	 print "<script>window.location='micuenta.php';</script>";
-    }else{
-    	 print "<script>window.location='carrito.php';</script>";
-    	};
-   
-
- } else { 
-
-   print "<script>alert('Email o Password estan incorrectos');</script>";
-   print "<script>window.location='micuenta.php';</script>";
-   
- }
- mysqli_close($con); 
- ?>
+$sep = (strpos($destLogin, '?') === false) ? '?' : '&';
+header('Location: ' . $destLogin . $sep . 'login=error');
+exit;

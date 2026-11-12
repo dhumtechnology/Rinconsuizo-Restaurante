@@ -13,6 +13,15 @@ $tra = new Login();
 $ses = $tra->ExpiraSession();
 $reg = $tra->ListarArqueoCaja();
 
+include_once __DIR__ . "/../db/core/autoload.php";
+include_once __DIR__ . "/../db/core/app/model/ClientesData.php";
+include_once __DIR__ . "/../db/core/app/model/ReservaData.php";
+
+$reservas = ReservaData::getAll();
+if (!is_array($reservas)) {
+	$reservas = array();
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -33,7 +42,7 @@ $reg = $tra->ListarArqueoCaja();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <!-- script jquery -->
 
 </head>
@@ -237,9 +246,6 @@ $reg = $tra->ListarArqueoCaja();
 <h3 class="panel-title"><i class="fa fa-tasks"></i> Reservas de mesas<span class="pull-right"></span></h3></div>
 
 <div class="panel-body">
-<div id="datatable-responsive_wrapper" class="dataTables_wrapper form-inline dt-bootstrap no-footer">
-
-
 <div class="row">
 <div class="col-sm-12">
 <?php
@@ -264,9 +270,9 @@ $reg = $tra->ListarArqueoCaja();
 	}
 }		
 	   ?> 
-<table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap dataTable no-footer dtr-inline collapsed" role="grid" aria-describedby="datatable-responsive_info" style="width: 100%;" width="100%" cellspacing="0">
+<table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap" width="100%" cellspacing="0">
                                                  <thead>
-												 <tr role="row">
+												 <tr>
 													<th>N°</th>
 													<th>Nombres cliente</th>
 													<th>Correo electrónico</th>
@@ -278,60 +284,31 @@ $reg = $tra->ListarArqueoCaja();
 												 </tr>
 												 </thead>
 												 <tbody>
-
-
-<?php  
-include_once __DIR__ . "/../db/core/autoload.php";
-include_once __DIR__ . "/../db/core/app/model/ClientesData.php";
-include_once __DIR__ . "/../db/core/app/model/ReservaData.php";
-
-$reservas = ReservaData::getAll();
-if (!is_array($reservas)) {
-    $reservas = array();
-}
-
-        if (count($reservas) > 0) { ?>  
-        <?php foreach ($reservas as $reserva):
-            $cli = $reserva->getCliente();
-            $nom = ($cli && isset($cli->nomcliente)) ? $cli->nomcliente : 'Cliente #' . (int) $reserva->id_cliente;
-            $mailCli = ($cli && isset($cli->emailcliente)) ? $cli->emailcliente : '—';
-            $tlfReserva = !empty($reserva->telefono) ? $reserva->telefono : (($cli && !empty($cli->tlfcliente)) ? $cli->tlfcliente : '—');
+<?php foreach ($reservas as $reserva):
+            $cli = (is_object($reserva) && method_exists($reserva, 'getCliente')) ? $reserva->getCliente() : null;
+            $nom = ($cli && isset($cli->nomcliente)) ? $cli->nomcliente : 'Cliente #' . (int) (isset($reserva->id_cliente) ? $reserva->id_cliente : 0);
+            $mailCli = ($cli && isset($cli->emailcliente) && $cli->emailcliente !== '') ? $cli->emailcliente : '—';
+            $tlfReserva = (!empty($reserva->telefono)) ? $reserva->telefono : (($cli && !empty($cli->tlfcliente)) ? $cli->tlfcliente : '—');
+            $fecha = isset($reserva->fecha) ? (string) $reserva->fecha : '—';
+            $mensaje = isset($reserva->mensaje) ? (string) $reserva->mensaje : '';
         ?>
-          
-          <tr role="row" class="odd">
-                         <td class="sorting_1" tabindex="0"><?php echo (int) $reserva->id; ?></td>
+          <tr>
+                         <td><?php echo (int) $reserva->id; ?></td>
                                                <td><?php echo htmlspecialchars($nom); ?></td>
                                                <td><?php echo htmlspecialchars($mailCli); ?></td>
                                                <td><?php echo htmlspecialchars($tlfReserva); ?></td>
                                                <td><?php echo (int) $reserva->cantidad; ?></td>
-                                               <td><?php echo htmlspecialchars($reserva->fecha); ?></td>
-                                               <td><?php echo htmlspecialchars($reserva->mensaje); ?></td>
-                                               
+                                               <td><?php echo htmlspecialchars($fecha); ?></td>
+                                               <td><?php echo htmlspecialchars($mensaje); ?></td>
                          <td>
- 
-
 <a href="delreserva.php?id=<?php echo (int) $reserva->id; ?>" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar reserva" ><i class="fa fa-archive"></i></a>
-
-
-
  </td>
                          </tr>
-
         <?php endforeach; ?>
-    <?php } else { ?>
-          <tr><td colspan="8" class="text-center">No hay reservas web registradas.</td></tr>
-    <?php } ?>   
-
-
-
-
-
-
 											   </tbody>
 </table>
                                                  </div>
                                              </div>
-										</div>
 								  </div>
 							</div>
 					</div>
@@ -409,13 +386,23 @@ if (!is_array($reservas)) {
 
         <script type="text/javascript">
             $(document).ready(function() {
-                $('#datatable').dataTable();
-                $('#datatable-keytable').DataTable( { keys: true } );
-                $('#datatable-responsive').DataTable({ order: [[0, 'desc']] });
-                $('#datatable-scroller').DataTable( { ajax: "assets/plugins/datatables/json/scroller-demo.json", deferRender: true, scrollY: 380, scrollCollapse: true, scroller: true } );
-                var table = $('#datatable-fixed-header').DataTable( { fixedHeader: true } );
-            } );
-            TableManageButtons.init();
+                if ($.fn.DataTable.isDataTable('#datatable-responsive')) {
+                    $('#datatable-responsive').DataTable().destroy();
+                }
+                $('#datatable-responsive').DataTable({
+                    order: [[0, 'desc']],
+                    autoWidth: false,
+                    columnDefs: [
+                        { targets: '_all', defaultContent: '' }
+                    ],
+                    language: {
+                        emptyTable: 'No hay reservas web registradas.',
+                        zeroRecords: 'No se encontraron reservas.',
+                        search: 'Buscar:',
+                        paginate: { previous: 'Anterior', next: 'Siguiente' }
+                    }
+                });
+            });
         </script>
   
   

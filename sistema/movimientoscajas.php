@@ -33,7 +33,7 @@ $reg = $tra->ListarMovimientoCajas();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <!-- script jquery -->
 
 </head>
@@ -322,7 +322,7 @@ for($i=0;$i<sizeof($reg);$i++){
  
  <a href="#" class="btn btn-success btn-xs" data-placement="left" title="Ver Movimiento" data-original-title="" data-href="#" data-toggle="modal" data-target="#panel-modal" data-backdrop="static" data-keyboard="false" onClick="VerMovimientoCaja('<?php echo base64_encode($reg[$i]["codmovimientocaja"]); ?>')"><i class="fa fa-search-plus"></i></a>
 								  
-<a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Movimiento" onClick="actualizar('formovimientocaja?codmovimientocaja=<?php echo base64_encode($reg[$i]["codmovimientocaja"]) ?>')"><i class="fa fa-pencil"></i></a>
+<a href="javascript:void(0)" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Movimiento" onClick="return actualizar('formovimientocaja?codmovimientocaja=<?php echo base64_encode($reg[$i]["codmovimientocaja"]) ?>')"><i class="fa fa-pencil"></i></a>
                                  
 <?php if(date("Y-m-d",strtotime($reg[$i]['fechamovimientocaja']))!=date("Y-m-d")){ ?>
 
@@ -330,7 +330,7 @@ for($i=0;$i<sizeof($reg);$i++){
 
 <?php } else { ?>
 
-<a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Movimiento" onClick="eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codmovimientocaja=<?php echo base64_encode($reg[$i]["codmovimientocaja"]) ?>&codcaja=<?php echo base64_encode($reg[$i]["codcaja"]) ?>&codmovimientocaja=<?php echo base64_encode($reg[$i]["codmovimientocaja"]) ?>&tipomovimientocaja=<?php echo base64_encode($reg[$i]["tipomovimientocaja"]) ?>&montomovimientocaja=<?php echo base64_encode($reg[$i]["montomovimientocaja"]) ?>&tipo=<?php echo base64_encode("MOVIMIENTOCAJA") ?>')"><i class="fa fa-trash-o"></i></a>
+<a href="javascript:void(0)" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Movimiento" onClick="return eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codmovimientocaja=<?php echo base64_encode($reg[$i]["codmovimientocaja"]) ?>&codcaja=<?php echo base64_encode($reg[$i]["codcaja"]) ?>&codmovimientocaja=<?php echo base64_encode($reg[$i]["codmovimientocaja"]) ?>&tipomovimientocaja=<?php echo base64_encode($reg[$i]["tipomovimientocaja"]) ?>&montomovimientocaja=<?php echo base64_encode($reg[$i]["montomovimientocaja"]) ?>&tipo=<?php echo base64_encode("MOVIMIENTOCAJA") ?>')"><i class="fa fa-trash-o"></i></a>
 
 <?php } ?> </td>
 											   </tr>

@@ -672,45 +672,124 @@ public function RecuperarPassword()
 
 ####################################### CLASE USUARIOS ####################################
 
+	/**
+	 * El NIT (cedula) debe ser único dentro del mismo restaurante; puede repetirse en otros.
+	 */
+	public function existeNitUsuarioEnRestaurante($cedula, $idRestaurante, $excluirCodigo = null)
+	{
+		self::SetNames();
+		$cedula = trim(strip_tags((string) $cedula));
+		$idRestaurante = (int) $idRestaurante;
+		if ($cedula === '' || $idRestaurante <= 0) {
+			return false;
+		}
+		$sql = 'SELECT codigo FROM usuarios WHERE cedula = ? AND id_restaurante = ?';
+		$params = array($cedula, $idRestaurante);
+		if ($excluirCodigo !== null && $excluirCodigo !== '') {
+			$sql .= ' AND codigo != ?';
+			$params[] = (int) $excluirCodigo;
+		}
+		$sql .= ' LIMIT 1';
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute($params);
+		return $stmt->rowCount() > 0;
+	}
+
+	public function existeEmailUsuarioEnRestaurante($email, $idRestaurante, $excluirCodigo = null)
+	{
+		self::SetNames();
+		$email = strtolower(trim(strip_tags((string) $email)));
+		$idRestaurante = (int) $idRestaurante;
+		if ($email === '' || $idRestaurante <= 0) {
+			return false;
+		}
+		$sql = 'SELECT codigo FROM usuarios WHERE id_restaurante = ? AND LOWER(email) = ?';
+		$params = array($idRestaurante, $email);
+		if ($excluirCodigo !== null && $excluirCodigo !== '') {
+			$sql .= ' AND codigo != ?';
+			$params[] = (int) $excluirCodigo;
+		}
+		$sql .= ' LIMIT 1';
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute($params);
+		return $stmt->rowCount() > 0;
+	}
+
+	public function existeTelefonoUsuarioEnRestaurante($telefono, $idRestaurante, $excluirCodigo = null)
+	{
+		self::SetNames();
+		$tel = preg_replace('/\D+/', '', (string) $telefono);
+		$idRestaurante = (int) $idRestaurante;
+		if ($tel === '' || $idRestaurante <= 0) {
+			return false;
+		}
+		$sql = "SELECT codigo FROM usuarios WHERE id_restaurante = ?
+			AND REPLACE(REPLACE(REPLACE(REPLACE(nrotelefono, ' ', ''), '-', ''), '+', ''), '.', '') = ?";
+		$params = array($idRestaurante, $tel);
+		if ($excluirCodigo !== null && $excluirCodigo !== '') {
+			$sql .= ' AND codigo != ?';
+			$params[] = (int) $excluirCodigo;
+		}
+		$sql .= ' LIMIT 1';
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute($params);
+		return $stmt->rowCount() > 0;
+	}
+
+	public function GenerarPasswordUsuarioAleatorio($length = 12)
+	{
+		$chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+		$max = strlen($chars) - 1;
+		$out = '';
+		for ($i = 0; $i < $length; $i++) {
+			$out .= $chars[random_int(0, $max)];
+		}
+		return $out;
+	}
+
 ############################## FUNCION PARA REGISTRAR USUARIOS ##############################
 public function RegistrarUsuarios()
 {
 	self::SetNames();
-	if(empty($_POST["nombres"]) or empty($_POST["usuario"]) or empty($_POST["password"]))
+	$cedula = trim(strip_tags(isset($_POST["cedula"]) ? $_POST["cedula"] : ''));
+	$email = strtolower(trim(strip_tags(isset($_POST["email"]) ? $_POST["email"] : '')));
+	$nrotelefono = trim(strip_tags(isset($_POST["nrotelefono"]) ? $_POST["nrotelefono"] : ''));
+	$passPlain = trim((string) (isset($_POST["password"]) ? $_POST["password"] : ''));
+	if ($passPlain === '' || !empty($_POST['generar_password'])) {
+		$passPlain = $this->GenerarPasswordUsuarioAleatorio();
+	}
+	if(empty($_POST["nombres"]) or empty($_POST["usuario"]) or $cedula === '' or $email === '' or $nrotelefono === '')
 	{
 		echo "1";
 		exit;
 	}
-	$sql = " select cedula from usuarios where cedula = ? AND ".tenantWhere('usuarios');
-	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array($_POST["cedula"]) );
-	$num = $stmt->rowCount();
-	if($num > 0)
-	{
-
+	if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($passPlain) < 8) {
+		echo "1";
+		exit;
+	}
+	$idRest = tenantId();
+	if ($idRest <= 0) {
+		echo "1";
+		exit;
+	}
+	if ($this->existeNitUsuarioEnRestaurante($cedula, $idRest)) {
 		echo "2";
 		exit;
 	}
-	else
+	if ($this->existeEmailUsuarioEnRestaurante($email, $idRest)) {
+		echo "3";
+		exit;
+	}
+	if ($this->existeTelefonoUsuarioEnRestaurante($nrotelefono, $idRest)) {
+		echo "6";
+		exit;
+	}
+	$sql = " select usuario from usuarios where usuario = ? AND ".tenantWhere('usuarios');
+	$stmt = $this->dbh->prepare($sql);
+	$stmt->execute( array($_POST["usuario"]) );
+	$num = $stmt->rowCount();
+	if($num == 0)
 	{
-		$sql = " select email from usuarios where email = ? AND ".tenantWhere('usuarios');
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array($_POST["email"]) );
-		$num = $stmt->rowCount();
-		if($num > 0)
-		{
-
-			echo "3";
-			exit;
-		}
-		else
-		{
-			$sql = " select usuario from usuarios where usuario = ? AND ".tenantWhere('usuarios');
-			$stmt = $this->dbh->prepare($sql);
-			$stmt->execute( array($_POST["usuario"]) );
-			$num = $stmt->rowCount();
-			if($num == 0)
-			{
 				$nivel = strip_tags($_POST["nivel"]);
 				$nivel = strtoupper($nivel);
 				if (esSuperAdmin()) {
@@ -723,11 +802,6 @@ public function RegistrarUsuarios()
 						echo "1";
 						exit;
 					}
-				}
-				$idRest = tenantId();
-				if ($idRest <= 0) {
-					echo "1";
-					exit;
 				}
 				$query = " INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, password_plain, nivel, status, id_restaurante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 				if (function_exists('usuarios_ensure_password_plain')) {
@@ -746,21 +820,18 @@ public function RegistrarUsuarios()
 				$stmt->bindParam(10, $status);
 				$stmt->bindParam(11, $idRest);
 
-				$cedula = strip_tags($_POST["cedula"]);
 				$nombres = strip_tags($_POST["nombres"]);
 				$nrotelefono = strip_tags($_POST["nrotelefono"]);
 				$cargo = strip_tags($_POST["cargo"]);
-				$email = strip_tags($_POST["email"]);
 				$usuario = strip_tags($_POST["usuario"]);
-				$passPlain = (string) $_POST["password"];
-				$password = sha1(md5($_POST["password"]));
-				$status = strip_tags(strtoupper($_POST["status"]));
+				$password = sha1(md5($passPlain));
+				$status = 'ACTIVO';
+				if (!empty($_POST["status"])) {
+					$status = strip_tags(strtoupper($_POST["status"]));
+				}
 				$stmt->execute();
 
-				$envio = array('ok' => false, 'error' => '');
-				if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-					$envio = $this->enviarCredencialesAdminRestaurante($idRest, $nombres, $email, $usuario, $passPlain, $nivel);
-				}
+				$envio = $this->enviarCredencialesAdminRestaurante($idRest, $nombres, $email, $usuario, $passPlain, $nivel);
 
 ##################  SUBIR FOTO DE USUARIOS ######################################
 //datos del arhivo  
@@ -792,13 +863,11 @@ public function RegistrarUsuarios()
 					echo "</div>";
 				}
 				exit;
-			}
-			else
-			{
-				echo "4";
-				exit;
-			}
-		}
+	}
+	else
+	{
+		echo "4";
+		exit;
 	}
 }
 ############################## FUNCION PARA REGISTRAR USUARIOS ##############################
@@ -854,16 +923,13 @@ public function UsuariosPorId()
 {
 	self::SetNames();
 	$this->p = array();
-	$sql = " select * from usuarios where codigo = ? AND ".tenantWhere('usuarios')." AND nivel <> 'SUPERADMINISTRADOR' ";
-	if (isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'administrador') {
-		$codigoSolicitado = (int) base64_decode($_GET['codigo']);
-		$esPropio = isset($_SESSION['codigo']) && (int) $_SESSION['codigo'] === $codigoSolicitado;
-		if (!$esPropio) {
-			$sql .= " AND nivel <> 'ADMINISTRADOR' ";
-		}
+	$codigo = function_exists('rs_decode_request_id') ? rs_decode_request_id('codigo') : 0;
+	if ($codigo <= 0) {
+		return array();
 	}
+	$sql = " select * from usuarios where codigo = ? AND ".tenantWhere('usuarios')." AND nivel <> 'SUPERADMINISTRADOR' ";
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute(array(base64_decode($_GET['codigo'])));
+	$stmt->execute(array($codigo));
 	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 		$this->p[] = $row;
 		return $this->p;
@@ -876,46 +942,65 @@ public function UsuariosPorId()
 	public function ActualizarUsuarios()
 	{
 
-		if(empty($_POST["cedula"]) or empty($_POST["nombres"]) or empty($_POST["usuario"]) or empty($_POST["password"]))
+		$cedula = trim(strip_tags(isset($_POST["cedula"]) ? $_POST["cedula"] : ''));
+		$email = strtolower(trim(strip_tags(isset($_POST["email"]) ? $_POST["email"] : '')));
+		$nrotelefono = trim(strip_tags(isset($_POST["nrotelefono"]) ? $_POST["nrotelefono"] : ''));
+		$passwordIn = isset($_POST["password"]) ? trim(strip_tags((string) $_POST["password"])) : '';
+		if($cedula === '' or empty($_POST["nombres"]) or empty($_POST["usuario"]) or $email === '' or $nrotelefono === '')
 		{
+			echo "1";
+			exit;
+		}
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 			echo "1";
 			exit;
 		}
 		self::SetNames();
 		$codigoObjetivo = strip_tags($_POST["codigo"]);
-		if (isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'administrador') {
-			$sqlObj = "SELECT nivel FROM usuarios WHERE codigo = ? AND ".tenantWhere('usuarios');
+		if ($passwordIn === '' && $codigoObjetivo !== '') {
+			if (function_exists('usuarios_ensure_password_plain')) {
+				usuarios_ensure_password_plain($this->dbh);
+			}
+			$stPw = $this->dbh->prepare('SELECT password_plain FROM usuarios WHERE codigo = ? AND ' . tenantWhere('usuarios'));
+			$stPw->execute(array($codigoObjetivo));
+			$rowPw = $stPw->fetch(PDO::FETCH_ASSOC);
+			if ($rowPw && !empty($rowPw['password_plain'])) {
+				$passwordIn = (string) $rowPw['password_plain'];
+				$_POST['password'] = $passwordIn;
+				$_POST['password2'] = $passwordIn;
+			}
+		}
+		if ($passwordIn === '') {
+			echo "1";
+			exit;
+		}
+		if (function_exists('pos_es_administrador_restaurante') ? pos_es_administrador_restaurante() : (isset($_SESSION['acceso']) && $_SESSION['acceso'] === 'administrador')) {
+			$sqlObj = "SELECT codigo FROM usuarios WHERE codigo = ? AND ".tenantWhere('usuarios')." AND nivel <> 'SUPERADMINISTRADOR'";
 			$stmtObj = $this->dbh->prepare($sqlObj);
 			$stmtObj->execute(array($codigoObjetivo));
-			$rowObj = $stmtObj->fetch(PDO::FETCH_ASSOC);
-			$esPropio = isset($_SESSION['codigo']) && (int) $codigoObjetivo === (int) $_SESSION['codigo'];
-			if (!$rowObj || ($rowObj['nivel'] === 'ADMINISTRADOR' && !$esPropio)) {
+			if (!$stmtObj->fetch(PDO::FETCH_ASSOC)) {
 				echo "5";
 				exit;
 			}
 		}
-		$sql = " select * from usuarios where codigo != ? and cedula = ? AND ".tenantWhere('usuarios');
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array($_POST["codigo"], $_POST["cedula"]) );
-		$num = $stmt->rowCount();
-		if($num > 0)
-		{
+		$idRest = tenantId();
+		if ($idRest <= 0) {
+			echo "1";
+			exit;
+		}
+		if ($this->existeNitUsuarioEnRestaurante($cedula, $idRest, $codigoObjetivo)) {
 			echo "2";
 			exit;
 		}
-		else
+		if ($this->existeEmailUsuarioEnRestaurante($email, $idRest, $codigoObjetivo)) {
+			echo "3";
+			exit;
+		}
+		if ($this->existeTelefonoUsuarioEnRestaurante($nrotelefono, $idRest, $codigoObjetivo)) {
+			echo "6";
+			exit;
+		}
 		{
-			$sql = " select email from usuarios where codigo != ? and email = ? AND ".tenantWhere('usuarios');
-			$stmt = $this->dbh->prepare($sql);
-			$stmt->execute( array($_POST["codigo"], $_POST["email"]) );
-			$num = $stmt->rowCount();
-			if($num > 0)
-			{
-				echo "3";
-				exit;
-			}
-			else
-			{
 				$sql = " select usuario from usuarios where codigo != ? and usuario = ? AND ".tenantWhere('usuarios');
 				$stmt = $this->dbh->prepare($sql);
 				$stmt->execute( array($_POST["codigo"], $_POST["usuario"]) );
@@ -952,11 +1037,9 @@ public function UsuariosPorId()
 					$stmt->bindParam(10, $status);
 					$stmt->bindParam(11, $codigo);
 
-					$cedula = strip_tags($_POST["cedula"]);
 					$nombres = strip_tags($_POST["nombres"]);
 					$nrotelefono = strip_tags($_POST["nrotelefono"]);
 					$cargo = strip_tags($_POST["cargo"]);
-					$email = strip_tags($_POST["email"]);
 					$usuario = strip_tags($_POST["usuario"]);
 					$passPlain = (string) $_POST["password"];
 					$password = sha1(md5($_POST["password"]));
@@ -1005,7 +1088,6 @@ public function UsuariosPorId()
 					exit;
 				}
 			}
-		}
 	}
 ############################## FUNCION PARA ACTUALIZAR USUARIOS ##############################
 
@@ -1150,24 +1232,20 @@ public function ListarSalas()
 public function SalasPorId()
 {
 	self::SetNames();
+	$this->p = array();
+	$codsala = function_exists('rs_decode_request_id') ? rs_decode_request_id('codsala') : 0;
+	if ($codsala <= 0) {
+		return array();
+	}
 	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM salas LEFT JOIN mesas ON salas.codsala = mesas.codsala where salas.codsala = ? AND ".tenantWhere('salas');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codsala"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codsala));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ################################# FUNCION ID DE SALAS ################################
 
 ############################# FUNCION PARA LISTAR MESAS POR SALAS ################################
@@ -1859,28 +1937,23 @@ public function ContarDeliveryCocina()
 public function MesasPorId()
 {
 	self::SetNames();
-	$codmesaReq = base64_decode($_GET["codmesa"]);
+	$this->p = array();
+	$codmesaReq = function_exists('rs_decode_request_id') ? rs_decode_request_id('codmesa') : 0;
+	if ($codmesaReq <= 0) {
+		return array();
+	}
 	$codmesaPrincipal = $this->ResolverMesaPrincipal($codmesaReq);
-	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM mesas INNER JOIN salas ON salas.codsala = mesas.codsala where mesas.codmesa = ? AND ".tenantWhere('mesas')." AND ".tenantWhere('salas');
+	$sql = " select salas.codsala, salas.nombresala, salas.salacreada, mesas.codmesa, mesas.nombremesa, mesas.mesacreada, mesas.statusmesa FROM mesas INNER JOIN salas ON salas.codsala = mesas.codsala AND ".tenantWhere('salas')." where mesas.codmesa = ? AND ".tenantWhere('mesas');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array($codmesaPrincipal) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codmesaPrincipal));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$row['nombremesa'] = $this->NombreMesaConUnion($row['codmesa']);
+		$row['tiene_union'] = $this->MesaTieneUnionActiva($row['codmesa']) ? 1 : 0;
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$row['nombremesa'] = $this->NombreMesaConUnion($row['codmesa']);
-				$row['tiene_union'] = $this->MesaTieneUnionActiva($row['codmesa']) ? 1 : 0;
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ############################ FUNCION ID DE MESAS ###########################
 
 ############################ FUNCION PARA ACTUALIZAR MESAS ###########################
@@ -1904,7 +1977,7 @@ public function MesasPorId()
 			." nombremesa = ?, "
 			." statusmesa = ? "
 			." where "
-			." codmesa = ?;
+			." codmesa = ? AND ".tenantWhere('mesas').";
 			";
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->bindParam(1, $codsala);
@@ -2123,24 +2196,20 @@ public function ListarMediosPagos()
 public function MediosPagosPorId()
 {
 	self::SetNames();
-	$sql = " select * from mediospagos where codmediopago = ? ";
+	$this->p = array();
+	$codmediopago = function_exists('rs_decode_request_id') ? rs_decode_request_id('codmediopago') : 0;
+	if ($codmediopago <= 0) {
+		return array();
+	}
+	$sql = " select * from mediospagos where codmediopago = ? AND ".tenantWhere('mediospagos');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codmediopago"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codmediopago));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ############################### FUNCION ID MEDIOS DE PAGO ############################
 
 ############################### FUNCION ID MEDIOS DE PAGO #2 ###########################
@@ -2187,7 +2256,7 @@ public function MediosPagosPorId()
 				$sql = " update mediospagos set "
 				." mediopago = ? "
 				." where "
-				." codmediopago = ?;
+				." codmediopago = ? AND ".tenantWhere('mediospagos').";
 				";
 				$stmt = $this->dbh->prepare($sql);
 				$stmt->bindParam(1, $mediopago);
@@ -2319,18 +2388,18 @@ public function MediosPagosPorId()
 			self::SetNames();
 			$this->AsegurarTablaImpresoras();
 			$this->p = array();
+			$id = function_exists('rs_decode_request_id') ? rs_decode_request_id('id_impresora') : 0;
+			if ($id <= 0) {
+				return array();
+			}
 			$sql = "SELECT * FROM impresoras WHERE id_impresora = ? AND ".tenantWhere('impresoras');
 			$stmt = $this->dbh->prepare($sql);
-			$stmt->execute(array(base64_decode($_GET["id_impresora"])));
-			$num = $stmt->rowCount();
-			if ($num == 0) {
-				echo "";
-			} else {
-				if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-					$this->p[] = $row;
-				}
+			$stmt->execute(array($id));
+			if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+				$this->p[] = $row;
 				return $this->p;
 			}
+			return array();
 		}
 
 		public function ActualizarImpresoras()
@@ -2495,24 +2564,20 @@ public function ListarCategorias()
 public function CategoriasPorId()
 {
 	self::SetNames();
-	$sql = " select * from categorias where codcategoria = ? ";
+	$this->p = array();
+	$codcategoria = function_exists('rs_decode_request_id') ? rs_decode_request_id('codcategoria') : 0;
+	if ($codcategoria <= 0) {
+		return array();
+	}
+	$sql = " select * from categorias where codcategoria = ? AND ".tenantWhere('categorias');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codcategoria"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codcategoria));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ############################## FUNCION ID CATEGORIAS ##############################
 
 ############################## FUNCION PARA ACTUALIZAR CATEGORIAS ##############################
@@ -2534,7 +2599,7 @@ public function CategoriasPorId()
 			$sql = " update categorias set "
 			." nomcategoria = ? "
 			." where "
-			." codcategoria = ?;
+			." codcategoria = ? AND ".tenantWhere('categorias').";
 			";
 			$stmt = $this->dbh->prepare($sql);
 			$stmt->bindParam(1, $nomcategoria);
@@ -2629,33 +2694,65 @@ public function CategoriasPorId()
 
 #################################### CLASE CAJAS DE VENTAS #####################################
 
+############################### FUNCION PARA N° DE CAJA (POS) #################################
+	/**
+	 * Genera el siguiente número de caja (5 dígitos), único por restaurante (tenant).
+	 * En el sistema la caja se identifica por codcaja (PK); el nrocaja es solo para el POS.
+	 */
+	public function GenerarSiguienteNumeroCaja()
+	{
+		self::SetNames();
+		$sql = "SELECT nrocaja FROM cajas
+			WHERE nrocaja REGEXP '^[0-9]+$' AND ".tenantWhere('cajas')."
+			ORDER BY CAST(nrocaja AS UNSIGNED) DESC
+			LIMIT 1";
+		$stmt = $this->dbh->prepare($sql);
+		$stmt->execute();
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		if ($row && isset($row['nrocaja']) && $row['nrocaja'] !== '') {
+			$next = ((int) $row['nrocaja']) + 1;
+		} else {
+			$next = 1;
+		}
+		for ($i = 0; $i < 50; $i++) {
+			$nrocaja = str_pad((string) $next, 5, '0', STR_PAD_LEFT);
+			if (strlen($nrocaja) > 15) {
+				$nrocaja = substr((string) $next, 0, 15);
+			}
+			$check = $this->dbh->prepare("SELECT codcaja FROM cajas WHERE nrocaja = ? AND ".tenantWhere('cajas')." LIMIT 1");
+			$check->execute(array($nrocaja));
+			if ($check->rowCount() === 0) {
+				return $nrocaja;
+			}
+			$next++;
+		}
+		return str_pad((string) time(), 5, '0', STR_PAD_LEFT);
+	}
+
+	public function NumeroCaja()
+	{
+		return $this->GenerarSiguienteNumeroCaja();
+	}
+############################### FUNCION PARA N° DE CAJA (POS) #################################
+
 ################################# FUNCION PARA REGISTRAR CAJAS #################################
 public function RegistrarCajas()
 {
 	self::SetNames();
-	if(empty($_POST["nrocaja"]) or empty($_POST["nombrecaja"]))
+	if(empty($_POST["nombrecaja"]))
 	{
 		echo "1";
 		exit;
 	}
-	$sql = " select nombrecaja from cajas where nombrecaja = ? AND ".tenantWhere('cajas');
-	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array($_POST["nombrecaja"]) );
-	$num = $stmt->rowCount();
-	if($num > 0)
-	{
-		echo "2";
-		exit;
-	}
+	$nrocaja = $this->GenerarSiguienteNumeroCaja();
 	$sqlNro = " select nrocaja from cajas where nrocaja = ? AND ".tenantWhere('cajas');
 	$stmtNro = $this->dbh->prepare($sqlNro);
-	$stmtNro->execute( array($_POST["nrocaja"]) );
+	$stmtNro->execute( array($nrocaja) );
 	if ($stmtNro->rowCount() > 0)
 	{
-		echo "2";
+		echo "4";
 		exit;
 	}
-	else
 	{
 		$sql = " select codigo from cajas where codigo = ? and codigo != '' AND ".tenantWhere('cajas');
 		$stmt = $this->dbh->prepare($sql);
@@ -2670,7 +2767,6 @@ public function RegistrarCajas()
 			$stmt->bindParam(3, $codigo);
 			$stmt->bindParam(4, $id_restaurante);
 
-			$nrocaja = strip_tags($_POST["nrocaja"]);
 			$nombrecaja = strip_tags($_POST["nombrecaja"]);
 			$codigo = strip_tags($_POST["codigo"]);
 			$id_restaurante = tenantId();
@@ -2735,24 +2831,20 @@ public function ListarCajasAbiertas()
 public function CajaPorId()
 {
 	self::SetNames();
+	$this->p = array();
+	$codcaja = function_exists('rs_decode_request_id') ? rs_decode_request_id('codcaja') : 0;
+	if ($codcaja <= 0) {
+		return array();
+	}
 	$sql = " select * from cajas LEFT JOIN usuarios ON cajas.codigo = usuarios.codigo WHERE cajas.codcaja = ? AND ".tenantWhere('cajas');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codcaja"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codcaja));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ################################# FUNCION ID CAJAS #################################
 
 ################################# FUNCION ID CAJEROS #################################
@@ -2798,21 +2890,20 @@ public function CajerosSessionPorId()
 		public function ActualizarCaja()
 		{
 			self::SetNames();
-			if(empty($_POST["codcaja"]))
+			if(empty($_POST["codcaja"]) || empty($_POST["nombrecaja"]))
 			{
 				echo "1";
 				exit;
 			}
-			$sql = " select nombrecaja from cajas where codcaja != ? and nombrecaja = ? AND ".tenantWhere('cajas');
-			$stmt = $this->dbh->prepare($sql);
-			$stmt->execute( array($_POST["codcaja"], $_POST["nombrecaja"]) );
-			$num = $stmt->rowCount();
-			if($num > 0)
+			$nrocaja = strip_tags($_POST["nrocaja"]);
+			$sqlNro = " select nrocaja from cajas where codcaja != ? and nrocaja = ? AND ".tenantWhere('cajas');
+			$stmtNro = $this->dbh->prepare($sqlNro);
+			$stmtNro->execute(array($_POST["codcaja"], $nrocaja));
+			if ($stmtNro->rowCount() > 0)
 			{
-				echo "2";
+				echo "4";
 				exit;
 			}
-			else
 			{
 				$sql = " select codigo from cajas where codcaja != ? and codigo = ? and codigo != 0 AND ".tenantWhere('cajas');
 				$stmt = $this->dbh->prepare($sql);
@@ -2943,29 +3034,31 @@ public function CajerosSessionPorId()
 ###################################### FUNCION LISTAR CLIENTES ################################## 
 	public function BusquedaClientes()
 	{
-self::SetNames();
-		
-$sql = " SELECT * from clientes WHERE CONCAT(cedcliente, '',nomcliente) LIKE '%".$_GET["buscacliente"]."%' ORDER BY codcliente ASC LIMIT 0,20";
-		$stmt = $this->dbh->prepare($sql);
-		$stmt->execute();
-		$num = $stmt->rowCount();
-		     if($num==0)
-		{
-		
-	echo "<center><div class='alert alert-danger'>";
-	echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-	echo "<span class='fa fa-info-circle'></span> NO SE ENCONTRARON RESULTADOS PARA TU B&Uacute;SQUEDA !</div></center>";
-	exit;
-		       }
-		else
-		{
-		while($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[]=$row;
-			}
-			return $this->p;
-			$this->dbh=null;
+		self::SetNames();
+		$this->p = array();
+		$filtro = isset($_GET['buscacliente']) ? trim((string) $_GET['buscacliente']) : '';
+		$where = tenantWhere('clientes');
+		if ($filtro === '') {
+			$sql = "SELECT * FROM clientes WHERE ".$where." ORDER BY nomcliente ASC LIMIT 200";
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute();
+		} else {
+			$like = '%'.$filtro.'%';
+			$sql = "SELECT * FROM clientes WHERE ".$where." AND (cedcliente LIKE ? OR nomcliente LIKE ? OR emailcliente LIKE ? OR tlfcliente LIKE ?) ORDER BY nomcliente ASC LIMIT 50";
+			$stmt = $this->dbh->prepare($sql);
+			$stmt->execute(array($like, $like, $like, $like));
 		}
+		$num = $stmt->rowCount();
+		if ($num == 0) {
+			echo "<center><div class='alert alert-danger'>";
+			echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+			echo "<span class='fa fa-info-circle'></span> NO SE ENCONTRARON RESULTADOS PARA TU B&Uacute;SQUEDA !</div></center>";
+			exit;
+		}
+		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
+		}
+		return $this->p;
 	}
 ###################################### FUNCION LISTAR CLIENTES ################################## 
 
@@ -2985,7 +3078,7 @@ public function RegistrarClientes()
 	$num = $stmt->rowCount();
 	if($num == 0)
 	{
-		$query = " insert into clientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
+		$query = " INSERT INTO clientes (cedcliente, nomcliente, direccliente, tlfcliente, emailcliente, password, documento, estado, codigo, id_restaurante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
 		$stmt->bindParam(1, $cedcliente);
 		$stmt->bindParam(2, $nomcliente);
@@ -2998,13 +3091,12 @@ public function RegistrarClientes()
 		$stmt->bindParam(9, $codigo);
 		$stmt->bindParam(10, $id_restaurante);
 
-		$password1 = "1200000";
 		$nrodocumento = 1;
 		$estado = 1;
 		$codigo = "NULL";
 		$id_restaurante = tenantId();
+		$password = isset($_POST['password']) ? strip_tags($_POST['password']) : '';
 
-		$documento = strip_tags($_POST["documento"]);
 		$cedcliente = strip_tags($_POST["cedcliente"]);
 		$nomcliente = strip_tags($_POST["nomcliente"]);
 		$direccliente = strip_tags($_POST["direccliente"]);
@@ -3030,13 +3122,13 @@ public function RegistrarClientes()
 public function ListarClientes()
 {
 	self::SetNames();
+	$this->p = array();
 	$sql = " select * from clientes WHERE ".tenantWhere();
 	foreach ($this->dbh->query($sql) as $row)
 	{
 		$this->p[] = $row;
 	}
 	return $this->p;
-	$this->dbh=null;
 }
 ################################## FUNCION PARA LISTAR CLIENTES #############################
 
@@ -3044,24 +3136,20 @@ public function ListarClientes()
 public function ClientesPorId()
 {
 	self::SetNames();
-	$sql = " select * from clientes where codcliente = ? ";
+	$this->p = array();
+	$codcliente = function_exists('rs_decode_request_id') ? rs_decode_request_id('codcliente') : 0;
+	if ($codcliente <= 0) {
+		return array();
+	}
+	$sql = " select * from clientes where codcliente = ? AND ".tenantWhere('clientes');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codcliente"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codcliente));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ################################## FUNCION ID CLIENTES #############################
 
 ################################## FUNCION PARA ACUALIZAR CLIENTES #############################
@@ -3259,24 +3347,20 @@ public function ListarProveedores()
 public function ProveedoresPorId()
 {
 	self::SetNames();
-	$sql = " select * from proveedores where codproveedor = ? ";
+	$this->p = array();
+	$codproveedor = function_exists('rs_decode_request_id') ? rs_decode_request_id('codproveedor') : 0;
+	if ($codproveedor <= 0) {
+		return array();
+	}
+	$sql = " select * from proveedores where codproveedor = ? AND ".tenantWhere('proveedores');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codproveedor"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codproveedor));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ################################ FUNCION ID PROVEEDORES ############################
 
 ################################ FUNCION ID PROVEEDORES #2 ###########################
@@ -3658,24 +3742,20 @@ public function ListarIngredientes()
 public function IngredientesPorId()
 {
 	self::SetNames();
-	$sql = " SELECT * FROM ingredientes LEFT JOIN proveedores ON ingredientes.codproveedor = proveedores.codproveedor WHERE ingredientes.codingrediente = ?";
+	$this->p = array();
+	$codingrediente = function_exists('rs_decode_request_id') ? rs_decode_request_id('codingrediente') : 0;
+	if ($codingrediente <= 0) {
+		return array();
+	}
+	$sql = " SELECT * FROM ingredientes LEFT JOIN proveedores ON ingredientes.codproveedor = proveedores.codproveedor WHERE ingredientes.codingrediente = ? AND ".tenantWhere('ingredientes');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codingrediente"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codingrediente));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ############################### FUNCION ID INGREDIENTES #############################
 
 ############################### FUNCION PARA VER KARDEX INGREDIENTES #############################
@@ -4065,7 +4145,7 @@ exit;
 			exit;
 		}
 
-		$ingrediente = $_POST['codingrediente'];
+		$ingrediente = isset($_POST['codingrediente']) ? (array) $_POST['codingrediente'] : array();
 		$repeated = array_filter(array_count_values($ingrediente), function($count) {
 			return $count > 1;
 		});
@@ -4105,9 +4185,15 @@ exit;
 			$precioventa = strip_tags($_POST["precioventa"]);
 			$existencia = strip_tags($_POST["existencia"]);
 			$stockminimo = strip_tags($_POST["stockminimo"]);
+			if ($stockminimo === '' || $stockminimo === null) {
+				$stockminimo = 0;
+			}
 			$ivaproducto = strip_tags($_POST["ivaproducto"]);
 			$descproducto = strip_tags($_POST["descproducto"]);
 			$codproveedor = strip_tags($_POST["codproveedor"]);
+			if ($codproveedor === '' || $codproveedor === null) {
+				$codproveedor = 0;
+			}
 			$codigobarra = isset($_POST['codigobarra']) ? trim(strip_tags($_POST['codigobarra'])) : '';
 			if ($codigobarra === '' || $codigobarra === '0' || $codigobarra === '00000000000') {
 				$codigobarra = $this->GenerarCodigoBarraUnico();
@@ -4170,8 +4256,9 @@ exit;
 
 
 ###################### PROCESO DE REGISTRO DE INSCREDIENTES A PRODUCTOS ###########################
-for($i=0;$i<count($_POST['codingrediente']);$i++){  //recorro el array
-	if (!empty($_POST['codingrediente'][$i])) {
+$codingredientesPost = isset($_POST['codingrediente']) ? (array) $_POST['codingrediente'] : array();
+for($i=0;$i<count($codingredientesPost);$i++){  //recorro el array
+	if (!empty($codingredientesPost[$i])) {
 
 		$query = " insert into productosvsingredientes values (null, ?, ?, ?); ";
 		$stmt = $this->dbh->prepare($query);
@@ -4180,8 +4267,8 @@ for($i=0;$i<count($_POST['codingrediente']);$i++){  //recorro el array
 		$stmt->bindParam(3, $cantidad);
 
 		$codproducto = strip_tags($_POST["codproducto"]);
-		$codingrediente = strip_tags($_POST['codingrediente'][$i]);
-		$cantidad = strip_tags($_POST['cantidad'][$i]);
+		$codingrediente = strip_tags($codingredientesPost[$i]);
+		$cantidad = isset($_POST['cantidad'][$i]) ? strip_tags($_POST['cantidad'][$i]) : '0';
 		$stmt->execute();
 	}
 }
@@ -4295,48 +4382,40 @@ public function ListarProductosFavoritos()
 public function ProductosPorId()
 {
 	self::SetNames();
-	$sql = " SELECT * FROM productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria LEFT JOIN proveedores ON productos.codproveedor=proveedores.codproveedor WHERE productos.codproducto = ?";
+	$this->p = array();
+	$codproducto = function_exists('rs_decode_request_string') ? rs_decode_request_string('codproducto') : '';
+	if ($codproducto === '') {
+		return array();
+	}
+	$sql = " SELECT * FROM productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria LEFT JOIN proveedores ON productos.codproveedor=proveedores.codproveedor WHERE productos.codproducto = ? AND ".tenantWhere('productos');
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codproducto"])) );
-	$num = $stmt->rowCount();
-	if($num==0)
-	{
-		echo "";
+	$stmt->execute(array($codproducto));
+	if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+		$this->p[] = $row;
+		return $this->p;
 	}
-	else
-	{
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$this->p[] = $row;
-			}
-			return $this->p;
-			$this->dbh=null;
-		}
-	}
+	return array();
+}
 ########################### FUNCION ID PRODUCTOS #################################
 
 ########################### FUNCION PARA DETALLES PRODUCTOS #################################
 	public function DetalleProductosPorId()
 	{
 		self::SetNames();
-		$sql = " SELECT * FROM productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria LEFT JOIN proveedores ON productos.codproveedor=proveedores.codproveedor WHERE productos.codproducto = ?";
+		$this->p = array();
+		$codproducto = function_exists('rs_decode_request_string') ? rs_decode_request_string('codproducto') : '';
+		if ($codproducto === '') {
+			return array();
+		}
+		$sql = " SELECT * FROM productos INNER JOIN categorias ON productos.codcategoria = categorias.codcategoria LEFT JOIN proveedores ON productos.codproveedor=proveedores.codproveedor WHERE productos.codproducto = ? AND ".tenantWhere('productos');
 		$stmt = $this->dbh->prepare($sql);
-		$stmt->execute( array(base64_decode($_GET["codproducto"])) );
-		$num = $stmt->rowCount();
-		if($num==0)
-		{
-			echo "";
+		$stmt->execute(array($codproducto));
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$this->p[] = $row;
+			return $this->p;
 		}
-		else
-		{
-			if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-				{
-					$this->p[] = $row;
-				}
-				return $this->p;
-				$this->dbh=null;
-			}
-		}
+		return array();
+	}
 ########################### FUNCION PARA DETALLES PRODUCTOS #################################
 
 ########################### FUNCION PARA VER KARDEX PRODUCTOS #################################
@@ -4344,8 +4423,12 @@ public function ProductosPorId()
 		{
 			self::SetNames();
 			$sql ="SELECT kardexproductos.codproducto, kardexproductos.codresponsable, kardexproductos.movimiento, kardexproductos.entradas, kardexproductos.salidas, kardexproductos.stockactual, kardexproductos.preciom, kardexproductos.costototal, kardexproductos.documento, kardexproductos.fechakardex, proveedores.nomproveedor as proveedor, clientes.nomcliente as clientes FROM (productos LEFT JOIN kardexproductos ON productos.codproducto=kardexproductos.codproducto) LEFT JOIN proveedores ON proveedores.codproveedor=kardexproductos.codresponsable LEFT JOIN clientes ON clientes.codcliente=kardexproductos.codresponsable WHERE kardexproductos.codproducto = ?";
+			$codproducto = function_exists('rs_decode_request_string') ? rs_decode_request_string('codproducto') : '';
+			if ($codproducto === '') {
+				return array();
+			}
 			$stmt = $this->dbh->prepare($sql);
-			$stmt->execute( array(base64_decode($_GET["codproducto"])) );
+			$stmt->execute(array($codproducto));
 			$num = $stmt->rowCount();
 
 			while($row = $stmt->fetch(PDO::FETCH_ASSOC))
@@ -4362,8 +4445,12 @@ public function VerDetallesIngredientesProductos()
 {
 	self::SetNames();
 	$sql ="SELECT productosvsingredientes.codproducto, productosvsingredientes.cantracion, ingredientes.codingrediente, ingredientes.nomingrediente, ingredientes.costoingrediente, ingredientes.cantingrediente, ingredientes.unidadingrediente FROM (productos LEFT JOIN productosvsingredientes ON productos.codproducto=productosvsingredientes.codproducto) LEFT JOIN ingredientes ON ingredientes.codingrediente=productosvsingredientes.codingrediente WHERE productosvsingredientes.codproducto = ?";
+	$codproducto = function_exists('rs_decode_request_string') ? rs_decode_request_string('codproducto') : '';
+	if ($codproducto === '') {
+		return array();
+	}
 	$stmt = $this->dbh->prepare($sql);
-	$stmt->execute( array(base64_decode($_GET["codproducto"])) );
+	$stmt->execute(array($codproducto));
 	$num = $stmt->rowCount();
 
 	while($row = $stmt->fetch(PDO::FETCH_ASSOC))
@@ -4397,6 +4484,18 @@ public function VerDetallesIngredientesProductos()
 		}
 
 		self::SetNames();
+		$codalmacenPost = isset($_POST['codalmacen']) ? (int) strip_tags($_POST['codalmacen']) : 0;
+		if ($codalmacenPost <= 0) {
+			echo "5";
+			exit;
+		}
+		$sqlPerm = "SELECT codalmacen FROM productos WHERE codalmacen = ? AND ".tenantWhere('productos');
+		$stmtPerm = $this->dbh->prepare($sqlPerm);
+		$stmtPerm->execute(array($codalmacenPost));
+		if (!$stmtPerm->fetch(PDO::FETCH_ASSOC)) {
+			echo "5";
+			exit;
+		}
 		$sql = " update productos set "
 		." codproducto = ?, "
 		." producto = ?, "
@@ -4412,7 +4511,7 @@ public function VerDetallesIngredientesProductos()
 		." favorito = ?, "
 		." statusproducto = ? "
 		." where "
-		." codalmacen = ?;
+		." codalmacen = ? AND ".tenantWhere('productos').";
 		";
 		$stmt = $this->dbh->prepare($sql);
 		$stmt->bindParam(1, $codproducto);
@@ -4437,13 +4536,19 @@ public function VerDetallesIngredientesProductos()
 		$precioventa = strip_tags($_POST["precioventa"]);
 		$existencia = strip_tags($_POST["existencia"]);
 		$stockminimo = strip_tags($_POST["stockminimo"]);
+		if ($stockminimo === '' || $stockminimo === null) {
+			$stockminimo = 0;
+		}
 		$ivaproducto = strip_tags($_POST["ivaproducto"]);
 		$descproducto = strip_tags($_POST["descproducto"]);
 		$codproveedor = strip_tags($_POST["codproveedor"]);
+		if ($codproveedor === '' || $codproveedor === null) {
+			$codproveedor = 0;
+		}
 		if (strip_tags($_POST['codigobarra']!="")) { $codigobarra = strip_tags($_POST['codigobarra']); } else { $codigobarra ='00000000000'; }
 		$favorito = strip_tags($_POST["favorito"]);
 		$statusproducto = strip_tags($_POST["statusproducto"]);
-		$codalmacen = strip_tags($_POST["codalmacen"]);
+		$codalmacen = $codalmacenPost;
 		$stmt->execute();
 
 ##################  SUBIR FOTO DE PRODUCTO ######################################
@@ -7026,7 +7131,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
                 <div class="col-md-12"> 
                     <div class="form-group has-feedback"> 
 <label class="control-label">B&uacute;squeda de Productos:<span class="symbol required"></span></label>
-<input class="form-control" type="text" name="busquedaproducto" id="busquedaproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Realice la B&uacute;squeda de Producto">
+<input class="form-control" type="text" name="busquedaproducto" id="busquedaproducto" autocomplete="off" placeholder="Realice la B&uacute;squeda de Producto">
                     <i class="fa fa-search form-control-feedback"></i> 
                     </div> 
                 </div>
@@ -7094,7 +7199,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
  <label id="boton" onClick="mostrar();" style="cursor: pointer;">Agregar Observaciones: </label>
             <div id="observaciones" style="display: none;">
                 <div class="form-group has-feedback"> 
-<textarea name="observaciones" class="form-control" id="observaciones" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Observaciones" required="" aria-required="true"></textarea>
+<textarea name="observaciones" class="form-control" id="observaciones" autocomplete="off" placeholder="Ingrese Observaciones" required="" aria-required="true"></textarea>
                         <i class="fa fa-comments form-control-feedback"></i>
                  </div>
             </div>
@@ -7186,7 +7291,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 	<div class="col-md-12"> 
 		<div class="form-group has-feedback"> 
 			<label class="control-label">Descuento: <span class="symbol required"></span></label>
-			<input class="form-control calculodescuentove" type="text" name="descuento" id="descuento" onKeyUp="this.value=this.value.toUpperCase();" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Descuento en Venta" value="0.00" required="required">
+			<input class="form-control calculodescuentove" type="text" name="descuento" id="descuento" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Descuento en Venta" value="0.00" required="required">
 			<i class="fa fa-minus-circle form-control-feedback"></i> 
 		</div> 
 	</div>
@@ -7230,7 +7335,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 			<div class="col-md-12"> 
 				<div class="form-group has-feedback"> 
 					<label class="control-label">Monto Pagado: <span class="symbol required"></span></label>
-					<input class="form-control number devolucion" type="text" name="montopagado" id="montopagado" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Monto Pagado" value="0.00" required="" aria-required="true"> 
+					<input class="form-control number devolucion" type="text" name="montopagado" id="montopagado" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Monto Pagado" value="0.00" required="" aria-required="true"> 
 					<i class="fa fa-usd form-control-feedback"></i>
 				</div> 
 			</div>
@@ -7240,7 +7345,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 			<div class="col-md-12"> 
 				<div class="form-group has-feedback"> 
 					<label class="control-label">Cambio Devuelto: <span class="symbol required"></span></label>
-					<input class="form-control number" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Cambio Devuelto" value="0.00" required="" aria-required="true"> 
+					<input class="form-control number" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Cambio Devuelto" value="0.00" required="" aria-required="true"> 
 					<i class="fa fa-usd form-control-feedback"></i>
 				</div> 
 			</div>
@@ -7250,7 +7355,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 			<div class="col-md-12"> 
 				<div class="form-group has-feedback"> 
 					<label class="control-label">Fecha Vence Cr&eacute;dito: <span class="symbol required"></span></label>
-					<input class="form-control calendario" type="text" name="fechavencecredito" id="fechavencecredito" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Fecha Vence Cr&eacute;dito" disabled="" required="" aria-required="true"> 
+					<input class="form-control calendario" type="text" name="fechavencecredito" id="fechavencecredito" autocomplete="off" placeholder="Ingrese Fecha Vence Cr&eacute;dito" disabled="" required="" aria-required="true"> 
 					<i class="fa fa-calendar form-control-feedback"></i>
 				</div> 
 			</div>
@@ -7260,7 +7365,7 @@ echo "<img src='./fotos/producto.png' alt='x' style='border-radius:4px;width:40p
 			<div class="col-md-12"> 
 				<div class="form-group has-feedback"> 
 					<label for="field-6" class="control-label">Monto de Abono: <span class="symbol required"></span></label>
-					<input class="form-control number" type="text" name="montoabono" id="montoabono" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" value="0.00" autocomplete="off" placeholder="Ingrese Monto de Abono" disabled="" required="" aria-required="true"> 
+					<input class="form-control number" type="text" name="montoabono" id="montoabono" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" value="0.00" autocomplete="off" placeholder="Ingrese Monto de Abono" disabled="" required="" aria-required="true"> 
 					<i class="fa fa-calendar form-control-feedback"></i>
 				</div> 
 			</div>
@@ -7847,7 +7952,8 @@ echo "<script>(function(){var u='reportepdf?codventa=".base64_encode($codventa).
 	public function MensajeSinArqueoVentas()
 	{
 		if (isset($_SESSION['acceso']) && ($_SESSION['acceso'] == 'cajero' || $_SESSION['acceso'] == 'administrador')) {
-			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA ABIERTO PARA PROCESAR VENTAS.<br> DEBE HABER AL MENOS UN ARQUEO INICIADO EN EL LOCAL. SI DESEA REALIZARLO HAZ CLIC <a href='forarqueo'>AQUI</a></center></div>";
+			$linkArqueo = function_exists('pos_sistema_page_url') ? htmlspecialchars(pos_sistema_page_url('forarqueo'), ENT_QUOTES, 'UTF-8') : 'forarqueo';
+			return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA ABIERTO PARA PROCESAR VENTAS.<br> DEBE HABER AL MENOS UN ARQUEO INICIADO EN EL LOCAL. SI DESEA REALIZARLO HAZ CLIC <a href='" . $linkArqueo . "'>AQUI</a></center></div>";
 		}
 		return "<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button><center><span class='fa fa-info-circle'></span> DISCULPE, NO EXISTE UN ARQUEO DE CAJA PARA PROCESAR VENTAS.<br>EL MESERO NO PUEDE TOMAR PEDIDOS HASTA QUE EL CAJERO O ADMINISTRADOR INICIE EL ARQUEO DE CAJA.</center></div>";
 	}
@@ -11284,7 +11390,7 @@ public function VerificaArqueoCreditos()
                                <div class="form-group has-feedback"> 
             <label class="control-label">B&uacute;squeda de Clientes: <span class="symbol required"></span></label>
 <input type="hidden" name="codcaja" id="codcaja" value="<?php echo $codcaja; ?>" readonly="readonly">
-<input type="hidden" class="form-control" name="codcliente" id="codcliente"><input class="form-control" type="text" name="busquedacliente" id="busquedacliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Datos del Cliente para tu b&uacute;squeda" required="required">
+<input type="hidden" class="form-control" name="codcliente" id="codcliente"><input class="form-control" type="text" name="busquedacliente" id="busquedacliente" autocomplete="off" placeholder="Ingrese Datos del Cliente para tu b&uacute;squeda" required="required">
                         <i class="fa fa-search form-control-feedback"></i>  
                               </div> 
                         </div> 	
@@ -11951,6 +12057,15 @@ $sql = "select
 		$nombres = strip_tags($_POST['nombres']);
 		$usuarioLogin = strip_tags($_POST['usuario']);
 		$passwordPlain = (string) $_POST['password'];
+		$cedula = trim(strip_tags(isset($_POST['cedula']) ? $_POST['cedula'] : ''));
+		if ($cedula === '') {
+			echo "<div class='alert alert-warning'>Indique el NIT del administrador.</div>";
+			exit;
+		}
+		if ($this->existeNitUsuarioEnRestaurante($cedula, $idRest)) {
+			echo "<div class='alert alert-warning'>Ya existe un usuario con este NIT en este restaurante.</div>";
+			exit;
+		}
 		$chk = $this->dbh->prepare("SELECT codigo FROM usuarios WHERE usuario = ? AND id_restaurante = ?");
 		$chk->execute(array($usuarioLogin, $idRest));
 		if ($chk->rowCount() > 0) {
@@ -11962,7 +12077,7 @@ $sql = "select
 		}
 		$stmt = $this->dbh->prepare("INSERT INTO usuarios (cedula, nombres, nrotelefono, cargo, email, usuario, password, password_plain, nivel, status, id_restaurante) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
 		$stmt->execute(array(
-			strip_tags($_POST['cedula']),
+			$cedula,
 			$nombres,
 			strip_tags(isset($_POST['nrotelefono']) ? $_POST['nrotelefono'] : ''),
 			$cargo,

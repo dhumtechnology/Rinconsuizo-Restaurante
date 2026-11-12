@@ -1,7 +1,7 @@
 <?php
 require_once("class/class.php");
 ?>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script src="assets/script/jscalendario.js"></script>
 <script src="assets/script/autocompleto.js"></script> 
 <!-- Calendario -->

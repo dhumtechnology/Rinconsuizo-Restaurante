@@ -1,7 +1,6 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador") {
+require_once("class/class.php");
+require_once(__DIR__ . "/inc/pos_for_admin.php");
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -18,6 +17,14 @@ else if(isset($_POST['btn-update']))
 {
 $reg = $tra->ActualizarProveedores();
 exit;
+}
+
+$reg = null;
+if (isset($_GET['codproveedor'])) {
+	$reg = $tra->ProveedoresPorId();
+	if (empty($reg)) {
+		pos_redirect_edit_not_found('proveedores.php');
+	}
 }
 ?>
 <!DOCTYPE html>
@@ -40,7 +47,7 @@ exit;
 <script src="assets/js/jquery.min.js"></script>
 <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <script type="text/javascript">
@@ -249,9 +256,7 @@ exit;
 <div class="col-sm-12 col-xs-12"> 
             <div class="box-body">
 			
-<?php  if (isset($_GET['codproveedor'])) {
-			
-			$reg = $tra->ProveedoresPorId(); ?>
+<?php  if (!empty($reg)) { ?>
 			
   <form class="form" name="updateproveedores" id="updateproveedores" method="post" data-id="<?php echo $reg[0]["codproveedor"] ?>">
 				
@@ -269,7 +274,7 @@ exit;
                               <div class="form-group has-feedback"> 
     <label class="control-label">Nit: <span class="symbol required"></span></label> 
   <input type="hidden" name="codproveedor" id="codproveedor" <?php if (isset($reg[0]['codproveedor'])) { ?> value="<?php echo $reg[0]['codproveedor']; ?>"<?php } ?>>
-	  <input type="text" class="form-control" name="ritproveedor" id="ritproveedor" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nit de Proveedor" <?php if (isset($reg[0]['ritproveedor'])) { ?> value="<?php echo $reg[0]['ritproveedor']; ?>"<?php } ?> required="" aria-required="true">
+	  <input type="text" class="form-control" name="ritproveedor" id="ritproveedor" autocomplete="off" placeholder="Ingrese Nit de Proveedor" <?php if (isset($reg[0]['ritproveedor'])) { ?> value="<?php echo $reg[0]['ritproveedor']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>
                               </div> 
                         </div>
@@ -277,7 +282,7 @@ exit;
 							<div class="col-md-6"> 
                                <div class="form-group has-feedback"> 
   <label class="control-label">Nombre de Proveedor: <span class="symbol required"></span></label> 
-  <input type="text" class="form-control" name="nomproveedor" id="nomproveedor" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Proveedor" <?php if (isset($reg[0]['nomproveedor'])) { ?> value="<?php echo $reg[0]['nomproveedor']; ?>"<?php } ?> required="" aria-required="true">
+  <input type="text" class="form-control" name="nomproveedor" id="nomproveedor" autocomplete="off" placeholder="Ingrese Nombre de Proveedor" <?php if (isset($reg[0]['nomproveedor'])) { ?> value="<?php echo $reg[0]['nomproveedor']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>  
                               </div> 
                         </div> 	
@@ -287,7 +292,7 @@ exit;
                             <div class="col-md-6"> 
                               <div class="form-group has-feedback"> 
 <label class="control-label">Dirección de Proveedor: <span class="symbol required"></span></label> 
-<textarea name="direcproveedor" class="form-control" id="direcproveedor" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Dirección de Proveedor" required="" aria-required="true"><?php if (isset($reg[0]['direcproveedor'])) { ?><?php echo $reg[0]['direcproveedor']; ?><?php } ?></textarea>
+<textarea name="direcproveedor" class="form-control" id="direcproveedor" autocomplete="off" placeholder="Ingrese Dirección de Proveedor" required="" aria-required="true"><?php if (isset($reg[0]['direcproveedor'])) { ?><?php echo $reg[0]['direcproveedor']; ?><?php } ?></textarea>
                         <i class="fa fa-map-marker form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -295,7 +300,7 @@ exit;
 							<div class="col-md-6"> 
                                <div class="form-group has-feedback"> 
         <label class="control-label">Teléfono de Proveedor: <span class="symbol required"></span></label> 
-    <input type="text" class="form-control" name="tlfproveedor" id="tlfproveedor" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Telefono de Proveedor" <?php if (isset($reg[0]['tlfproveedor'])) { ?> value="<?php echo $reg[0]['tlfproveedor']; ?>"<?php } ?>>
+    <input type="text" class="form-control" name="tlfproveedor" id="tlfproveedor" autocomplete="off" placeholder="Ingrese Telefono de Proveedor" <?php if (isset($reg[0]['tlfproveedor'])) { ?> value="<?php echo $reg[0]['tlfproveedor']; ?>"<?php } ?>>
                         <i class="fa fa-phone form-control-feedback"></i> 
                               </div> 
                         </div> 	
@@ -305,7 +310,7 @@ exit;
                             <div class="col-md-6"> 
                               <div class="form-group has-feedback"> 
           <label class="control-label">Correo de Proveedor: <span class="symbol required"></span></label> 
-  <input type="text" class="form-control" name="emailproveedor" id="emailproveedor" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Correo de Proveedor" <?php if (isset($reg[0]['emailproveedor'])) { ?> value="<?php echo $reg[0]['emailproveedor']; ?>"<?php } ?>>
+  <input type="text" class="form-control" name="emailproveedor" id="emailproveedor" autocomplete="off" placeholder="Ingrese Correo de Proveedor" <?php if (isset($reg[0]['emailproveedor'])) { ?> value="<?php echo $reg[0]['emailproveedor']; ?>"<?php } ?>>
                         <i class="fa fa-envelope-o form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -313,7 +318,7 @@ exit;
 						<div class="col-md-6"> 
                                <div class="form-group has-feedback"> 
   <label class="control-label">Persona de Contacto: <span class="symbol required"></span></label> 
-  <input type="text" class="form-control" name="contactoproveedor" id="contactoproveedor" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Persona de Contacto" <?php if (isset($reg[0]['contactoproveedor'])) { ?> value="<?php echo $reg[0]['contactoproveedor']; ?>"<?php } ?> required="" aria-required="true">
+  <input type="text" class="form-control" name="contactoproveedor" id="contactoproveedor" autocomplete="off" placeholder="Ingrese Persona de Contacto" <?php if (isset($reg[0]['contactoproveedor'])) { ?> value="<?php echo $reg[0]['contactoproveedor']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-user form-control-feedback"></i>  
                               </div> 
                         </div> 	
@@ -321,7 +326,7 @@ exit;
 					
 			  
             <div class="modal-footer"> 
-<?php  if (isset($_GET['codproveedor'])) { ?>
+<?php  if (!empty($reg)) { ?>
 <button type="submit" name="btn-update" id="btn-update" class="btn btn-primary"><span class="fa fa-edit"></span> Actualizar</button>
 <button class="btn btn-danger" type="reset"><span class="fa fa-trash-o"></span> Cancelar</button>
     <?php } else { ?>
@@ -367,14 +372,3 @@ exit;
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 

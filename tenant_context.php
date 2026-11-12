@@ -683,6 +683,25 @@ if (!function_exists('web_url')) {
 	}
 }
 
+if (!function_exists('web_menu_page_url')) {
+	/** URL de inicio / orden online con filtros id y q. */
+	function web_menu_page_url($page, $idCategoria = 0, $qBusqueda = '')
+	{
+		$page = ltrim((string) $page, '/');
+		$params = [];
+		$idCategoria = (int) $idCategoria;
+		$qBusqueda = trim((string) $qBusqueda);
+		if ($idCategoria > 0) {
+			$params['id'] = $idCategoria;
+		}
+		if ($qBusqueda !== '') {
+			$params['q'] = $qBusqueda;
+		}
+		$qs = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+		return $page . ($qs !== '' ? '?' . $qs : '');
+	}
+}
+
 if (!function_exists('sistema_url')) {
 	function sistema_url($path = '')
 	{

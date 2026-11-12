@@ -82,7 +82,7 @@
         <script src="assets/js/jquery.min.js"></script> 
       <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
         <script type="text/javascript" src="assets/script/titulos.js"></script>
-        <script type="text/javascript" src="assets/script/script2.js?v=mixvuelto1"></script>
+        <script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
         <script type="text/javascript" src="assets/script/jsventas.js"></script>
 <?php if (in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true)) { ?>
         <script type="text/javascript" src="assets/script/mesas-union.js"></script>
@@ -169,14 +169,14 @@
                                     <div class="col-md-6">
                                         <div class="form-group has-feedback"> 
    <label class="control-label">Documento de Cliente: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="cedcliente" id="cedcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Documento de Cliente" required="" aria-required="true">
+<input type="text" class="form-control" name="cedcliente" id="cedcliente" autocomplete="off" placeholder="Ingrese Documento de Cliente" required="" aria-required="true">
                                             <i class="fa fa-pencil form-control-feedback"></i>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
                                         <div class="form-group has-feedback"> 
    <label class="control-label">Nombres  / Razón Social: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="nomcliente" id="nomcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Cliente" required="" aria-required="true">
+<input type="text" class="form-control" name="nomcliente" id="nomcliente" autocomplete="off" placeholder="Ingrese Nombre de Cliente" required="" aria-required="true">
                                             <i class="fa fa-pencil form-control-feedback"></i>  
                                         </div>
                                     </div>
@@ -185,14 +185,14 @@
                                     <div class="col-md-6">
                                         <div class="form-group has-feedback"> 
     <label class="control-label">Dirección de Cliente: <span class="symbol required"></span></label>
-<textarea name="direccliente" class="form-control" id="direccliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Dirección de Cliente" required="" aria-required="true"></textarea>
+<textarea name="direccliente" class="form-control" id="direccliente" autocomplete="off" placeholder="Ingrese Dirección de Cliente" required="" aria-required="true"></textarea>
                                             <i class="fa fa-map-marker form-control-feedback"></i> 
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group has-feedback"> 
     <label class="control-label">N° Teléfono de Cliente:</label> 
-<input type="text" class="form-control" name="tlfcliente" id="tlfcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Telefono de Cliente">
+<input type="text" class="form-control" name="tlfcliente" id="tlfcliente" autocomplete="off" placeholder="Ingrese Telefono de Cliente">
                                             <i class="fa fa-phone form-control-feedback"></i> 
                                         </div>
                                     </div>
@@ -201,7 +201,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group has-feedback"> 
     <label class="control-label">Correo de Cliente:</label> 
-<input type="text" class="form-control" name="emailcliente" id="emailcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Correo de Cliente">
+<input type="text" class="form-control" name="emailcliente" id="emailcliente" autocomplete="off" placeholder="Ingrese Correo de Cliente">
                                             <i class="fa fa-envelope-o form-control-feedback"></i> 
                                         </div>
                                     </div>

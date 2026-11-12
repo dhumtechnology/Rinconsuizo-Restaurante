@@ -21,7 +21,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'SepararMesasUnion') {
     $union->SepararMesasUnion();
 }
 ?>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/jscompras.js"></script>
 <script type="text/javascript" src="assets/script/jsventas.js"></script>
 <script src="assets/script/jscalendario.js"></script>
@@ -217,8 +217,8 @@ for($i=0;$i<sizeof($reg);$i++){
                          <td class="sorting_1" tabindex="0"><?php echo $a++; ?></td>
                          <td><?php echo $reg[$i]['cedcliente']; ?></td>
                          <td><?php echo $reg[$i]['nomcliente']; ?></td>
-                         <td><?php echo $reg[$i]['tlfcliente']; ?></td>
                          <td><?php echo $correo = ( $reg[$i]['emailcliente'] == '' ? "NINGUNO" : $reg[$i]['emailcliente']); ?></td>
+                         <td><?php echo $reg[$i]['tlfcliente']; ?></td>
                          <td>
  
  <a class="btn btn-success btn-xs" data-placement="left" title="Ver" data-original-title="" data-href="#" data-toggle="modal" data-target="#panel-modal" data-backdrop="static" data-keyboard="false" onClick="VerCliente('<?php echo base64_encode($reg[$i]["codcliente"]); ?>')"><i class="fa fa-search-plus"></i></a>
@@ -651,7 +651,7 @@ if (isset($_GET['muestracodigoproducto'])) {
   
 $tra = new Login();
   ?>
-<input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese C?digo de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo htmlspecialchars($tra->CodigoProducto(), ENT_QUOTES, 'UTF-8'); ?>" <?php } ?> required="" aria-required="true">
+<input type="text" class="form-control" name="codproducto" id="codproducto" autocomplete="off" placeholder="Ingrese C?digo de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo htmlspecialchars($tra->CodigoProducto(), ENT_QUOTES, 'UTF-8'); ?>" <?php } ?> required="" aria-required="true">
 
 <?php 
   }
@@ -861,7 +861,7 @@ for($i=0;$i<sizeof($busq);$i++){
                                                     <tr>
                                         <td><?php echo $a++; ?></td>
 <td><input type="hidden" name="codingrediente[]" id="codingrediente" value="<?php echo $busq[$i]["codingrediente"]; ?>"><?php echo $busq[$i]["nomingrediente"]; ?></td>
-<td><input type="text" class="form-control" name="cantidad[]" id="cantidad" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Cantidad Porci?n" value="<?php echo $busq[$i]["cantracion"]; ?>" required="" aria-required="true"></td>
+<td><input type="text" class="form-control" name="cantidad[]" id="cantidad" autocomplete="off" placeholder="Cantidad Porci?n" value="<?php echo $busq[$i]["cantracion"]; ?>" required="" aria-required="true"></td>
 <td><?php echo $busq[$i]["cantingrediente"]." ".$busq[$i]["unidadingrediente"]; ?></td>
 <td><?php echo "<strong>".$con[0]['simbolo']."</strong>".number_format($busq[$i]["costoingrediente"], 2, '.', ','); ?></td>
 <td data-priority="7"><center><a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Ingrediente" onClick="EliminaIngrediente('<?php echo base64_encode($busq[$i]['codproducto']) ?>','<?php echo base64_encode($busq[$i]['codingrediente']) ?>','<?php echo base64_encode("ELIMINAINGREDIENTES") ?>')"><i class="fa fa-trash-o"></i></a></center></td>
@@ -1990,7 +1990,7 @@ if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] ==
                     <div class="col-md-12"> 
                                <div class="form-group has-feedback"> 
              <label class="control-label">Descuento: <span class="symbol required"></span></label>
-<input class="form-control calculodescuentove" type="text" name="descuento" id="descuento" onKeyUp="this.value=this.value.toUpperCase();" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Descuento en Venta" value="<?php echo $arqueo[0]['descuentove']; ?>" required="required">
+<input class="form-control calculodescuentove" type="text" name="descuento" id="descuento" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Descuento en Venta" value="<?php echo $arqueo[0]['descuentove']; ?>" required="required">
                         <i class="fa fa-minus-circle form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -2045,7 +2045,7 @@ if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] ==
   <button type="button" class="btn btn-info btn-sm btn-block" onclick="AgregarFilaPagoMixto(); return false;"><i class="fa fa-plus"></i> Agregar medio de pago</button>
   <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma a cuenta: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
   <div id="pago-mixto-vuelto" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed #ddd;">
-    <p class="help-block" style="margin-top:0;">Hay EFECTIVO en el mixto: indique lo que entrega el cliente y el vuelto (la fila de efectivo es solo la parte de la cuenta).</p>
+    <p class="help-block" style="margin-top:0;">Hay EFECTIVO en el mixto: el monto recibido y el vuelto se calculan solos según la fila de efectivo; puede ajustar el recibido si el cliente entrega otro billete.</p>
     <div class="row">
       <div class="col-md-6">
         <div class="form-group has-feedback">
@@ -2074,7 +2074,7 @@ if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] ==
   <div class="col-md-12"> 
     <div class="form-group has-feedback"> 
       <label class="control-label">Monto Pagado: <span class="symbol required"></span></label>
-<input class="form-control number calculodevolucion" type="text" name="montopagado" id="montopagado" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" value="<?php echo $arqueo[0]['totalpago'] ?>" autocomplete="off" placeholder="Ingrese Monto Pagado por Cliente" required="" aria-required="true"> 
+<input class="form-control number calculodevolucion" type="text" name="montopagado" id="montopagado" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" value="<?php echo $arqueo[0]['totalpago'] ?>" autocomplete="off" placeholder="Ingrese Monto Pagado por Cliente" required="" aria-required="true"> 
                         <i class="fa fa-usd form-control-feedback"></i>
     </div> 
   </div>
@@ -2084,7 +2084,7 @@ if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] ==
   <div class="col-md-12"> 
      <div class="form-group has-feedback"> 
       <label class="control-label">Cambio Devuelto: <span class="symbol required"></span></label>
-<input class="form-control number" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" value="0.00" autocomplete="off" placeholder="Ingrese Cambio Devuelto a Cliente"  aria-required="true"> 
+<input class="form-control number" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" value="0.00" autocomplete="off" placeholder="Ingrese Cambio Devuelto a Cliente"  aria-required="true"> 
                         <i class="fa fa-usd form-control-feedback"></i>
       </div> 
   </div>
@@ -2151,7 +2151,7 @@ if (isset($_GET['BuscaFormaPagoVentas']) && isset($_GET['tipopagove'])) {
   <button type="button" class="btn btn-info btn-sm btn-block" onclick="AgregarFilaPagoMixto(); return false;"><i class="fa fa-plus"></i> Agregar medio de pago</button>
   <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma a cuenta: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
   <div id="pago-mixto-vuelto" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed #ddd;">
-    <p class="help-block" style="margin-top:0;">Hay EFECTIVO en el mixto: indique lo que entrega el cliente y el vuelto (la fila de efectivo es solo la parte de la cuenta).</p>
+    <p class="help-block" style="margin-top:0;">Hay EFECTIVO en el mixto: el monto recibido y el vuelto se calculan solos según la fila de efectivo; puede ajustar el recibido si el cliente entrega otro billete.</p>
     <div class="row">
       <div class="col-md-6">
         <div class="form-group has-feedback">
@@ -2181,7 +2181,7 @@ if (isset($_GET['BuscaFormaPagoVentas']) && isset($_GET['tipopagove'])) {
   <div class="col-md-12"> 
     <div class="form-group has-feedback"> 
       <label for="field-6" class="control-label">Fecha Vence Cr&eacute;dito: <span class="symbol required"></span></label>
-   <input class="form-control calendario" type="text" name="fechavencecredito" id="fechavencecredito" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Fecha Vence Cr&eacute;dito" required="required"> 
+   <input class="form-control calendario" type="text" name="fechavencecredito" id="fechavencecredito" autocomplete="off" placeholder="Ingrese Fecha Vence Cr&eacute;dito" required="required"> 
                         <i class="fa fa-calendar form-control-feedback"></i>
     </div> 
   </div>
@@ -2191,7 +2191,7 @@ if (isset($_GET['BuscaFormaPagoVentas']) && isset($_GET['tipopagove'])) {
   <div class="col-md-12"> 
     <div class="form-group has-feedback"> 
       <label for="field-6" class="control-label">Monto de Abono: <span class="symbol required"></span></label>
-    <input class="form-control number" type="text" name="montoabono" id="montoabono" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" value="0.00" autocomplete="off" placeholder="Ingrese Monto de Abono" required="" aria-required="true"> 
+    <input class="form-control number" type="text" name="montoabono" id="montoabono" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" value="0.00" autocomplete="off" placeholder="Ingrese Monto de Abono" required="" aria-required="true"> 
                         <i class="fa fa-calendar form-control-feedback"></i>
     </div> 
   </div>
@@ -2214,7 +2214,7 @@ $reg = $tra->MediosPagosId();
   <div class="col-md-12"> 
     <div class="form-group has-feedback"> 
       <label for="field-6" class="control-label">Monto Pagado : <span class="symbol required"></span></label>
-<input class="form-control number calculodevolucion" type="text" name="montopagado" id="montopagado" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Monto Pagado por Cliente" required="" aria-required="true"> 
+<input class="form-control number calculodevolucion" type="text" name="montopagado" id="montopagado" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Monto Pagado por Cliente" required="" aria-required="true"> 
                         <i class="fa fa-usd form-control-feedback"></i>
     </div> 
   </div>
@@ -2224,7 +2224,7 @@ $reg = $tra->MediosPagosId();
   <div class="col-md-12"> 
     <div class="form-group has-feedback"> 
       <label for="field-6" class="control-label">Cambio Devuelto: <span class="symbol required"></span></label>
-<input class="form-control number" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Cambio Devuelto a Cliente" value="0.00" aria-required="true"> 
+<input class="form-control number" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Cambio Devuelto a Cliente" value="0.00" aria-required="true"> 
                         <i class="fa fa-usd form-control-feedback"></i>
     </div> 
   </div>
@@ -3768,7 +3768,7 @@ $forbon = $forbon->BuscaAbonosCreditos();
               <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
       <label class="control-label">Monto a Pagar: <span class="symbol required"></span></label>
-  <input class="form-control" type="text" name="montoabono" id="montoabono" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Monto a Abonar" required="" aria-required="true">
+  <input class="form-control" type="text" name="montoabono" id="montoabono" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Monto a Abonar" required="" aria-required="true">
                         <i class="fa fa-money form-control-feedback"></i>
                               </div> 
                         </div>  

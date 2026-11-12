@@ -34,7 +34,7 @@ $reg = $tra->ListarDetallesCompras();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->
@@ -328,9 +328,9 @@ for($i=0;$i<sizeof($reg);$i++){
 											   <td>
 <a href="#" class="btn btn-success btn-xs" data-placement="left" title="Ver Detalle de Compra" data-original-title="" data-href="#" data-toggle="modal" data-target="#panel-modal" data-backdrop="static" data-keyboard="false" onClick="VerDetalleCompra('<?php echo base64_encode($reg[$i]["coddetallecompra"]); ?>','<?php echo base64_encode($reg[$i]["tipoentrada"]); ?>')"><i class="fa fa-search-plus"></i></a>
 
-<a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Detalle de Compra"onClick="actualizar('editdetallecompra?coddetallecompra=<?php echo base64_encode($reg[$i]["coddetallecompra"]) ?>&tipoentrada=<?php echo base64_encode($reg[$i]["tipoentrada"]) ?>')"><i class="fa fa-pencil"></i></a>
+<a href="javascript:void(0)" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Detalle de Compra"onClick="return actualizar('editdetallecompra?coddetallecompra=<?php echo base64_encode($reg[$i]["coddetallecompra"]) ?>&tipoentrada=<?php echo base64_encode($reg[$i]["tipoentrada"]) ?>')"><i class="fa fa-pencil"></i></a>
                                  
-<a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Detalle de Compra" onClick="eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&coddetallecompra=<?php echo base64_encode($reg[$i]["coddetallecompra"]) ?>&codcompra=<?php echo base64_encode($reg[$i]["codcompra"]) ?>&codproducto=<?php echo base64_encode($reg[$i]["codproducto"]) ?>&cantcompra=<?php echo base64_encode($reg[$i]["cantcompra"]) ?>&ivaproductoc=<?php echo base64_encode($reg[$i]["ivaproductoc"]) ?>&tipoentrada=<?php echo base64_encode($reg[$i]["tipoentrada"]) ?>&tipo=<?php echo base64_encode("DETALLESCOMPRAS") ?>')"><i class="fa fa-trash-o"></i></a></td>
+<a href="javascript:void(0)" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Detalle de Compra" onClick="return eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&coddetallecompra=<?php echo base64_encode($reg[$i]["coddetallecompra"]) ?>&codcompra=<?php echo base64_encode($reg[$i]["codcompra"]) ?>&codproducto=<?php echo base64_encode($reg[$i]["codproducto"]) ?>&cantcompra=<?php echo base64_encode($reg[$i]["cantcompra"]) ?>&ivaproductoc=<?php echo base64_encode($reg[$i]["ivaproductoc"]) ?>&tipoentrada=<?php echo base64_encode($reg[$i]["tipoentrada"]) ?>&tipo=<?php echo base64_encode("DETALLESCOMPRAS") ?>')"><i class="fa fa-trash-o"></i></a></td>
 											   </tr>
 											   <?php } } ?>
 											   </tbody>

@@ -38,7 +38,7 @@ exit;
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/jscompras.js"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
@@ -273,7 +273,7 @@ exit;
                             <div class="col-md-2"> 
                               <div class="form-group has-feedback"> 
                  <label class="control-label">Código: <span class="symbol required"></span></label>
-<input class="form-control agregac" type="text" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Codigo">
+<input class="form-control agregac" type="text" name="codproducto" id="codproducto" autocomplete="off" placeholder="Codigo">
 <i class="fa fa-pencil form-control-feedback"></i>
                               </div> 
                         </div>
@@ -281,7 +281,7 @@ exit;
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
     <label class="control-label">Nombre de Producto: <span class="symbol required"></span></label>
-<input class="form-control agregac" type="text" name="producto" id="producto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Descripcion de Producto">
+<input class="form-control agregac" type="text" name="producto" id="producto" autocomplete="off" placeholder="Ingrese Descripcion de Producto">
                         <i class="fa fa-search form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -310,14 +310,14 @@ exit;
 						<div class="col-md-3"> 
                               <div class="form-group has-feedback"> 
    <label class="control-label">Cantidad de Compra: <span class="symbol required"></span></label>
-<input class="form-control agregac" type="text" name="cantidad" id="cantidad" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Cantidad de Compra">
+<input class="form-control agregac" type="text" name="cantidad" id="cantidad" autocomplete="off" placeholder="Ingrese Cantidad de Compra">
 <i class="fa fa-bolt form-control-feedback"></i>
                               </div> 
                         </div>
 				          <div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
        <label class="control-label">Precio de Compra: <span class="symbol required"></span></label>
-<input class="form-control agregac" type="text" name="preciocompra" id="preciocompra" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Precio de Compra"><input type="hidden" name="precioconiva" id="precioconiva" value="0.00"> 
+<input class="form-control agregac" type="text" name="preciocompra" id="preciocompra" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Precio de Compra"><input type="hidden" name="precioconiva" id="precioconiva" value="0.00"> 
                         <i class="fa fa-dollar form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -325,7 +325,7 @@ exit;
 						<div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
                     <label class="control-label">Precio de Venta: </label>
-<input class="form-control agregac" type="text" name="precioventa" id="precioventa" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Precio de Venta"> 
+<input class="form-control agregac" type="text" name="precioventa" id="precioventa" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Precio de Venta"> 
                         <i class="fa fa-dollar form-control-feedback"></i>
                               </div> 
                         </div>
@@ -384,11 +384,11 @@ exit;
                         <tr>
                           <td>&nbsp;</td>
 
-<td><span class="Estilo10"><label>IGV <?php echo $config[0]['ivac'] ?>%: <input class="number" type="hidden" name="iva" id="iva" onKeyPress="EvaluateText('%f', this);" style="border-radius:4px;height:30px;width:70px;" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" value="<?php echo $config[0]['ivac'] ?>"></label></span></td>
+<td><span class="Estilo10"><label>IGV <?php echo $config[0]['ivac'] ?>%: <input class="number" type="hidden" name="iva" id="iva" onKeyPress="EvaluateText('%f', this);" style="border-radius:4px;height:30px;width:70px;" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" value="<?php echo $config[0]['ivac'] ?>"></label></span></td>
 <td><span class="Estilo10"><?php echo "<strong>".$simbolo."</strong>"; ?><label id="lbliva" name="lbliva">0.00</label><input type="hidden" name="txtIva" id="txtIva" value="0.00"/></span></td>
 
 
-<td><span class="Estilo10"><label>Descuento <input class="number" type="text" name="descuento" id="descuento" onKeyPress="EvaluateText('%f', this);" style="border-radius:4px;height:30px;width:70px;" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" value="0.00"> %:</label></span></td>
+<td><span class="Estilo10"><label>Descuento <input class="number" type="text" name="descuento" id="descuento" onKeyPress="EvaluateText('%f', this);" style="border-radius:4px;height:30px;width:70px;" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" value="0.00"> %:</label></span></td>
 <td><span class="Estilo10"><?php echo "<strong>".$simbolo."</strong>"; ?><label id="lbldescuento" name="lbldescuento">0.00</label><input type="hidden" name="txtDescuento" id="txtDescuento" value="0.00"/></span></td>
 
  <td><span class="Estilo10"><center style="font-size:22px;"><?php echo "<strong>".$simbolo."</strong>"; ?><label id="lbltotal" name="lbltotal">0.00</label>
@@ -425,7 +425,7 @@ exit;
                            <div class="col-md-12"> 
                                <div class="form-group has-feedback"> 
      <label class="control-label">N° de Compra: <span class="symbol required"></span></label>
-<input class="form-control" type="text" name="codcompra" id="codcompra" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese N° de Compra" required="required">
+<input class="form-control" type="text" name="codcompra" id="codcompra" autocomplete="off" placeholder="Ingrese N° de Compra" required="required">
                         <i class="fa fa-bolt form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -435,7 +435,7 @@ exit;
                            <div class="col-md-12"> 
                                <div class="form-group has-feedback"> 
            <label class="control-label">N° de Serie: <span class="symbol required"></span></label>
-<input class="form-control" type="text" name="codseriec" id="codseriec" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese N° de Serie" required="required">
+<input class="form-control" type="text" name="codseriec" id="codseriec" autocomplete="off" placeholder="Ingrese N° de Serie" required="required">
                         <i class="fa fa-bolt form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -495,7 +495,7 @@ exit;
                            <div class="col-md-12"> 
                                <div class="form-group has-feedback"> 
 <label class="control-label">Fecha Vence Cr&eacute;dito: <span class="symbol required"></span></label>
-<input class="form-control calendario" type="text" name="fechavencecredito" id="fechavencecredito" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Fecha Vence Cr&eacute;dito" disabled required="" aria-required="true">
+<input class="form-control calendario" type="text" name="fechavencecredito" id="fechavencecredito" autocomplete="off" placeholder="Ingrese Fecha Vence Cr&eacute;dito" disabled required="" aria-required="true">
                         <i class="fa fa-calendar form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -505,7 +505,7 @@ exit;
                            <div class="col-md-12"> 
                                <div class="form-group has-feedback"> 
                          <label class="control-label">Fecha de Compra: <span class="symbol required"></span></label>
-<input class="form-control" type="text" name="fecharegistro" id="fecharegistro" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Fecha Compra" date="" readonly="readonly">
+<input class="form-control" type="text" name="fecharegistro" id="fecharegistro" autocomplete="off" placeholder="Ingrese Fecha Compra" date="" readonly="readonly">
                               </div> 
                         </div>
                     </div>

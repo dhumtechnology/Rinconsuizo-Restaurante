@@ -1,7 +1,6 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador") {
+require_once("class/class.php");
+require_once(__DIR__ . "/inc/pos_for_admin.php");
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -18,6 +17,14 @@ else if(isset($_POST['btn-update']))
 {
 $reg = $tra->ActualizarMesas();
 exit;
+}
+
+$reg = null;
+if (isset($_GET['codmesa'])) {
+	$reg = $tra->MesasPorId();
+	if (empty($reg)) {
+		pos_redirect_edit_not_found('mesas.php');
+	}
 }
 ?>
 <!DOCTYPE html>
@@ -39,7 +46,7 @@ exit;
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->	
@@ -243,9 +250,7 @@ exit;
 <div class="col-sm-12 col-xs-12"> 
             <div class="box-body">
 			
-<?php  if (isset($_GET['codmesa'])) {
-			
-			$reg = $tra->MesasPorId(); ?>
+<?php  if (!empty($reg)) { ?>
 			
 <form class="form" name="updatemesas" id="updatemesas" method="post" data-id="<?php echo $reg[0]["codmesa"] ?>" action="#">
 				
@@ -259,7 +264,7 @@ exit;
                                                 </div>
 												
 				
-<?php  if (isset($_GET['codmesa'])) {  ?>
+<?php  if (!empty($reg)) {  ?>
 
 
        <div class="row"> 
@@ -297,7 +302,7 @@ exit;
                                <div class="form-group has-feedback"> 
 <label class="control-label">Nombre / Número de Mesa: <span class="symbol required"></span></label>
 <input type="hidden" name="codmesa" id="codmesa" <?php if (isset($reg[0]['codmesa'])) { ?> value="<?php echo $reg[0]['codmesa']; ?>"<?php } ?>>
- <input type="text" class="form-control" name="nombremesa" id="nombremesa" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Mesa" <?php if (isset($reg[0]['nombremesa'])) { ?> value="<?php echo $reg[0]['nombremesa']; ?>"<?php } ?> required="" aria-required="true">
+ <input type="text" class="form-control" name="nombremesa" id="nombremesa" autocomplete="off" placeholder="Ingrese Nombre de Mesa" <?php if (isset($reg[0]['nombremesa'])) { ?> value="<?php echo $reg[0]['nombremesa']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-share-alt-square form-control-feedback"></i>  
                               </div> 
                         </div>
@@ -361,7 +366,7 @@ exit;
                                <div class="form-group has-feedback"> 
 <label class="control-label">Nombre / Número de Mesa: <span class="symbol required"></span></label>
 <input type="hidden" name="codmesa" id="codmesa" <?php if (isset($reg[0]['codmesa'])) { ?> value="<?php echo $reg[0]['codmesa']; ?>"<?php } ?>>
- <input type="text" class="form-control" name="nombremesa" id="nombremesa" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Mesa" <?php if (isset($reg[0]['nombremesa'])) { ?> value="<?php echo $reg[0]['nombremesa']; ?>"<?php } ?> required="" aria-required="true">
+ <input type="text" class="form-control" name="nombremesa" id="nombremesa" autocomplete="off" placeholder="Ingrese Nombre de Mesa" <?php if (isset($reg[0]['nombremesa'])) { ?> value="<?php echo $reg[0]['nombremesa']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-share-alt-square form-control-feedback"></i>  
                               </div> 
                         </div>
@@ -369,7 +374,7 @@ exit;
 	<?php } ?>				
 					
              <div class="modal-footer"> 
-<?php  if (isset($_GET['codmesa'])) { ?>
+<?php  if (!empty($reg)) { ?>
 <button type="submit" name="btn-update" id="btn-update" class="btn btn-primary"><span class="fa fa-edit"></span> Actualizar</button>
 <button class="btn btn-danger" type="reset"><span class="fa fa-trash-o"></span> Cancelar</button>
     <?php } else { ?>
@@ -415,14 +420,3 @@ exit;
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 

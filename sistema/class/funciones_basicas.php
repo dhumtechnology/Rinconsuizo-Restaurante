@@ -828,6 +828,128 @@ function tenantWhere($alias = '')
     return ' ' . $col . ' = ' . (int) $id . ' ';
 }
 
+/**
+ * Decodifica ID desde query string (base64 o numérico). Usado en formularios de edición.
+ */
+function rs_decode_request_id($key = 'codigo')
+{
+    if (!isset($_GET[$key]) || trim((string) $_GET[$key]) === '') {
+        return 0;
+    }
+    $raw = trim((string) $_GET[$key]);
+    if (strpos($raw, '%') !== false) {
+        $raw = rawurldecode($raw);
+    }
+    $candidates = array($raw);
+    if (strpos($raw, ' ') !== false) {
+        $candidates[] = str_replace(' ', '+', $raw);
+    }
+    foreach ($candidates as $cand) {
+        if (ctype_digit($cand)) {
+            return (int) $cand;
+        }
+        $decoded = base64_decode($cand, true);
+        if ($decoded !== false && $decoded !== '' && ctype_digit($decoded)) {
+            return (int) $decoded;
+        }
+    }
+    return 0;
+}
+
+/** Valor para enlaces actualizar(?id=...) resistentes a la URL. */
+function rs_encode_edit_param($value)
+{
+    return rawurlencode(base64_encode((string) $value));
+}
+
+/**
+ * Parámetro GET para edición: entero o texto (codproducto alfanumérico).
+ * @return int|string|null
+ */
+function rs_decode_get($key)
+{
+    $id = rs_decode_request_id($key);
+    if ($id > 0) {
+        return $id;
+    }
+    if (function_exists('rs_decode_request_string')) {
+        $s = rs_decode_request_string($key);
+        if ($s !== '') {
+            return $s;
+        }
+    }
+    return null;
+}
+
+function pos_redirect_edit_not_found($listPage)
+{
+    $listPage = preg_replace('/\.php$/i', '', ltrim((string) $listPage, '/'));
+    $url = function_exists('sistema_url') ? sistema_url($listPage) : $listPage;
+    $sep = (strpos($url, '?') !== false) ? '&' : '?';
+    header('Location: ' . $url . $sep . 'mesage=4');
+    exit;
+}
+
+/**
+ * Decodifica código alfanumérico desde query (base64, URL-safe, o valor plano).
+ */
+function rs_decode_request_string($key = 'codproducto')
+{
+    if (!isset($_GET[$key]) || trim((string) $_GET[$key]) === '') {
+        return '';
+    }
+    $raw = trim((string) $_GET[$key]);
+    if (strpos($raw, '%') !== false) {
+        $raw = rawurldecode($raw);
+    }
+    $candidates = array($raw);
+    if (strpos($raw, ' ') !== false) {
+        $candidates[] = str_replace(' ', '+', $raw);
+    }
+    foreach ($candidates as $cand) {
+        $decoded = base64_decode($cand, true);
+        if ($decoded !== false && $decoded !== '' && preg_match('/^[\x20-\x7E]+$/', $decoded)) {
+            return $decoded;
+        }
+    }
+    return $raw;
+}
+
+/** URL absoluta dentro del POS del restaurante (evita caer en index.php → panel). */
+function pos_sistema_page_url($page)
+{
+    $page = ltrim((string) $page, '/');
+    if (function_exists('sistema_url')) {
+        return rtrim(sistema_url($page), '/');
+    }
+    return $page;
+}
+
+function pos_session_acceso_normalizado()
+{
+    if (!isset($_SESSION['acceso'])) {
+        return '';
+    }
+    return strtolower(trim((string) $_SESSION['acceso']));
+}
+
+function pos_es_administrador_restaurante()
+{
+    return pos_session_acceso_normalizado() === 'administrador';
+}
+
+function pos_require_administrador_pos($mensaje = null, $redirect = 'usuarios.php')
+{
+    if (!pos_es_administrador_restaurante()) {
+        $msg = $mensaje !== null ? $mensaje : 'Solo el perfil Administrador puede acceder a esta sección.';
+        if (function_exists('sistema_url')) {
+            $redirect = sistema_url(preg_replace('/\.php$/i', '', (string) $redirect));
+        }
+        echo '<script type="text/javascript">alert(' . json_encode($msg) . ');document.location.href=' . json_encode($redirect) . ';</script>';
+        exit;
+    }
+}
+
 function puedeGestionarUnionMesas()
 {
     if (!isset($_SESSION['acceso'])) {
@@ -1340,7 +1462,7 @@ function renderCarritoMesaPanel($config)
                 <label id="boton-observaciones" onClick="mostrar();" style="cursor:pointer;">Agregar Observaciones:</label>
                 <div id="panel-observaciones" style="display:none;">
                     <div class="form-group has-feedback">
-                        <textarea name="observaciones" class="form-control teclado-observaciones" id="observaciones-pedido" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Observaciones"></textarea>
+                        <textarea name="observaciones" class="form-control teclado-observaciones" id="observaciones-pedido" autocomplete="off" placeholder="Ingrese Observaciones"></textarea>
                         <i class="fa fa-comments form-control-feedback"></i>
                     </div>
                 </div>

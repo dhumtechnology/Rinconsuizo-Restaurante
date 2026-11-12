@@ -32,7 +32,7 @@ $ses = $tra->ExpiraSession();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->
@@ -339,7 +339,7 @@ elseif($reg[$i]['fechavencecredito'] < date("Y-m-d")) { echo Dias_Transcurridos(
 											   <td>
 <a href="#" class="btn btn-success btn-xs" onClick="VerCompra('<?php echo base64_encode($reg[$i]['codcompra']) ?>')" data-href="#" data-toggle="modal" data-target=".bs-example-modal-lg" data-placement="left" data-backdrop="static" data-keyboard="false" data-id="" rel="tooltip" data-original-title="Ver Compra" title="Ver Producto"><i class="fa fa-search-plus"></i></a>
  
-<?php if($reg[$i]['statuscompra']=="PENDIENTE") { ?><a class="btn btn-info btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Pagar Factura" onClick="pagar('eliminar?<?php echo base64_encode('eliminar'); ?>&codcompra=<?php echo base64_encode($reg[$i]["codcompra"]) ?>&tipo=<?php echo base64_encode("PAGARFACTURA") ?>')"><i class="fa fa-refresh"></i></a><?php } ?>
+<?php if($reg[$i]['statuscompra']=="PENDIENTE") { ?><a class="btn btn-info btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Pagar Factura" onClick="return pagar('eliminar?<?php echo base64_encode('eliminar'); ?>&codcompra=<?php echo base64_encode($reg[$i]["codcompra"]) ?>&tipo=<?php echo base64_encode("PAGARFACTURA") ?>')"><i class="fa fa-refresh"></i></a><?php } ?>
 
 <a href="reportepdf?codcompra=<?php echo base64_encode($reg[$i]['codcompra']); ?>&tipo=<?php echo base64_encode("FACTURACOMPRAS") ?>" target="_black" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Factura de Compra"><i class="fa fa-print"></i></a></td>
 											   </tr>

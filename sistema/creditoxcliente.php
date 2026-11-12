@@ -29,7 +29,7 @@ $ses = $tra->ExpiraSession();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->
@@ -245,7 +245,7 @@ $ses = $tra->ExpiraSession();
 							<div class="col-md-12"> 
                                <div class="form-group has-feedback"> 
                         <label class="control-label">Búsqueda de Clientes: <span class="symbol required"></span></label>
-<input type="hidden" class="form-control" name="codcliente" id="codcliente"><input class="form-control" type="text" name="busquedacliente" id="busquedacliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Datos del Cliente para tu busqueda" required="required">
+<input type="hidden" class="form-control" name="codcliente" id="codcliente"><input class="form-control" type="text" name="busquedacliente" id="busquedacliente" autocomplete="off" placeholder="Ingrese Datos del Cliente para tu busqueda" required="required">
                         <i class="fa fa-search form-control-feedback"></i>  
                               </div> 
                         </div> 	

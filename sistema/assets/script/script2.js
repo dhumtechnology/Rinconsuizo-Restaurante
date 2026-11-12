@@ -146,57 +146,86 @@ setTimeout("muestraReloj()", 1000);
 }
 
 //////// FUNCIONES PARA MOSTRAR MENSAJES DE ALERTA DE ACTUALIZAR, ELIMINAR Y PAGAR REGISTROS
+function rsSistemaDirUrl(page)
+{
+	page = String(page || '');
+	if (page === '') {
+		return page;
+	}
+	if (/^https?:\/\//i.test(page) || page.charAt(0) === '/') {
+		return page;
+	}
+	var path = window.location.pathname.replace(/\\/g, '/');
+	var idx = path.lastIndexOf('/');
+	if (idx === -1) {
+		return page;
+	}
+	return path.substring(0, idx + 1) + page;
+}
+
+function rsNavigateConfirm(url, mensaje)
+{
+	if (window.event) {
+		window.event.preventDefault ? window.event.preventDefault() : (window.event.returnValue = false);
+	}
+	if (!confirm(mensaje)) {
+		return false;
+	}
+	window.location.href = rsSistemaDirUrl(url);
+	return false;
+}
+
 function actualizar(url)
 {
-	if(confirm('ESTA SEGURO DE ACTUALIZAR ESTE REGISTRO ?'))
-	{
-		window.location=url;
-	}
+	return rsNavigateConfirm(url, 'ESTA SEGURO DE ACTUALIZAR ESTE REGISTRO ?');
 }
 
 function agregar(url)
 {
-	if(confirm('ESTA SEGURO DE AGREGAR INGREDIENTES A ESTE PRODUCTO ?'))
-	{
-		window.location=url;
-	}
+	return rsNavigateConfirm(url, 'ESTA SEGURO DE AGREGAR INGREDIENTES A ESTE PRODUCTO ?');
 }
 
 function eliminar(url)
 {
-	if(confirm('ESTA SEGURO DE ELIMINAR ESTE REGISTRO ?'))
-	{
-		window.location=url;
-	}
+	return rsNavigateConfirm(url, 'ESTA SEGURO DE ELIMINAR ESTE REGISTRO ?');
 }
 
 function pagar(url)
 {
-	if(confirm('ESTA SEGURO DE REALIZAR EL PAGO DE ESTA COMPRA PENDIENTE ?'))
-	{
-		window.location=url;
-	}
+	return rsNavigateConfirm(url, 'ESTA SEGURO DE REALIZAR EL PAGO DE ESTA COMPRA PENDIENTE ?');
 }
 
-function rsSistemaDirUrl(page)
-{
-	var path = window.location.pathname.replace(/\\/g, '/');
-	if (path.indexOf('/') === -1) {
-		return page;
-	}
-	return path.substring(0, path.lastIndexOf('/') + 1) + page;
+/* href="#" + <base href="/{slug}/sistema/"> mandaba al login/mostrador tras Editar */
+if (typeof document !== 'undefined' && document.addEventListener) {
+	document.addEventListener('click', function (e) {
+		var el = e.target;
+		while (el && el.tagName !== 'A') {
+			el = el.parentNode;
+			if (!el || el === document) {
+				return;
+			}
+		}
+		if (!el) {
+			return;
+		}
+		var href = (el.getAttribute('href') || '').replace(/^\s+|\s+$/g, '');
+		if (href !== '#' && href !== '' && href.toLowerCase() !== 'javascript:void(0)' && href.toLowerCase() !== 'javascript:void(0);') {
+			return;
+		}
+		var oc = el.getAttribute('onclick') || '';
+		if (/actualizar\s*\(|eliminar\s*\(|agregar\s*\(|pagar\s*\(|cerrarcaja\s*\(/i.test(oc)) {
+			if (e.preventDefault) {
+				e.preventDefault();
+			} else {
+				e.returnValue = false;
+			}
+		}
+	}, true);
 }
 
 function cerrarcaja(url)
 {
-	if(confirm('ESTA SEGURO DE REALIZAR EL CIERRE DE ESTA CAJA ?'))
-	{
-		if (/^https?:\/\//i.test(url) || url.charAt(0) === '/') {
-			window.location = url;
-		} else {
-			window.location = rsSistemaDirUrl(url);
-		}
-	}
+	return rsNavigateConfirm(url, 'ESTA SEGURO DE REALIZAR EL CIERRE DE ESTA CAJA ?');
 }
 
 function VerificaMovimiento()
@@ -379,12 +408,12 @@ $.ajax({
 function BuscarClientes(){
                                      
 $('#resultadocliente').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
-var buscacliente = $("#buscacliente").val();
-var num = $("#buscacliente").val().length;
+var buscacliente = $("#buscacliente").val() || "";
+var num = buscacliente.trim().length;
 var dataString = $("#buscaclientes").serialize();
 var url = 'funciones.php?BusquedaClientes=si';
 
-if(buscacliente=="" || buscacliente==" " || num<5){ 
+if (buscacliente.trim() !== "" && num < 2) {
 
 $("#resultadocliente").html('<br><center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> POR FAVOR INGRESE CRITERIO PARA TU B&Uacute;SQUEDA DE CLIENTES !</div></center>'); 
 
@@ -399,7 +428,6 @@ return false;
             success: function(response) {            
                 $('#resultadocliente').empty();
                 $('#resultadocliente').append(''+response+'').fadeIn("slow");
-                $('#'+parent).remove();
              }
         }); 
        
@@ -1313,20 +1341,41 @@ function MedioPagoMixEsEfectivo($select) {
 
 function ObtenerMontosEfectivoMixto() {
 	var cuentaEfectivo = 0;
+	var filasEfectivo = 0;
 	$('#filas-pago-mixto .fila-pago-mixto').each(function() {
 		var $sel = $(this).find('.formapagove-mix');
 		if (!MedioPagoMixEsEfectivo($sel)) {
 			return;
 		}
+		filasEfectivo++;
 		var monto = parseFloat(String($(this).find('.montopago-mix').val() || '0').replace(',', '')) || 0;
 		cuentaEfectivo += monto;
 	});
 	return {
 		cuenta: Math.round(cuentaEfectivo * 100) / 100,
-		hayEfectivo: cuentaEfectivo > 0 || $('#filas-pago-mixto .formapagove-mix').filter(function() {
-			return MedioPagoMixEsEfectivo($(this));
-		}).length > 0
+		hayEfectivo: filasEfectivo > 0
 	};
+}
+
+/** Ajusta monto recibido si sigue ligado a la parte en efectivo; devuelve el monto recibido numérico. */
+function SincronizarMontoRecibidoEfectivoMixto(cuentaEfectivo) {
+	var $recibido = $('#montorecibido_mix_efectivo');
+	var recibido = parseFloat(String($recibido.val() || '0').replace(',', '')) || 0;
+	var lastSync = parseFloat(String($recibido.data('last-sync-cuenta') || ''));
+	var touched = !!$recibido.data('touched');
+	var sigueAuto = !touched
+		|| recibido <= 0
+		|| (!isNaN(lastSync) && Math.abs(recibido - lastSync) < 0.001);
+	if (cuentaEfectivo > 0 && sigueAuto) {
+		recibido = cuentaEfectivo;
+		$recibido.val(recibido.toFixed(2));
+		$recibido.data('last-sync-cuenta', cuentaEfectivo);
+	} else if (cuentaEfectivo <= 0 && !touched) {
+		$recibido.val('0.00');
+		$recibido.removeData('last-sync-cuenta');
+		recibido = 0;
+	}
+	return recibido;
 }
 
 function AgregarFilaPagoMixto() {
@@ -1388,24 +1437,23 @@ function ActualizarSumaPagoMixto() {
 	var ef = ObtenerMontosEfectivoMixto();
 	var vuelto = 0;
 	var montopagado = suma;
-	if (ef.hayEfectivo) {
+	if (ef.hayEfectivo && ef.cuenta > 0) {
 		$('#pago-mixto-vuelto').show();
-		var $recibido = $('#montorecibido_mix_efectivo');
-		var recibido = parseFloat(String($recibido.val() || '0').replace(',', '')) || 0;
-		// Si aún no tiparon recibido (o quedó en 0), sugerir la parte de efectivo a cuenta
-		if (!$recibido.data('touched') && (recibido <= 0 || Math.abs(recibido - ef.cuenta) < 0.001)) {
-			recibido = ef.cuenta;
-			$recibido.val(ef.cuenta.toFixed(2));
-		}
+		var recibido = SincronizarMontoRecibidoEfectivoMixto(ef.cuenta);
 		vuelto = Math.round((recibido - ef.cuenta) * 100) / 100;
 		if (vuelto < 0) {
 			vuelto = 0;
 		}
 		montopagado = Math.round((suma - ef.cuenta + recibido) * 100) / 100;
 		$('#montodevuelto_mix_visible').val(vuelto.toFixed(2));
+	} else if (ef.hayEfectivo) {
+		$('#pago-mixto-vuelto').show();
+		$('#montodevuelto_mix_visible').val('0.00');
+		vuelto = 0;
+		montopagado = suma;
 	} else {
 		$('#pago-mixto-vuelto').hide();
-		$('#montorecibido_mix_efectivo').val('0.00').removeData('touched');
+		$('#montorecibido_mix_efectivo').val('0.00').removeData('touched').removeData('last-sync-cuenta');
 		$('#montodevuelto_mix_visible').val('0.00');
 		vuelto = 0;
 		montopagado = suma;
@@ -1414,8 +1462,12 @@ function ActualizarSumaPagoMixto() {
 	$('#montodevuelto_mix_hidden').val(vuelto.toFixed(2));
 }
 
-$(document).on('input change', '#montorecibido_mix_efectivo', function() {
+$(document).on('input', '#montorecibido_mix_efectivo', function() {
 	$(this).data('touched', true);
+	ActualizarSumaPagoMixto();
+});
+$(document).on('change keyup', '#filas-pago-mixto .formapagove-mix, #filas-pago-mixto .montopago-mix', function() {
+	ActualizarSumaPagoMixto();
 });
 
 function ValidarPagoMixtoAntesDeCerrar() {
@@ -1442,7 +1494,7 @@ function ValidarPagoMixtoAntesDeCerrar() {
 		return false;
 	}
 	var ef = ObtenerMontosEfectivoMixto();
-	if (ef.hayEfectivo) {
+	if (ef.hayEfectivo && ef.cuenta > 0) {
 		var recibido = parseFloat(String($('#montorecibido_mix_efectivo').val() || '0').replace(',', '')) || 0;
 		if (recibido + 0.001 < ef.cuenta) {
 			alert('El monto recibido en efectivo (' + recibido.toFixed(2) + ') no puede ser menor a la parte en efectivo de la cuenta (' + ef.cuenta.toFixed(2) + ').');

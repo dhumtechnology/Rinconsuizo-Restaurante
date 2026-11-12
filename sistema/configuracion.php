@@ -37,7 +37,7 @@ exit;
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 
@@ -258,7 +258,7 @@ $(".phone").mask("999 999 9999");
                               <div class="form-group has-feedback"> 
             <label class="control-label">Nit de Empresa: <span class="symbol required"></span></label> 
  <input type="hidden" name="id" id="id" value="<?php echo $reg[0]['id']; ?>">
-<input type="text" class="form-control" name="rifempresa" id="rifempresa" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nit de Empresa" value="<?php echo $reg[0]['rifempresa']; ?>" required="" aria-required="true">
+<input type="text" class="form-control" name="rifempresa" id="rifempresa" autocomplete="off" placeholder="Ingrese Nit de Empresa" value="<?php echo $reg[0]['rifempresa']; ?>" required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>
                                                                 </div> 
                                                             </div>
@@ -266,14 +266,14 @@ $(".phone").mask("999 999 9999");
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
                 <label class="control-label">Nombre de Empresa: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="nomempresa" id="nomempresa" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Empresa" value="<?php echo $reg[0]['nomempresa']; ?>" required="" aria-required="true">
+<input type="text" class="form-control" name="nomempresa" id="nomempresa" autocomplete="off" placeholder="Ingrese Nombre de Empresa" value="<?php echo $reg[0]['nomempresa']; ?>" required="" aria-required="true">
                         <i class="fa fa-bank form-control-feedback"></i>
                                                                 </div> 
                                                             </div> 	
                             <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
                 <label  class="control-label">Dirección de Empresa: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="direcempresa" id="direcempresa" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Dirección de Empresa" value="<?php echo $reg[0]['direcempresa']; ?>" required="" aria-required="true">
+<input type="text" class="form-control" name="direcempresa" id="direcempresa" autocomplete="off" placeholder="Ingrese Dirección de Empresa" value="<?php echo $reg[0]['direcempresa']; ?>" required="" aria-required="true">
                         <i class="fa fa-map-marker form-control-feedback"></i> 
                                                                 </div> 
                                                             </div>
@@ -284,7 +284,7 @@ $(".phone").mask("999 999 9999");
 							<div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
               <label class="control-label">Teléfono de Empresa: <span class="symbol required"></span></label> 
- <input type="text" class="form-control phone" name="tlfempresa" id="tlfempresa" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Telefono de Empresa" value="<?php echo $reg[0]['tlfempresa']; ?>" required="" aria-required="true">
+ <input type="text" class="form-control phone" name="tlfempresa" id="tlfempresa" autocomplete="off" placeholder="Ingrese Telefono de Empresa" value="<?php echo $reg[0]['tlfempresa']; ?>" required="" aria-required="true">
                         <i class="fa fa-phone form-control-feedback"></i>
                                                                 </div> 
                                                             </div> 
@@ -292,7 +292,7 @@ $(".phone").mask("999 999 9999");
               <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
           <label class="control-label">Correo de Empresa: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="correoempresa" id="correoempresa" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Correo de Empresa" value="<?php echo $reg[0]['correoempresa']; ?>" required="" aria-required="true">
+<input type="text" class="form-control" name="correoempresa" id="correoempresa" autocomplete="off" placeholder="Ingrese Correo de Empresa" value="<?php echo $reg[0]['correoempresa']; ?>" required="" aria-required="true">
                         <i class="fa fa-envelope-o form-control-feedback"></i>  
                                                                 </div> 
                                                             </div> 	
@@ -300,7 +300,7 @@ $(".phone").mask("999 999 9999");
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
               <label class="control-label">Nit de Responsable: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="cedresponsable" id="cedresponsable" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nit de Responsable" value="<?php echo $reg[0]['cedresponsable']; ?>" required="" aria-required="true">
+<input type="text" class="form-control" name="cedresponsable" id="cedresponsable" autocomplete="off" placeholder="Ingrese Nit de Responsable" value="<?php echo $reg[0]['cedresponsable']; ?>" required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>
                                                                 </div> 
                                                             </div> 		
@@ -311,7 +311,7 @@ $(".phone").mask("999 999 9999");
               <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
              <label class="control-label">Nombre de Responsable: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="nomresponsable" id="nomresponsable" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre Completo de Responsable" value="<?php echo $reg[0]['nomresponsable']; ?>" required="" aria-required="true">
+<input type="text" class="form-control" name="nomresponsable" id="nomresponsable" autocomplete="off" placeholder="Ingrese Nombre Completo de Responsable" value="<?php echo $reg[0]['nomresponsable']; ?>" required="" aria-required="true">
                         <i class="fa fa-user form-control-feedback"></i>
                                                                 </div> 
                                                             </div>
@@ -319,7 +319,7 @@ $(".phone").mask("999 999 9999");
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
              <label class="control-label">Teléfono de Responsable: <span class="symbol required"></span></label> 
- <input type="text" class="form-control phone" name="tlfresponsable" id="tlfresponsable" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Telefono de Responsable" value="<?php echo $reg[0]['tlfresponsable']; ?>" required="" aria-required="true">
+ <input type="text" class="form-control phone" name="tlfresponsable" id="tlfresponsable" autocomplete="off" placeholder="Ingrese Telefono de Responsable" value="<?php echo $reg[0]['tlfresponsable']; ?>" required="" aria-required="true">
                         <i class="fa fa-phone form-control-feedback"></i>
                                                                 </div> 
                                                             </div> 
@@ -327,7 +327,7 @@ $(".phone").mask("999 999 9999");
               <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
           <label class="control-label">Correo de Responsable: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="correoresponsable" id="correoresponsable" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Correo de Responsable" value="<?php echo $reg[0]['correoresponsable']; ?>" required="" aria-required="true">
+<input type="text" class="form-control" name="correoresponsable" id="correoresponsable" autocomplete="off" placeholder="Ingrese Correo de Responsable" value="<?php echo $reg[0]['correoresponsable']; ?>" required="" aria-required="true">
                         <i class="fa fa-envelope-o form-control-feedback"></i>  
                                                                 </div> 
                                                             </div> 		
@@ -338,7 +338,7 @@ $(".phone").mask("999 999 9999");
                             <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
                  <label class="control-label">IGV en Compras: <span class="symbol required"></span></label> 
- <input type="text" class="form-control number" name="ivac" id="ivac" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese IGV de Compras" value="<?php echo $reg[0]['ivac']; ?>" required="" aria-required="true">
+ <input type="text" class="form-control number" name="ivac" id="ivac" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese IGV de Compras" value="<?php echo $reg[0]['ivac']; ?>" required="" aria-required="true">
                         <i class="fa fa-usd form-control-feedback"></i>  
                                                                 </div> 
                                                             </div>  
@@ -346,7 +346,7 @@ $(".phone").mask("999 999 9999");
 							<div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
               <label class="control-label">IGV en Ventas: <span class="symbol required"></span></label> 
- <input type="text" class="form-control number" name="ivav" id="ivav" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese IGV de Ventas" value="<?php echo $reg[0]['ivav']; ?>" required="" aria-required="true">
+ <input type="text" class="form-control number" name="ivav" id="ivav" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese IGV de Ventas" value="<?php echo $reg[0]['ivav']; ?>" required="" aria-required="true">
                         <i class="fa fa-usd form-control-feedback"></i>  
                                                                 </div> 
                                                             </div>	
@@ -354,7 +354,7 @@ $(".phone").mask("999 999 9999");
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
             <label class="control-label">Símbolo de moneda: <span class="symbol required"></span></label> 
-<input name="simbolo" class="form-control" type="text" id="simbolo" onKeyUp="this.value=this.value.toUpperCase();" value="<?php echo $reg[0]['simbolo']; ?>" placeholder="Ingrese Símbolo de moneda" autocomplete="off" required="required"/><small>Elije el símbolo de moneda que deseas utilizar al mostrar valores. Puedes dejarlo en blanco para no mostrar ningún símbolo.</small>
+<input name="simbolo" class="form-control" type="text" id="simbolo" value="<?php echo $reg[0]['simbolo']; ?>" placeholder="Ingrese Símbolo de moneda" autocomplete="off" required="required"/><small>Elije el símbolo de moneda que deseas utilizar al mostrar valores. Puedes dejarlo en blanco para no mostrar ningún símbolo.</small>
                         <i class="fa fa-pencil form-control-feedback"></i> 
                                                                 </div> 
                                                             </div> 

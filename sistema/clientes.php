@@ -40,7 +40,7 @@ require_once("class/class.php");
 <script src="assets/js/jquery.min.js"></script> 
  <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=clientes1"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <script type="text/javascript">
@@ -111,7 +111,7 @@ require_once("class/class.php");
                       <div class="col-md-6"> 
                         <div class="form-group has-feedback"> 
                     <label class="control-label">Documento de Cliente: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="cedcliente" id="cedcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Documento de Cliente" tabindex="1" required="" aria-required="true">
+<input type="text" class="form-control" name="cedcliente" id="cedcliente" autocomplete="off" placeholder="Ingrese Documento de Cliente" tabindex="1" required="" aria-required="true">
                           <i class="fa fa-pencil form-control-feedback"></i>
                         </div> 
                       </div>
@@ -119,7 +119,7 @@ require_once("class/class.php");
                       <div class="col-md-12"> 
                        <div class="form-group has-feedback"> 
                         <label class="control-label">Nombres  / Razón Social: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="nomcliente" id="nomcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Cliente"  tabindex="2" required="" aria-required="true">
+<input type="text" class="form-control" name="nomcliente" id="nomcliente" autocomplete="off" placeholder="Ingrese Nombre de Cliente"  tabindex="2" required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>  
                       </div> 
                     </div>  
@@ -129,7 +129,7 @@ require_once("class/class.php");
                     <div class="col-md-6"> 
                       <div class="form-group has-feedback"> 
                        <label class="control-label">Dirección de Cliente: <span class="symbol required"></span></label> 
-<textarea name="direccliente" class="form-control" id="direccliente" onKeyUp="this.value=this.value.toUpperCase();" tabindex="3" autocomplete="off" placeholder="Ingrese Dirección de Cliente" required="" aria-required="true"></textarea>
+<textarea name="direccliente" class="form-control" id="direccliente" tabindex="3" autocomplete="off" placeholder="Ingrese Dirección de Cliente" required="" aria-required="true"></textarea>
                        <i class="fa fa-map-marker form-control-feedback"></i> 
                      </div> 
                    </div>
@@ -137,7 +137,7 @@ require_once("class/class.php");
                    <div class="col-md-6"> 
                     <div class="form-group has-feedback"> 
                       <label class="control-label">Correo de Cliente:</label> 
-<input type="text" class="form-control" name="emailcliente" id="emailcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Correo de Cliente" tabindex="4" >
+<input type="text" class="form-control" name="emailcliente" id="emailcliente" autocomplete="off" placeholder="Ingrese Correo de Cliente" tabindex="4" >
                       <i class="fa fa-envelope-o form-control-feedback"></i> 
                     </div> 
                   </div>        
@@ -148,7 +148,7 @@ require_once("class/class.php");
                  <div class="col-md-6"> 
                   <div class="form-group has-feedback"> 
               <label class="control-label">N° Teléfono de Cliente: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="tlfcliente" id="tlfcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Telefono de Cliente" tabindex="5" >
+<input type="text" class="form-control" name="tlfcliente" id="tlfcliente" autocomplete="off" placeholder="Ingrese Telefono de Cliente" tabindex="5" >
                    <i class="fa fa-phone form-control-feedback"></i> 
                  </div> 
                </div>  
@@ -198,7 +198,7 @@ require_once("class/class.php");
                   <label class="control-label">Documento de Cliente: <span class="symbol required"></span></label> 
 <input type="hidden" name="codcliente" id="codcliente">
 <input type="hidden" name="busqueda" id="busqueda">
-<input type="text" class="form-control" name="cedcliente" id="cedcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Documento de Cliente" tabindex="1" required="" aria-required="true">
+<input type="text" class="form-control" name="cedcliente" id="cedcliente" autocomplete="off" placeholder="Ingrese Documento de Cliente" tabindex="1" required="" aria-required="true">
                           <i class="fa fa-pencil form-control-feedback"></i>
                         </div> 
                       </div>
@@ -206,7 +206,7 @@ require_once("class/class.php");
                       <div class="col-md-12"> 
                        <div class="form-group has-feedback"> 
                     <label class="control-label">Nombres  / Razón Social: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="nomcliente" id="nomcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Cliente"  tabindex="2" required="" aria-required="true">
+<input type="text" class="form-control" name="nomcliente" id="nomcliente" autocomplete="off" placeholder="Ingrese Nombre de Cliente"  tabindex="2" required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>  
                       </div> 
                     </div>  
@@ -216,7 +216,7 @@ require_once("class/class.php");
                     <div class="col-md-6"> 
                       <div class="form-group has-feedback"> 
                   <label class="control-label">Dirección de Cliente: <span class="symbol required"></span></label> 
- <textarea name="direccliente" class="form-control" id="direccliente" onKeyUp="this.value=this.value.toUpperCase();" tabindex="3" autocomplete="off" placeholder="Ingrese Dirección de Cliente" required="" aria-required="true"></textarea>
+ <textarea name="direccliente" class="form-control" id="direccliente" tabindex="3" autocomplete="off" placeholder="Ingrese Dirección de Cliente" required="" aria-required="true"></textarea>
                        <i class="fa fa-map-marker form-control-feedback"></i> 
                      </div> 
                    </div>
@@ -224,7 +224,7 @@ require_once("class/class.php");
                    <div class="col-md-6"> 
                     <div class="form-group has-feedback"> 
                       <label class="control-label">Correo de Cliente:</label> 
-<input type="text" class="form-control" name="emailcliente" id="emailcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Correo de Cliente" tabindex="4" >
+<input type="text" class="form-control" name="emailcliente" id="emailcliente" autocomplete="off" placeholder="Ingrese Correo de Cliente" tabindex="4" >
                       <i class="fa fa-envelope-o form-control-feedback"></i> 
                     </div> 
                   </div>        
@@ -235,7 +235,7 @@ require_once("class/class.php");
                  <div class="col-md-6"> 
                   <div class="form-group has-feedback"> 
               <label class="control-label">N° Teléfono de Cliente: <span class="symbol required"></span></label> 
-<input type="text" class="form-control" name="tlfcliente" id="tlfcliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Telefono de Cliente" tabindex="5" >
+<input type="text" class="form-control" name="tlfcliente" id="tlfcliente" autocomplete="off" placeholder="Ingrese Telefono de Cliente" tabindex="5" >
                    <i class="fa fa-phone form-control-feedback"></i> 
                  </div> 
                </div> 
@@ -470,7 +470,7 @@ require_once("class/class.php");
               <div class="col-md-12"> 
        <div class="form-group has-feedback"> 
       <label class="control-label">Realice la Búsqueda de Clientes: <span class="symbol required"></span></label>
-<input class="form-control" type="text" name="buscacliente" id="buscacliente" onKeyUp="this.value=this.value.toUpperCase(); BuscarClientes();" autocomplete="off" placeholder="Ingrese Nit o Nombre para Búsqueda de Clientes" required="required">
+<input class="form-control" type="text" name="buscacliente" id="buscacliente" onKeyUp="BuscarClientes();" autocomplete="off" placeholder="Buscar por nit, nombre, email o teléfono">
          <i class="fa fa-search form-control-feedback"></i>  
         </div> 
       </div>  
@@ -513,6 +513,13 @@ require_once("class/class.php");
         <!-- jQuery  -->
         <script src="assets/pages/jquery.dashboard.js"></script>
         <script src="assets/plugins/noty/packaged/jquery.noty.packaged.min.js"></script>
+        <script type="text/javascript">
+        jQuery(function () {
+            if (typeof BuscarClientes === 'function') {
+                BuscarClientes();
+            }
+        });
+        </script>
   
 
    </body>

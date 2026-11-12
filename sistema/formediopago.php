@@ -1,7 +1,6 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador") {
+require_once("class/class.php");
+require_once(__DIR__ . "/inc/pos_for_admin.php");
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -18,6 +17,14 @@ elseif(isset($_POST['btn-update']))
 {
 $reg = $tra->ActualizarMediosPagos();
 exit;
+}
+
+$reg = null;
+if (isset($_GET['codmediopago'])) {
+	$reg = $tra->MediosPagosPorId();
+	if (empty($reg)) {
+		pos_redirect_edit_not_found('mediospagos.php');
+	}
 }
 ?>
 <!DOCTYPE html>
@@ -39,7 +46,7 @@ exit;
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->	
@@ -243,9 +250,7 @@ exit;
 <div class="col-sm-12 col-xs-12"> 
             <div class="box-body">
 			
-<?php  if (isset($_GET['codmediopago'])) {
-			
-			$reg = $tra->MediosPagosPorId(); ?>
+<?php  if (!empty($reg)) { ?>
 			
       <form class="form" name="updatemediopago" id="updatemediopago" method="post" data-id="<?php echo $reg[0]["codmediopago"] ?>" action="#">
 				
@@ -263,7 +268,7 @@ exit;
                                <div class="form-group has-feedback"> 
                         <label class="control-label">Medio de Pago: <span class="symbol required"></span></label>
 <input type="hidden" name="codmediopago" id="codmediopago" <?php if (isset($reg[0]['codmediopago'])) { ?> value="<?php echo $reg[0]['codmediopago']; ?>"<?php } ?>>
-  <input type="text" class="form-control" name="mediopago" id="mediopago" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Medio de Pago" <?php if (isset($reg[0]['mediopago'])) { ?> value="<?php echo $reg[0]['mediopago']; ?>"<?php } ?> required="" aria-required="true">
+  <input type="text" class="form-control" name="mediopago" id="mediopago" autocomplete="off" placeholder="Ingrese Medio de Pago" <?php if (isset($reg[0]['mediopago'])) { ?> value="<?php echo $reg[0]['mediopago']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-medium form-control-feedback"></i>  
                               </div> 
                         </div> 	
@@ -271,7 +276,7 @@ exit;
 					
 					
              <div class="modal-footer"> 
-<?php  if (isset($_GET['codmediopago'])) { ?>
+<?php  if (!empty($reg)) { ?>
 <button type="submit" name="btn-update" id="btn-update" class="btn btn-primary"><span class="fa fa-edit"></span> Actualizar</button>
 <button class="btn btn-danger" type="reset"><span class="fa fa-trash-o"></span> Cancelar</button>
     <?php } else { ?>
@@ -317,14 +322,3 @@ exit;
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 

@@ -16,6 +16,8 @@ include "db/core/app/model/CarritoData.php";
 
 include "db/core/app/model/ClientesData.php";
 $__tn = function_exists('web_tenant_row') ? web_tenant_row() : null;
+$qBusqueda = isset($_GET['q']) ? trim($_GET['q']) : '';
+$idCategoria = (isset($_GET['id']) && $_GET['id'] !== '') ? (int) $_GET['id'] : 0;
 ?>
 <!doctype html>
 <html lang="es"  class="default" >
@@ -34,12 +36,12 @@ $__tn = function_exists('web_tenant_row') ? web_tenant_row() : null;
 <script src="css/bos.js"  crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <link rel="stylesheet" href="css/icon-nqt-fa.css">
-<link rel="stylesheet" href="css/tienda-mejoras.css?v=5" type="text/css" media="all">
+<link rel="stylesheet" href="css/tienda-mejoras.css?v=7" type="text/css" media="all">
   <?php if (function_exists('web_brand_head_styles')) { web_brand_head_styles(); } ?>
 
 </head>
 
-  <body id="cart" class="lang-es country-us currency-usd layout-full-width page-cart tax-display-disabled cart-empty fullwidth">
+  <body id="cart" class="lang-es rs-menu-page country-us currency-usd layout-full-width page-cart tax-display-disabled cart-empty fullwidth">
     <main id="page">     
       <header id="header">
         <div class="header-container">     
@@ -249,313 +251,8 @@ $__tn = function_exists('web_tenant_row') ? web_tenant_row() : null;
 </header>
       
         
-<aside id="notifications">
-  <div class="container">
-    
-    
-    
-      </div>
-</aside>
-      
-      <section id="wrapper">
-       
-              <div class="container">
-                
-            <nav data-depth="2" class="breadcrumb hidden-sm-down">
-  <!--page name-->
-      <p class="breadcrumb-page-name">Menú</p>
-    <!--end page name-->
-  <ol itemscope itemtype="">
-    
-              
-          
-        
-              
-          <li itemprop="itemListElement" itemscope itemtype="">
-            <a itemprop="item" href="#">
-              <span itemprop="name"></span>
-            </a>
-            <meta itemprop="position" content="2">
-          </li>
-        
-          
-  </ol>
-</nav>
-          
-          <div class="row">
-            
-              <div id="left-column" class="sidebar col-xs-12 col-sm-12 col-md-4 col-lg-3">
-                                  
 
-<div class="block-categories block block-highlighted hidden-sm-down">
-  <h4 class="title_block"><a href="2-inicio.html">CATEGORÍAS</a></h4>
-  <div class="block_content">
-    <ul class="category-top-menu">
-      <li>
-        <ul class="category-sub-menu">
-          
-          <?php $categorias = CategoriasData::getAll();
-            if(@count($categorias)>0){ ?>  
-            <?php foreach($categorias as $categoria):?>
-
-              <li data-depth="0">
-                <a href="productos.php?id=<?php echo $categoria->codcategoria; ?>"><?php echo $categoria->nomcategoria; ?></a>
-                <div class="navbar-toggler collapse-icons"><i class="fa fa-caret-right add"></i>
-                </div>
-              </li>
-
-            <?php endforeach; ?>
-            <?php }else{  echo"<h4 class='alert alert-success'>NO HAY REGISTRO</h4>"; }; ?>
-        </ul>
-  </div>
-</div>
-<div id="search_filters_wrapper" class="hidden-sm-down">
-    <div id="search_filters">
-      <p class="text-uppercase h6 hidden-sm-down">Filtrado por</p>   
-    </div>
-
-</div>
-
-</div>
-            
-
-            
-  <div id="content-wrapper" class="left-column col-xs-12 col-sm-12 col-md-8 col-lg-9">
-    
-    
-  <section id="main">
-
-    
-  <div id="js-product-list-header">
-            <div class="block-category card card-block">
-            <h1 class="h1">Nuestra carta</h1>
-            <div class="block-category-inner">
-                                            </div>
-        </div>
-    </div>
-  
-
-    <section id="products">
-      
-        <div>
-          
-            
-<div id="js-product-list-top" class="products-selection">
-  <div class="row">
-    <div class="col-lg-6 col-md-3 hidden-sm-down total-products">     
-      
-        <div class="display">
-          <div id="grid" class="leo_grid selected"><a rel="nofollow" href="#" title="Cuadrícula"><i class="fa fa-th"></i></a></div>
-          <div id="list" class="leo_list "><a rel="nofollow" href="#" title="Lista"><i class="fa fa-list-ul"></i></a></div>
-        </div>
-      
-      <p>Selecciona platos a pedir...</p>
-    </div>
-    <div class="col-lg-6 col-md-9">
-      <div class="row sort-by-row">
-          <span class="col-sm-3 col-md-3 hidden-sm-down sort-by">Ordenar por:</span>
-          <div class="col-md-12 products-sort-order dropdown">
-              <select class="form-control select2" required  name="id_categoria">   
-                <?php $categorias = CategoriasData::getAll();?>
-               <option value="">--- Seleciona categoría ---</option> 
-                 <?php foreach($categorias as $categoria):?>
-                    <option value="<?php echo $categoria->id;?>"><?php echo $categoria->nomcategoria;?></option>
-              <?php endforeach;?>                  
-            </select>
-          </div>
-        
-
-                 
-       </div>
-    </div>
-
-
-  </div>
-</div>
-          
-        </div>
-
-        
-        
-        
-
- <div>
-       
-
-
-<div id="js-product-list">
-<div class="products">  
-
-<div  class="product_list grid  product-default ">
-    <div class="row">
-                    
-             
-     <?php 
-      if(isset($_GET['id']) and $_GET['id']){
-        $productos = ProductoData::getBycategoria($_GET['id']);
-      }else{
-        $productos = ProductoData::getAll();
-      }
-     
-        if(@count($productos)>0){ ?>  
-        <?php foreach($productos as $productoc):?>
-          <div class="ajax_block_product col-sp-12 col-xs-6 col-sm-6 col-md-4 col-lg-3 col-xl-3 last-item-of-tablet-line last-item-of-mobile-line ">    
-                  <article class="product-miniature js-product-miniature" data-id-product="1" data-id-product-attribute="0" itemscope itemtype="">
-                    <div class="thumbnail-container">
-                      <div class="product-image">
-                         <a href="" class="thumbnail product-thumbnail">
-                         <img class="img-fluid" src="sistema/fotos/<?php echo $productoc->codproducto; ?>.jpg" alt = "" data-full-size-image-url = "img/platos/pina1.jpg">
-                         <span class="product-additional" data-idproduct="1"></span>
-                         </a>
-                          <span class="discount-percentage">S/ 
-                            <?php echo number_format($productoc->precioventa,0,'.',',');?>   
-                          </span>
-                      </div>
-                      <div class="product-meta">
-                        <h3 class="h3 product-title" itemprop="name"><a href=""><?php echo $productoc->producto;?></a></h3>
-                       
-            
-                     <div class="leo-list-product-reviews" itemprop="aggregateRating" itemscope itemtype="">
-                        <div class="leo-list-product-reviews-wraper">
-                           <div class="star_content clearfix">
-                              <div class="star star_on"></div>
-                              <div class="star star_on"></div>
-                              <div class="star star_on"></div>
-                              <div class="star star_on"></div>
-                              <div class="star"></div>
-                              <meta itemprop="worstRating" content = "0" />
-                              <meta itemprop="ratingValue" content = "4" />
-                              <meta itemprop="bestRating" content = "5" />
-                           </div>
-                            <span class="nb-revews"><span itemprop="reviewCount">1</span> Comentario (s)</span>
-                        </div>
-                    </div>
-
-
-          <div class="meta-button">
-            <div class="button-container cart">
-                <input type="hidden" class="form-control"  id="cantidad_<?php echo $productoc->codalmacen; ?>"  value="1" min="1" >
-                <input type="hidden" class="form-control" id="precio_venta_<?php echo $productoc->codalmacen; ?>"  value="<?php echo $productoc->precioventa;?>" >
-
-                  <a class="btn btn-product add-to-cart leo-bt-cart leo-bt-cart_1" href="javascript:void(0)" onclick="return agregar('<?php echo $productoc->codalmacen; ?>', event);">
-                    <i class="icon-nqt-shopping-basket"></i>
-                    <span class="name-btn-product">Agregar a carrito</span>
-                  </a>
-             
-            </div>
-
-          
-            
-            <!-- Modal -->
-            <div class="modal fade" id="exampleModal<?php echo $productoc->codalmacen; ?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-              <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                  <div class="modal-header" style="background: var(--brand-primary);">
-                    <h4 class="modal-title" id="exampleModalLabel" style="color: white;"> <i class="fa fa-check"></i> Producto añadido con éxito a su carrito de compras</h4>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <div class="row">
-                      <div class="col-md-5">
-                        <div class="row">
-                          <div class="col-md-6">
-                            <img src="sistema/fotos/<?php echo $productoc->codproducto; ?>.jpg" class="product-image" style="width: 100%;">
-                          </div>
-                          <div class="col-md-6" style="text-align: left;">
-                            <h6 class="h6 product-name" style="color: var(--brand-accent); font-size: 1.125rem;margin-bottom: 0.625rem;"><?php echo $productoc->producto;?></h6>
-                            <p class="product-price" style="color: var(--brand-secondary);text-align: left;font-size: 24px;font-weight: 600;">S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></p>
-                            <span class="js-modal-qty">Cantidad: <b>1</b></span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="col-md-7" style="border-left: solid 1px #bcbcbc;">
-                        <div class="cart-content">
-                          <p class="cart-products-count" style="text-align: left;">Hay <?php echo @count(CarritoData::getAllTemporal($session_id));?> artículos en su carrito.</p>
-                          <p class="js-cart-subtotal" style="text-align: left;">Subtotal: <b>S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
-                          <p style="text-align: left;">Transporte: <b>S/ 0</b></p>
-                          <p style="text-align: left;">IGV: <b>S/ 0</b></p>
-                          <p class="js-cart-total" style="text-align: left;">Total: <b>S/ <?php echo number_format($productoc->precioventa,0,'.',',');?></b></p>
-                          <div class="">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">CONTINUAR COMPRANDO</button>
-                            <a  href="carrito.php" type="button" class="btn btn-primary">PASAR POR LA CAJA</a>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-                  </div>
-                 
-                </div>
-              </div>
-            </div>
-
-
-          <div class="quickview no-variants hidden-sm-down">
-            <a href="#" class="quick-view btn-product" data-link-action="quickview" title="Vista rápida">
-              <span class="leo-quickview-bt-loading cssload-speeding-wheel"></span>
-              <span class="leo-quickview-bt-content">
-                <i class="icon-nqt-eye"></i>
-                <span class="name-btn-product">Vista rápida</span>
-              </span>
-            </a>
-          </div>
-          </div>
-
-          </div>
-          </div>
-          </article>
-
-          </div>
-
-        <?php endforeach; ?>
-    <?php }else{  echo"<h4 class='alert alert-success'>NO HAY REGISTRO</h4>"; }; ?>        
-                                       
-     
-
-
-
-
-                    
-
-</div>
-</div>
-  
-</div>
-
-  
-
-  
-
-  <div class="hidden-md-up text-xs-right up">
-    <a href="#header" class="btn btn-secondary">
-      Volver arriba
-      <i class="material-icons">&#xE316;</i>
-    </a>
-  </div>
-</div>
-          
-</div>
-
-<div id="js-product-list-bottom">
-  <div id="js-product-list-bottom"></div>
-</div>
-
-</section>
-
-</section>
-
-    
-  </div>
-
-
-            
- </div>
-</div>
-          
-</section>
-
+<?php $rsMenuPage = 'index.php'; require __DIR__ . '/web_menu_carta.php'; ?>
 
 
 <footer id="footer" class="footer-container">
@@ -632,8 +329,7 @@ $__tn = function_exists('web_tenant_row') ? web_tenant_row() : null;
 <script src="css/jquery.js"></script>
 <script src="js/tienda-nav.js"></script>
 <script src="js/carrito-home.js?v=3"></script>
-
-
+<?php require __DIR__ . '/web_menu_carta_scripts.php'; ?>
 
 
   </body>

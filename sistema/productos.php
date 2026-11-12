@@ -1,7 +1,10 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador") {
+require_once("class/class.php");
+if (!isset($_SESSION['acceso'])) {
+	echo '<script type="text/javascript">alert("NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\\nDEBERA DE INICIAR SESION");document.location.href="logout.php";</script>';
+	exit;
+}
+pos_require_administrador_pos("Solo el Administrador puede gestionar productos.", 'panel.php');
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -39,7 +42,7 @@ exit;
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->
@@ -332,6 +335,13 @@ exit;
 		echo "<center><span class='fa fa-info-circle'></span> USTED NO TIENE ACCESO PARA ELIMINAR PRODUCTOS, NO ERES EL ADMINISTRADOR DEL SISTEMA</center>";
         echo "</div>";   
 		break;
+
+		case 4:
+		echo "<div class='alert alert-warning'>";
+		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
+		echo "<center><span class='fa fa-info-circle'></span> NO SE PUDO CARGAR EL PRODUCTO PARA EDITAR (NO EXISTE O NO PERTENECE A ESTE RESTAURANTE).</center>";
+        echo "</div>";   
+		break;
 		
 	}
 }		
@@ -381,11 +391,11 @@ for($i=0;$i<sizeof($reg);$i++){
 											   <td>
 <a href="#" class="btn btn-success btn-xs" onClick="VerProducto('<?php echo base64_encode($reg[$i]['codproducto']) ?>')" data-href="#" data-toggle="modal" data-target=".bs-example-modal-lg" data-placement="left" data-backdrop="static" data-keyboard="false" data-id="" rel="tooltip" data-original-title="Ver Producto" title="Ver Producto"><i class="fa fa-search-plus"></i></a>
 								  
-<a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Producto" onClick="actualizar('forproducto?codproducto=<?php echo base64_encode($reg[$i]["codproducto"]) ?>')"><i class="fa fa-pencil"></i></a>
+<a href="javascript:void(0)" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Producto" onClick="return actualizar('forproducto?codproducto=<?php echo rs_encode_edit_param($reg[$i]["codproducto"]) ?>')"><i class="fa fa-pencil"></i></a>
 
-<a href="#" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Agregar Ingrediente" onClick="agregar('agregaingrediente?codproducto=<?php echo base64_encode($reg[$i]["codproducto"]) ?>')"><span class="fa fa-cart-arrow-down"></span></a>
+<a href="javascript:void(0)" class="btn btn-warning btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Agregar Ingrediente" onClick="return agregar('agregaingrediente?codproducto=<?php echo base64_encode($reg[$i]["codproducto"]) ?>')"><span class="fa fa-cart-arrow-down"></span></a>
                                  
-<a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Producto" onClick="eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codproducto=<?php echo base64_encode($reg[$i]["codproducto"]) ?>&tipo=<?php echo base64_encode("PRODUCTOS") ?>')"><i class="fa fa-trash-o"></i></a> </td>
+<a href="javascript:void(0)" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Producto" onClick="return eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codproducto=<?php echo base64_encode($reg[$i]["codproducto"]) ?>&tipo=<?php echo base64_encode("PRODUCTOS") ?>')"><i class="fa fa-trash-o"></i></a> </td>
 											   </tr>
 											   <?php } } ?>
 											   </tbody>
@@ -483,14 +493,3 @@ for($i=0;$i<sizeof($reg);$i++){
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 

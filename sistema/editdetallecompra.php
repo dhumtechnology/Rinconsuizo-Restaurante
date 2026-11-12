@@ -38,7 +38,7 @@ exit;
 <!-- Custom file upload -->
 <script src="assets/plugins/fileupload/bootstrap-fileupload.min.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->
@@ -260,14 +260,14 @@ exit;
 <input type="hidden" name="coddetallecompra" id="coddetallecompra" value="<?php echo $reg[0]['coddetallecompra']; ?>">
 <input type="hidden" name="codcompra" id="codcompra" value="<?php echo $reg[0]['codcompra']; ?>">
 <input type="hidden" name="tipoentrada" id="tipoentrada" value="<?php echo $reg[0]['tipoentrada']; ?>">
-<input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Código de Producto" value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly">
+<input type="text" class="form-control" name="codproducto" id="codproducto" autocomplete="off" placeholder="Ingrese Código de Producto" value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly">
                               </div> 
                         </div>
 															
 							<div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
     <label class="control-label">Nombre de Producto: <span class="symbol required"></span></label>
-<input type="text" class="form-control" name="producto" id="producto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Producto" value="<?php echo $reg[0]['producto']; ?>" readonly="readonly">
+<input type="text" class="form-control" name="producto" id="producto" autocomplete="off" placeholder="Ingrese Nombre de Producto" value="<?php echo $reg[0]['producto']; ?>" readonly="readonly">
                         <i class="fa fa-pencil form-control-feedback"></i> 
                               </div> 
                         </div> 	
@@ -300,7 +300,7 @@ exit;
 							<div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
     <label class="control-label">Precio de Compra: <span class="symbol required"></span></label>
-<input class="form-control number calculo" type="text" name="precio1" id="precio1" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Precio #1" value="<?php echo $reg[0]['precio1']; ?>" required="" aria-required="true"> 
+<input class="form-control number calculo" type="text" name="precio1" id="precio1" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Precio #1" value="<?php echo $reg[0]['precio1']; ?>" required="" aria-required="true"> 
 								  <i class="fa fa-money form-control-feedback"></i> 
                               </div> 
                         </div> 	
@@ -311,7 +311,7 @@ exit;
                             <div class="col-md-3"> 
                               <div class="form-group has-feedback"> 
       <label class="control-label">Precio de Venta: <span class="symbol required"></span></label>
-<input class="form-control number" type="text" name="precio2" id="precio2" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Precio #2" value="<?php echo $reg[0]['precio2']; ?>" required="" aria-required="true">
+<input class="form-control number" type="text" name="precio2" id="precio2" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Precio #2" value="<?php echo $reg[0]['precio2']; ?>" required="" aria-required="true">
 								   <i class="fa fa-money form-control-feedback"></i>
                               </div> 
                         </div>
@@ -319,7 +319,7 @@ exit;
 							<div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
               <label class="control-label">Importe: <span class="symbol required"></span></label>
-<input class="form-control number" type="text" name="importecompra" id="importecompra" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Importe" value="<?php echo $reg[0]['importecompra']; ?>" readonly="readonly">
+<input class="form-control number" type="text" name="importecompra" id="importecompra" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Importe" value="<?php echo $reg[0]['importecompra']; ?>" readonly="readonly">
 				   <i class="fa fa-money form-control-feedback"></i>
                               </div> 
                         </div>
@@ -329,7 +329,7 @@ exit;
         <label class="control-label">Cantidad Compra: <span class="symbol required"></span></label>
 <div id="cargacomprainput"><input type="hidden" name="cantidadcompradb" id="cantidadcompradb" value="<?php echo $reg[0]['cantcompra']; ?>" ></div>
 
-<input class="form-control calculo" type="text" name="cantcompra" id="cantcompra" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Cantidad de Compra" value="<?php echo $reg[0]['cantcompra']; ?>" required="" aria-required="true">
+<input class="form-control calculo" type="text" name="cantcompra" id="cantcompra" autocomplete="off" placeholder="Ingrese Cantidad de Compra" value="<?php echo $reg[0]['cantcompra']; ?>" required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>
                               </div> 
                         </div>

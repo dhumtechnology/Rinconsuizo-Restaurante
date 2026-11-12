@@ -531,7 +531,7 @@ $('document').ready(function()
 { 
 								
      /* validation */
-	 $("#usuario").validate({
+	 $("form#form-registro-usuario, form[name='usuario']").first().validate({
       rules:
 	  {
 			cedula: { required: true,  digits : true, minlength: 7 },
@@ -540,8 +540,8 @@ $('document').ready(function()
 			cargo: { required: true, },
 			email: { required: true, email: true },
 			usuario: { required: true, },
-			password: {required: true, minlength: 8},  
-            password2:   {required: true, minlength: 8, equalTo: "#password"}, 
+			password: { minlength: 8 },
+            password2: { minlength: 8, equalTo: "#password" },
 			nivel: { required: true, },
 			status: { required: true, },
 	   },
@@ -553,8 +553,8 @@ $('document').ready(function()
 			cargo: { required: "Ingrese Cargo de Usuario" },
 			email:{  required: "Ingrese Email de Usuario", email: "Ingrese un Email Valido" },
 			usuario:{ required: "Ingrese Usuario de Acceso" },
-			password:{ required: "Ingrese Password de Acceso", minlength: "Ingrese 8 caracteres como minimo" },
-		    password2:{ required: "Repita Password de Acceso", minlength: "Ingrese 8 caracteres como minimo", equalTo: "Este Password no coincide" },
+			password:{ minlength: "Ingrese 8 caracteres como minimo (o use Generar contraseña)" },
+		    password2:{ minlength: "Ingrese 8 caracteres como minimo", equalTo: "Este Password no coincide" },
 			nivel:{ required: "Seleccione Nivel de Acceso" },
 			status:{ required: "Seleccione Status de Usuario" },
        },
@@ -564,10 +564,16 @@ $('document').ready(function()
 	   
 	   /* form submit */
 	  function submitForm()
-	   {		
-				var data = $("#usuario").serialize();
-				var formData = new FormData($("#usuario")[0]);
-				
+	   {
+				var $form = $('form[name="usuario"]');
+				var formData = new FormData($form[0]);
+				var $btn = $("#btn-submit");
+
+				function restaurarBotonRegistrar() {
+					$btn.prop("disabled", false);
+					$btn.html('<span class="fa fa-save"></span> Registrar');
+				}
+
 				$.ajax({
 				type : 'POST',
 				url  : 'forusuario.php',
@@ -577,73 +583,58 @@ $('document').ready(function()
                 contentType: false,
                 processData: false,
 				beforeSend: function()
-				{	
+				{
 					$("#error").fadeOut();
-					$("#btn-submit").html('<i class="fa fa-refresh"></i> Verificando...');
+					$btn.prop("disabled", true);
+					$btn.html('<i class="fa fa-refresh fa-spin"></i> Registrando...');
 				},
 				success :  function(data)
-						   {						
+						   {
 								if(data==1){
-									
 									$("#error").fadeIn(1000, function(){
-											
-											
 	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LOS CAMPOS NO PUEDEN IR VACIOS, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
-											
-										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
-										
 									});
-																				
-								}  
+									restaurarBotonRegistrar();
+								}
 								else if(data=='2'){
-									
 									$("#error").fadeIn(1000, function(){
-											
-											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN USUARIO CON ESTE NUMERO DE C&Eacute;DULA, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
-											
-										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
-										
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN USUARIO CON ESTE NIT EN ESTE RESTAURANTE. EL MISMO NIT PUEDE USARSE EN OTRO RESTAURANTE.</div></center>');
 									});
-																				
+									restaurarBotonRegistrar();
 								}
 								else if(data=='3'){
-									
 									$("#error").fadeIn(1000, function(){
-											
-											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTE CORREO ELECTRONICO YA SE ENCUENTRA REGISTRADO, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
-											
-										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
-										
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN USUARIO CON ESTE CORREO EN ESTE RESTAURANTE.</div></center>');
 									});
-																				
+									restaurarBotonRegistrar();
+								}
+								else if(data=='6'){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN USUARIO CON ESTE TEL&Eacute;FONO EN ESTE RESTAURANTE.</div></center>');
+									});
+									restaurarBotonRegistrar();
 								}
 								else if(data=='4')
 								{
-									
-					$("#error").fadeIn(1000, function(){
-											
-											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTE USUARIO YA SE ENCUENTRA REGISTRADO, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
-											
-								$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
-										
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTE USUARIO DE ACCESO YA SE ENCUENTRA REGISTRADO EN ESTE RESTAURANTE.</div></center>');
 									});
+									restaurarBotonRegistrar();
 								}
 								else{
-										
+									$btn.html('<span class="fa fa-check"></span> Registrado');
 									$("#error").fadeIn(1000, function(){
-											
-						$("#error").html('<center> '+data+' </center>');
-						$("#usuario")[0].reset();		
-						setTimeout(function() { $("#error").html(""); }, 5000);		
-						$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
-										
+						$("#error").html('<center>'+ data +'<p class="text-muted" style="margin-top:10px;"><small>Será redirigido al listado de usuarios...</small></p></center>');
 									});
-											
+									setTimeout(function() { window.location.href = 'usuarios'; }, 4500);
 								}
-						   }
+						   },
+				error: function() {
+					$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO SE PUDO REGISTRAR EL USUARIO. INTENTE NUEVAMENTE.</div></center>');
+					});
+					restaurarBotonRegistrar();
+				}
 				});
 				return false;
 		}
@@ -731,7 +722,7 @@ $('document').ready(function()
 									$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN USUARIO CON ESTE NUMERO DE C&Eacute;DULA, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE OTRO USUARIO CON ESTE NIT EN ESTE RESTAURANTE.</div></center>');
 											
 								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
 										
@@ -743,7 +734,19 @@ $('document').ready(function()
 									$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTE CORREO ELECTRONICO YA SE ENCUENTRA REGISTRADO, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE OTRO USUARIO CON ESTE CORREO EN ESTE RESTAURANTE.</div></center>');
+											
+								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+										
+									});
+																				
+								}
+								else if(data=='6'){
+									
+									$("#error").fadeIn(1000, function(){
+											
+											
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE OTRO USUARIO CON ESTE TEL&Eacute;FONO EN ESTE RESTAURANTE.</div></center>');
 											
 								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
 										
@@ -756,7 +759,7 @@ $('document').ready(function()
 					$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTE USUARIO YA SE ENCUENTRA REGISTRADO, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTE USUARIO DE ACCESO YA SE ENCUENTRA REGISTRADO EN ESTE RESTAURANTE.</div></center>');
 											
 								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
 										
@@ -1815,13 +1818,13 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data=='2')
+								else if(data=='4')
 								{
 									
 					$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTE NOMBRE DE CAJA YA SE ENCUENTRA REGISTRADA, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> EL NÚMERO DE CAJA YA ESTÁ EN USO EN ESTE RESTAURANTE. RECARGUE LA PÁGINA PARA OBTENER EL SIGUIENTE NÚMERO.</div></center>');
 											
 										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
 										
@@ -1843,8 +1846,7 @@ $('document').ready(function()
 										
 									$("#error").fadeIn(1000, function(){
 						            $("#error").html('<center> '+data+' </center>');
-						            $("#cajas")[0].reset();			
-						            setTimeout(function() { $("#error").html(""); }, 5000);
+						            setTimeout(function() { window.location.href = 'cajas'; }, 4000);
 								    $("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
 										
 									});
@@ -1911,13 +1913,13 @@ $('document').ready(function()
 									});
 																				
 								}
-								else if(data=='2')
+								else if(data=='4')
 								{
 									
 					$("#error").fadeIn(1000, function(){
 											
 											
-	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTE NOMBRE DE CAJA YA SE ENCUENTRA REGISTRADA, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> EL NÚMERO DE CAJA YA ESTÁ EN USO EN ESTE RESTAURANTE.</div></center>');
 											
 								$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
 										
@@ -2917,6 +2919,8 @@ $('document').ready(function()
         return false;
 	 
 	  } else {
+				var $btnSubmit = $("#btn-submit");
+				var btnSubmitHtml = $btnSubmit.html();
 				$.ajax({
 				type : 'POST',
 				url  : 'forproducto.php',
@@ -2928,7 +2932,7 @@ $('document').ready(function()
 				beforeSend: function()
 				{	
 					$("#error").fadeOut();
-					$("#btn-submit").html('<i class="fa fa-refresh"></i> Verificando...');
+					$btnSubmit.prop("disabled", true).html('<i class="fa fa-refresh fa-spin"></i> Guardando...');
 				},
 				success :  function(data)
 						   {						
@@ -2939,7 +2943,7 @@ $('document').ready(function()
 											
 	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LOS CAMPOS NO PUEDEN IR VACIOS, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
 											
-										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+										$btnSubmit.prop("disabled", false).html('<span class="fa fa-save"></span> Guardar');
 										
 									});
 								}  
@@ -2949,7 +2953,7 @@ $('document').ready(function()
 											
 	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LOS INGREDIENTES ASOCIADOS NO PUEDEN REPETIRSE, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
 											
-										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+										$btnSubmit.prop("disabled", false).html('<span class="fa fa-save"></span> Guardar');
 										
 									});
 								} 
@@ -2959,7 +2963,7 @@ $('document').ready(function()
 											
 	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> YA EXISTE UN PRODUCTO CON ESTE C&Oacute;DIGO, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
 											
-										$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+										$btnSubmit.prop("disabled", false).html('<span class="fa fa-save"></span> Guardar');
 										
 									});
 								}
@@ -2969,16 +2973,23 @@ $('document').ready(function()
 											
 						$("#error").html('<center> '+data+' </center>');
 						$("#productos")[0].reset();
-				$("#datatable-responsive tbody").html("<tr><td><input type='hidden' name='codingrediente[]' id='codingrediente'><input type='text' class='form-control' name='busqueda[]' id='busqueda' onKeyUp='this.value=this.value.toUpperCase(); autocompletar(this.name);' autocomplete='off' placeholder='Porcion de Ingrediente'></td><td><input type='text' class='form-control' name='cantidad[]' id='cantidad1' onKeyUp='this.value=this.value.toUpperCase();' autocomplete='off' placeholder='Cantidad Porcion'></td><td><input type='text' class='form-control' name='unidadingrediente[]' id='unidadingrediente' onKeyUp='this.value=this.value.toUpperCase();' autocomplete='off' placeholder='Medida' readonly='readonly'></td></tr>");
+				$("#datatable-responsive tbody").html("<tr><td><input type='hidden' name='codingrediente[]' id='codingrediente'><input type='text' class='form-control' name='busqueda[]' id='busqueda' onKeyUp='autocompletar(this.name);' autocomplete='off' placeholder='Porcion de Ingrediente'></td><td><input type='text' class='form-control' name='cantidad[]' id='cantidad1' autocomplete='off' placeholder='Cantidad Porcion'></td><td><input type='text' class='form-control' name='unidadingrediente[]' id='unidadingrediente' autocomplete='off' placeholder='Medida' readonly='readonly'></td></tr>");
 						$("#nroproducto").load("funciones.php?muestranroproducto=si");
 						$("#codigoproducto").load("funciones.php?muestracodigoproducto=si");
 						setTimeout(function() { $("#error").html(""); }, 5000);		
-						$("#btn-submit").html('<span class="fa fa-save"></span> Registrar');
+						$btnSubmit.prop("disabled", false).html('<span class="fa fa-save"></span> Guardar');
 										
 									});
 											
 								}
-						   }
+						   },
+				error: function()
+				{
+					$("#error").fadeIn(1000, function(){
+						$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO SE PUDO GUARDAR EL PRODUCTO. REVISE LOS DATOS E INTENTE DE NUEVO.</div></center>');
+						$btnSubmit.prop("disabled", false).html(btnSubmitHtml);
+					});
+				}
 				});
 				return false;
 	        }
@@ -3070,6 +3081,8 @@ $('document').ready(function()
         return false;
 	 
 	  } else {
+				var $btnUpdate = $("#btn-update");
+				var btnUpdateHtml = $btnUpdate.html();
 				$.ajax({
 				type : 'POST',
 				url  : 'forproducto.php?codalmacen='+codalmacen,
@@ -3081,7 +3094,7 @@ $('document').ready(function()
 				beforeSend: function()
 				{	
 					$("#error").fadeOut();
-					$("#btn-update").html('<i class="fa fa-refresh"></i> Verificando ...');
+					$btnUpdate.prop("disabled", true).html('<i class="fa fa-refresh fa-spin"></i> Guardando...');
 				},
 				success :  function(data)
 						   {						
@@ -3093,7 +3106,7 @@ $('document').ready(function()
 	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LOS CAMPOS NO PUEDEN IR VACIOS, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
 
 											
-						  $("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+						  $btnUpdate.prop("disabled", false).html('<span class="fa fa-edit"></span> Actualizar');
 										
 									});
 																				
@@ -3104,8 +3117,14 @@ $('document').ready(function()
 											
 	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LOS INGREDIENTES ASOCIADOS NO PUEDEN REPETIRSE, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
 											
-						$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+						$btnUpdate.prop("disabled", false).html('<span class="fa fa-edit"></span> Actualizar');
 										
+									});
+								}
+								else if(data=='5'){
+									$("#error").fadeIn(1000, function(){
+	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO TIENE PERMISO PARA EDITAR ESE PRODUCTO O NO PERTENECE A ESTE RESTAURANTE.</div></center>');
+						$btnUpdate.prop("disabled", false).html('<span class="fa fa-edit"></span> Actualizar');
 									});
 								}
 								else{
@@ -3113,14 +3132,20 @@ $('document').ready(function()
 									$("#error").fadeIn(1000, function(){
 											
 						$("#error").html('<center> '+data+' </center>');
-						$('#btn-update').attr("disabled", true);
-						$("#btn-update").html('<span class="fa fa-edit"></span> Actualizar');
+						$btnUpdate.prop("disabled", true).html('<span class="fa fa-edit"></span> Actualizar');
      					setTimeout("location.href='productos'", 5000);
 				
 				});
 											
 								}
-						   }
+						   },
+				error: function()
+				{
+					$("#error").fadeIn(1000, function(){
+						$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO SE PUDO ACTUALIZAR EL PRODUCTO. REVISE LOS DATOS E INTENTE DE NUEVO.</div></center>');
+						$btnUpdate.prop("disabled", false).html(btnUpdateHtml);
+					});
+				}
 				});
 				return false;
 	        }
@@ -3208,7 +3233,7 @@ $('document').ready(function()
 									$("#error").fadeIn(1000, function(){
 						
 						$("#error").html('<center> '+data+' </center>');
-						$("#datatable-responsive tbody").html("<tr><td><input type='hidden' name='codingrediente[]' id='codingrediente'><input type='text' class='form-control' name='busqueda[]' id='busqueda' onKeyUp='this.value=this.value.toUpperCase(); autocompletar(this.name);' autocomplete='off' placeholder='Porcion de Ingrediente'></td><td><input type='text' class='form-control' name='cantidad[]' id='cantidad1' onKeyUp='this.value=this.value.toUpperCase();' autocomplete='off' placeholder='Cantidad Porcion'></td><td><input type='text' class='form-control' name='unidadingrediente[]' id='unidadingrediente' onKeyUp='this.value=this.value.toUpperCase();' autocomplete='off' placeholder='Medida' readonly='readonly'></td></tr>");
+						$("#datatable-responsive tbody").html("<tr><td><input type='hidden' name='codingrediente[]' id='codingrediente'><input type='text' class='form-control' name='busqueda[]' id='busqueda' onKeyUp='autocompletar(this.name);' autocomplete='off' placeholder='Porcion de Ingrediente'></td><td><input type='text' class='form-control' name='cantidad[]' id='cantidad1' autocomplete='off' placeholder='Cantidad Porcion'></td><td><input type='text' class='form-control' name='unidadingrediente[]' id='unidadingrediente' autocomplete='off' placeholder='Medida' readonly='readonly'></td></tr>");
 						
 						$("#cargaingredientes").load("funciones.php?BuscaNuevosIngredienteProductos=si&codproducto="+btoa(codproducto));
 						//setTimeout(function() { $("#error").html(""); }, 5000);	
@@ -4803,6 +4828,9 @@ $('document').ready(function()
 			  }
 			  var accion = window.ventasAccionSubmit || 'btn-venta';
 			  var esCerrarMesa = accion === 'btn-cerrar';
+			  if ($('#pagomixto').is(':checked') && typeof ActualizarSumaPagoMixto === 'function') {
+			      ActualizarSumaPagoMixto();
+			  }
 			  if (esCerrarMesa && typeof ValidarPagoMixtoAntesDeCerrar === 'function') {
 			      if (!ValidarPagoMixtoAntesDeCerrar()) {
 			          return false;

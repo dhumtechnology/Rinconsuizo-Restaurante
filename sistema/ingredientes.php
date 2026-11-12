@@ -33,7 +33,7 @@ $reg = $tra->ListarIngredientes();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <!-- script jquery -->
 
 </head>
@@ -337,9 +337,9 @@ for($i=0;$i<sizeof($reg);$i++){
  
 <a href="#" class="btn btn-success btn-xs" onClick="VerIngrediente('<?php echo base64_encode($reg[$i]['codingrediente']) ?>')" data-href="#" data-toggle="modal" data-target=".bs-example-modal-lg" data-placement="left" data-backdrop="static" data-keyboard="false" data-id="" rel="tooltip" data-original-title="Ver Ingrediente" title="Ver Ingrediente"><i class="fa fa-search-plus"></i></a>
 								  
-<a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Ingrediente" onClick="actualizar('foringrediente?codingrediente=<?php echo base64_encode($reg[$i]["codingrediente"]) ?>')"><i class="fa fa-pencil"></i></a>
+<a href="javascript:void(0)" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Ingrediente" onClick="return actualizar('foringrediente?codingrediente=<?php echo rs_encode_edit_param($reg[$i]["codingrediente"]) ?>')"><i class="fa fa-pencil"></i></a>
                                  
-<a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Ingrediente" onClick="eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codingrediente=<?php echo base64_encode($reg[$i]["codingrediente"]) ?>&tipo=<?php echo base64_encode("INGREDIENTES") ?>')"><i class="fa fa-trash-o"></i></a> </td>
+<a href="javascript:void(0)" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Ingrediente" onClick="return eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codingrediente=<?php echo base64_encode($reg[$i]["codingrediente"]) ?>&tipo=<?php echo base64_encode("INGREDIENTES") ?>')"><i class="fa fa-trash-o"></i></a> </td>
 											   </tr>
 											   <?php } } ?>
 											   </tbody>

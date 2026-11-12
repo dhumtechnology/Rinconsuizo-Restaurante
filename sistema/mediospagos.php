@@ -30,7 +30,7 @@ $reg = $tra->ListarMediosPagos();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <!-- script jquery -->
 
 </head>
@@ -285,9 +285,9 @@ for($i=0;$i<sizeof($reg);$i++){
                                                <td><?php echo $reg[$i]['mediopago']; ?></td>
 											   <td>
  						  
-<a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar M. de Pago" onClick="actualizar('formediopago?codmediopago=<?php echo base64_encode($reg[$i]["codmediopago"]) ?>')"><i class="fa fa-pencil"></i></a>
+<a href="javascript:void(0)" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar M. de Pago" onClick="return actualizar('formediopago?codmediopago=<?php echo rs_encode_edit_param($reg[$i]["codmediopago"]) ?>')"><i class="fa fa-pencil"></i></a>
                                  
-<a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar M. de Pago" onClick="eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codmediopago=<?php echo base64_encode($reg[$i]["codmediopago"]) ?>&tipo=<?php echo base64_encode("MEDIOPAGO") ?>')"><i class="fa fa-trash-o"></i></a> </td>
+<a href="javascript:void(0)" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar M. de Pago" onClick="return eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codmediopago=<?php echo base64_encode($reg[$i]["codmediopago"]) ?>&tipo=<?php echo base64_encode("MEDIOPAGO") ?>')"><i class="fa fa-trash-o"></i></a> </td>
 											   </tr>
 											   <?php } } ?>
 											   </tbody>

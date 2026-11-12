@@ -28,7 +28,7 @@ $ses = $tra->ExpiraSession();
         <!-- script jquery -->
         <script src="assets/js/jquery.min.js"></script> 
         <script type="text/javascript" src="assets/script/titulos.js"></script>
-        <script type="text/javascript" src="assets/script/script2.js"></script>
+        <script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
         <script type="text/javascript" src="assets/script/validation.min.js"></script>
         <!-- script jquery -->
 
@@ -244,7 +244,7 @@ $ses = $tra->ExpiraSession();
        <div class="form-group has-feedback"> 
         <label class="control-label">Búsqueda de Ingredientes: <span class="symbol required"></span></label>
         <input type="hidden" class="form-control" name="codingrediente" id="codingrediente">
-        <input class="form-control" type="text" name="busqueda" id="busqueda" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Realice la b&uacute;squeda de Ingredientes" required="required">
+        <input class="form-control" type="text" name="busqueda" id="busqueda" autocomplete="off" placeholder="Realice la b&uacute;squeda de Ingredientes" required="required">
         <i class="fa fa-search form-control-feedback"></i>  
       </div> 
     </div>  

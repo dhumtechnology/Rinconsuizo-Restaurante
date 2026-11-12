@@ -7,7 +7,14 @@ class ReservaData {
 	
 	}
 
-	public function getCliente(){ return ClientesData::getById($this->id_cliente);}
+	public function getCliente(){
+		$idCli = isset($this->id_cliente) ? (int) $this->id_cliente : 0;
+		if ($idCli <= 0 || !class_exists('ClientesData')) {
+			return null;
+		}
+		$cli = ClientesData::getById($idCli);
+		return ($cli && is_object($cli)) ? $cli : null;
+	}
 
 	private static function resolveTenantId()
 	{
@@ -67,7 +74,10 @@ class ReservaData {
 			$sql = "select * from ".self::$tablename." WHERE 1=0 ORDER BY id DESC";
 		}
 		$query = Executor::doit($sql);
-		return Model::many($query[0],new ReservaData());
+		if (!$query || empty($query[0])) {
+			return array();
+		}
+		return Model::many($query[0], new ReservaData());
 	}
 }
 

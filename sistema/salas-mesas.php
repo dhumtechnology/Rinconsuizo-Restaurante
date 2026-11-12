@@ -8,7 +8,7 @@ if (isset($_GET['salas_mesas'])) {
 	}
 }
 if (isset($_GET['salas_mesas'])): ?>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <?php endif; ?>
 
 
@@ -105,7 +105,7 @@ if (!$cajaProd->TieneArqueoAbiertoParaVentas()) {
     <div class="col-md-12">
         <div class="form-group has-feedback">
             <label class="control-label">B&uacute;squeda de Productos:</label>
-            <input class="form-control" type="text" name="busquedaproducto" id="busquedaproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Realice la B&uacute;squeda de Producto">
+            <input class="form-control" type="text" name="busquedaproducto" id="busquedaproducto" autocomplete="off" placeholder="Realice la B&uacute;squeda de Producto">
             <i class="fa fa-search form-control-feedback"></i>
         </div>
     </div>

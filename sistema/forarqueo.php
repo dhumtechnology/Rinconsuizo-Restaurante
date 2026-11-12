@@ -39,7 +39,7 @@ exit;
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js?v=arqueo-caja4"></script>
 <!-- script jquery -->	
@@ -311,7 +311,7 @@ exit;
 				<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
       <label class="control-label">Hora de Apertura: <span class="symbol required"></span></label>
-<?php if (isset($reg[0]['fechaapertura'])) { ?><input type="text" class="form-control" name="fechaapertura" id="fechaapertura" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Hora Apertura"  value="<?php echo $reg[0]['fechaapertura']; ?>" readonly="readonly"><?php } else { ?><input type="text" class="form-control" name="fecharegistro" id="fecharegistro" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Hora Apertura" readonly="readonly"><?php } ?>
+<?php if (isset($reg[0]['fechaapertura'])) { ?><input type="text" class="form-control" name="fechaapertura" id="fechaapertura" autocomplete="off" placeholder="Ingrese Hora Apertura"  value="<?php echo $reg[0]['fechaapertura']; ?>" readonly="readonly"><?php } else { ?><input type="text" class="form-control" name="fecharegistro" id="fecharegistro" autocomplete="off" placeholder="Ingrese Hora Apertura" readonly="readonly"><?php } ?>
                         <i class="fa fa-clock-o form-control-feedback"></i>  
                               </div> 
                         </div>
@@ -319,7 +319,7 @@ exit;
 				<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
         <label class="control-label">Monto Inicial: <span class="symbol required"></span></label>
- <input type="text" class="form-control" name="montoinicial" id="montoinicial" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Monto Inicial" <?php if (isset($reg[0]['montoinicial'])) { ?> value="<?php echo $reg[0]['montoinicial']; ?>"<?php } ?> required="" aria-required="true">
+ <input type="text" class="form-control" name="montoinicial" id="montoinicial" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Monto Inicial" <?php if (isset($reg[0]['montoinicial'])) { ?> value="<?php echo $reg[0]['montoinicial']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-usd form-control-feedback"></i>  
                               </div> 
                         </div>  	

@@ -33,7 +33,7 @@ $ses = $tra->ExpiraSession();
 <script src="assets/js/jquery.min.js"></script> 
  <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js?v=5"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js?v=5"></script>
 <!-- script jquery -->
@@ -288,7 +288,7 @@ $ses = $tra->ExpiraSession();
        <div class="form-group has-feedback"> 
       <label class="control-label">Búsqueda de Clientes: <span class="symbol required"></span></label>
 <input type="hidden" name="codcliente" id="codcliente">
-<input class="form-control" type="text" name="busquedacliente" id="busquedacliente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Criterio de Búsqueda" required="required">
+<input class="form-control" type="text" name="busquedacliente" id="busquedacliente" autocomplete="off" placeholder="Ingrese Criterio de Búsqueda" required="required">
          <i class="fa fa-search form-control-feedback"></i>  
         </div> 
       </div>   
@@ -315,7 +315,7 @@ $ses = $tra->ExpiraSession();
                         <div class="col-md-3"> 
                                <div class="form-group has-feedback"> 
          <label class="control-label">Ingrese Fecha de Venta: <span class="symbol required"></span></label>
-<input class="form-control calendario" type="text" name="fecha" id="fecha" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Fecha de Venta" tabindex="2" required="" aria-required="true">
+<input class="form-control calendario" type="text" name="fecha" id="fecha" autocomplete="off" placeholder="Ingrese Fecha de Venta" tabindex="2" required="" aria-required="true">
                         <i class="fa fa-calendar form-control-feedback"></i>  
                               </div> 
                         </div>

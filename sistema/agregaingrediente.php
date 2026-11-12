@@ -42,7 +42,7 @@ exit;
 <!-- Custom file upload -->
 <script src="assets/plugins/fileupload/bootstrap-fileupload.min.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->
@@ -350,9 +350,9 @@ exit;
                   </thead>
                   <tbody>
                     <tr>
-<td data-priority="3"><input type="hidden" name="codingrediente[]" id="codingrediente"><input type="text" class="form-control" name="busqueda[]" id="busqueda" onKeyUp="this.value=this.value.toUpperCase(); autocompletar(this.name);" title="Realice la busqueda de Ingrediente" autocomplete="off" placeholder="Porción de Ingrediente" required="" aria-required="true"></td>
-<td data-priority="2"><input type="text" class="form-control" name="cantidad[]" id="cantidad1" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Cantidad Porción" title="Ingrese Cantidad de Porcion" required="" aria-required="true"></td>
-<td data-priority="3"><input type="text" class="form-control" name="unidadingrediente[]" id="unidadingrediente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Medida" readonly="readonly"></td>
+<td data-priority="3"><input type="hidden" name="codingrediente[]" id="codingrediente"><input type="text" class="form-control" name="busqueda[]" id="busqueda" onKeyUp="autocompletar(this.name);" title="Realice la busqueda de Ingrediente" autocomplete="off" placeholder="Porción de Ingrediente" required="" aria-required="true"></td>
+<td data-priority="2"><input type="text" class="form-control" name="cantidad[]" id="cantidad1" autocomplete="off" placeholder="Cantidad Porción" title="Ingrese Cantidad de Porcion" required="" aria-required="true"></td>
+<td data-priority="3"><input type="text" class="form-control" name="unidadingrediente[]" id="unidadingrediente" autocomplete="off" placeholder="Medida" readonly="readonly"></td>
                     </tr><input type="hidden" name="var_cont">
                   </tbody>
             </table>
@@ -453,11 +453,11 @@ var indiceFila=1;
 myNewRow = document.getElementById('datatable-responsive').insertRow(-1);
 myNewRow.id=indiceFila;
 myNewCell=myNewRow.insertCell(-1);
-myNewCell.innerHTML='<input type="hidden" name="codingrediente[]'+cont+'" id="codingrediente'+cont+'"><input type="text" class="form-control" name="busqueda[]'+cont+'" id="busqueda'+cont+'" onKeyUp="this.value=this.value.toUpperCase(); autocompletar(this.name);" title="Realice la busqueda de Ingrediente" autocomplete="off" placeholder="Porción de Ingrediente" required="" aria-required="true">';
+myNewCell.innerHTML='<input type="hidden" name="codingrediente[]'+cont+'" id="codingrediente'+cont+'"><input type="text" class="form-control" name="busqueda[]'+cont+'" id="busqueda'+cont+'" onKeyUp="autocompletar(this.name);" title="Realice la busqueda de Ingrediente" autocomplete="off" placeholder="Porción de Ingrediente" required="" aria-required="true">';
 myNewCell=myNewRow.insertCell(-1);
-myNewCell.innerHTML='<input type="text" class="form-control" name="cantidad[]'+cont+'" id="cantidad'+cont+'" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Cantidad Porción" title="Ingrese Cantidad de Porcion" required="" aria-required="true">';
+myNewCell.innerHTML='<input type="text" class="form-control" name="cantidad[]'+cont+'" id="cantidad'+cont+'" autocomplete="off" placeholder="Cantidad Porción" title="Ingrese Cantidad de Porcion" required="" aria-required="true">';
 myNewCell=myNewRow.insertCell(-1);
-myNewCell.innerHTML='<input type="text" class="form-control" name="unidadingrediente[]'+cont+'" id="unidadingrediente'+cont+'" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Medida" readonly="readonly">';
+myNewCell.innerHTML='<input type="text" class="form-control" name="unidadingrediente[]'+cont+'" id="unidadingrediente'+cont+'" autocomplete="off" placeholder="Medida" readonly="readonly">';
 indiceFila++;
 }
 

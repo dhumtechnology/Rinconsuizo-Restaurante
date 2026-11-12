@@ -22,6 +22,9 @@ include "db/core/app/model/ClientesData.php";
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <title>Carrito</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <?php if (function_exists('web_tenant_slug') && web_tenant_slug() !== '') { ?>
+  <base href="<?php echo htmlspecialchars(web_base_href()); ?>">
+  <?php } ?>
   <link rel="stylesheet" href="css/estilos.css" type="text/css" media="all">
 
 <link rel="stylesheet" href="css/bos.css" type="text/css" media="all">

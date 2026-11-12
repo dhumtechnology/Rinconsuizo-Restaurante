@@ -17,6 +17,9 @@ include "db/core/app/model/CarritoData.php";
   <meta name="description" content="">
   <meta name="keywords" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <?php if (function_exists('web_tenant_slug') && web_tenant_slug() !== '') { ?>
+  <base href="<?php echo htmlspecialchars(web_base_href()); ?>">
+  <?php } ?>
   <link rel="icon" type="image/vnd.microsoft.icon" href="https://prestashopdemosite.com/theme/at_galvatron/demo/img/favicon.ico?1582011589">
   <link rel="shortcut icon" type="image/x-icon" href="https://prestashopdemosite.com/theme/at_galvatron/demo/img/favicon.ico?1582011589">
   <link rel="stylesheet" href="css/estilos.css" type="text/css" media="all">

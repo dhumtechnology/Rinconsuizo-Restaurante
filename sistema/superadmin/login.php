@@ -48,8 +48,7 @@ if (isset($_POST['btn-login']) || (isset($_POST['usuario']) && isset($_POST['pas
         <input type="hidden" name="login_mode" value="superadmin">
         <div id="error"></div>
         <label for="usuario">Usuario</label>
-        <input type="text" class="form-control" name="usuario" id="usuario" autocomplete="username" required
-               onKeyUp="this.value=this.value.toUpperCase();" placeholder="SUPERADMIN">
+        <input type="text" class="form-control" name="usuario" id="usuario" autocomplete="username" required placeholder="SUPERADMIN">
         <label for="password">Contraseña</label>
         <div class="sa-pass-wrap">
           <input type="password" class="form-control" name="password" id="password" autocomplete="current-password" required>

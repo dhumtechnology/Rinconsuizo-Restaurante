@@ -1,7 +1,10 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador") {
+require_once("class/class.php");
+if (!isset($_SESSION['acceso'])) {
+	echo '<script type="text/javascript">alert("NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\\nDEBERA DE INICIAR SESION");document.location.href="logout.php";</script>';
+	exit;
+}
+pos_require_administrador_pos("Solo el Administrador puede gestionar productos.", 'productos.php');
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -21,6 +24,15 @@ elseif(isset($_POST['btn-update']))
 {
 $reg = $tra->ActualizarProductos();
 exit;
+}
+
+$reg = null;
+if (isset($_GET['codproducto'])) {
+	$reg = $tra->ProductosPorId();
+	if (empty($reg)) {
+		pos_redirect_edit_not_found('productos.php');
+		exit;
+	}
 }
 ?>
 <!DOCTYPE html>
@@ -44,7 +56,7 @@ exit;
 <!-- Custom file upload -->
 <script src="assets/plugins/fileupload/bootstrap-fileupload.min.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->
@@ -244,9 +256,7 @@ exit;
 </div>
 </div>
       
-<?php  if (isset($_GET['codproducto'])) {
-      
-      $reg = $tra->ProductosPorId(); ?>
+<?php  if (!empty($reg)) { ?>
       
 <form class="form" method="post"  action="#" name="updateproducto" id="updateproducto" data-id="<?php echo $reg[0]["codalmacen"] ?>" enctype="multipart/form-data" onSubmit="asigna()">       
     <?php } else { ?>
@@ -274,14 +284,14 @@ exit;
                  <div id="nroproducto"><input type="hidden" name="codproceso" id="codproceso" <?php if (isset($reg[0]['codalmacen'])) { ?> value="" <?php } else { ?>  value="<?php echo GenerateRandomString(); ?>" <?php } ?>></div>
 <input type="hidden" name="codalmacen" id="codalmacen" <?php if (isset($reg[0]['codalmacen'])) { ?> value="<?php echo $reg[0]['codalmacen']; ?>"<?php } ?>>
 
-<div id="codigoproducto"><input type="text" class="form-control" name="codproducto" id="codproducto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Código de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo htmlspecialchars($tra->CodigoProducto(), ENT_QUOTES, 'UTF-8'); ?>" <?php } ?> required="" aria-required="true"></div>
+<div id="codigoproducto"><input type="text" class="form-control" name="codproducto" id="codproducto" autocomplete="off" placeholder="Ingrese Código de Producto" <?php if (isset($reg[0]['codproducto'])) { ?> value="<?php echo $reg[0]['codproducto']; ?>" readonly="readonly" <?php } else { ?>  value="<?php echo htmlspecialchars($tra->CodigoProducto(), ENT_QUOTES, 'UTF-8'); ?>" <?php } ?> required="" aria-required="true"></div>
                               </div> 
                         </div>
 															
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
     <label class="control-label">Nombre de Producto: <span class="symbol required"></span></label>
-                                  <input type="text" class="form-control" name="producto" id="producto" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Nombre de Producto" <?php if (isset($reg[0]['producto'])) { ?> value="<?php echo $reg[0]['producto']; ?>"<?php } ?> required="" aria-required="true">
+                                  <input type="text" class="form-control" name="producto" id="producto" autocomplete="off" placeholder="Ingrese Nombre de Producto" <?php if (isset($reg[0]['producto'])) { ?> value="<?php echo $reg[0]['producto']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i> 
                               </div> 
                         </div> 
@@ -322,7 +332,7 @@ exit;
               <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
         <label class="control-label">Precio de Compra: <span class="symbol required"></span></label>
-<input class="form-control " type="text" name="preciocompra" id="preciocompra" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Precio de Compra" <?php if (isset($reg[0]['preciocompra'])) { ?> value="<?php echo $reg[0]['preciocompra']; ?>"<?php } ?>>
+<input class="form-control " type="text" name="preciocompra" id="preciocompra" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Precio de Compra" <?php if (isset($reg[0]['preciocompra'])) { ?> value="<?php echo $reg[0]['preciocompra']; ?>"<?php } ?>>
                         <i class="fa fa-money form-control-feedback"></i> 
                               </div> 
                         </div> 
@@ -338,7 +348,7 @@ exit;
 							<div class="col-md-4"> 
                   <div class="form-group has-feedback"> 
 <label class="control-label">Cantidad o Existencia: <span class="symbol required"></span></label>
-<input class="form-control " type="text" name="existencia" id="existencia" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Cantidad o Existencia de Producto" <?php if (isset($reg[0]['existencia'])) { ?> value="<?php echo $reg[0]['existencia']; ?>"<?php } ?> required="" aria-required="true">
+<input class="form-control " type="text" name="existencia" id="existencia" autocomplete="off" placeholder="Ingrese Cantidad o Existencia de Producto" <?php if (isset($reg[0]['existencia'])) { ?> value="<?php echo $reg[0]['existencia']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-pencil form-control-feedback"></i>
                               </div> 
                         </div> 	
@@ -349,7 +359,7 @@ exit;
                         <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
                           <label class="control-label">Stock Minimo: </label>
-<input type="text" class="form-control" name="stockminimo" id="stockminimo" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Stock Minimo de Producto" <?php if (isset($reg[0]['stockminimo'])) { ?> value="<?php echo $reg[0]['stockminimo']; ?>"<?php } ?> required="" aria-required="true">
+<input type="text" class="form-control" name="stockminimo" id="stockminimo" autocomplete="off" placeholder="Ingrese Stock Minimo de Producto" <?php if (isset($reg[0]['stockminimo'])) { ?> value="<?php echo $reg[0]['stockminimo']; ?>"<?php } else { ?> value="0" <?php } ?> aria-required="false">
                         <i class="fa fa-map-marker form-control-feedback"></i>
                               </div> 
                         </div>
@@ -377,7 +387,7 @@ exit;
               <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
             <label class="control-label">Descuento %: <span class="symbol required"></span></label>
-  <input class="form-control" type="text" name="descproducto" id="descproducto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Dscuento de Producto" <?php if (isset($reg[0]['descproducto'])) { ?> value="<?php echo $reg[0]['descproducto']; ?>" <?php } else { ?> value="0.00" <?php } ?> tabindex="13" required="" aria-required="true">
+  <input class="form-control" type="text" name="descproducto" id="descproducto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Dscuento de Producto" <?php if (isset($reg[0]['descproducto'])) { ?> value="<?php echo $reg[0]['descproducto']; ?>" <?php } else { ?> value="0.00" <?php } ?> tabindex="13" required="" aria-required="true">
                         <i class="fa fa-money form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -389,7 +399,7 @@ exit;
                                <div class="form-group has-feedback"> 
           <label class="control-label">Código de Barra: </label>
 <?php if (isset($reg[0]['codigobarra'])) { ?>
-<input type="text" class="form-control" name="codigobarra" id="codigobarra" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Código de Barra" value="<?php echo htmlspecialchars($reg[0]['codigobarra']); ?>" tabindex="10">
+<input type="text" class="form-control" name="codigobarra" id="codigobarra" autocomplete="off" placeholder="Código de Barra" value="<?php echo htmlspecialchars($reg[0]['codigobarra']); ?>" tabindex="10">
 <?php } else { ?>
 <input type="text" class="form-control" name="codigobarra" id="codigobarra" autocomplete="off" placeholder="Se genera automáticamente" value="<?php echo htmlspecialchars($tra->GenerarCodigoBarraUnico()); ?>" tabindex="10" readonly="readonly">
 <?php } ?>
@@ -461,7 +471,7 @@ exit;
 <option value="NO" <?php if (!(strcmp('NO', $reg[0]['favorito']))) {echo "selected=\"selected\"";} ?>>NO</option>
                   </select>  
                 <?php } else { ?>
-                <select name="favorito" id="statusproducto" class="form-control" required="" aria-required="true">
+                <select name="favorito" id="favorito" class="form-control" required="" aria-required="true">
                         <option value="">SELECCIONE</option>
                         <option value="SI">SI</option>
                         <option value="NO">NO</option>
@@ -529,7 +539,7 @@ for($i=0;$i<sizeof($busq);$i++){
                     <tr>
 <td data-priority="1"><?php echo $a++; ?></td>
 <td data-priority="2"><input type="hidden" name="codingrediente[]" id="codingrediente" value="<?php echo $busq[$i]["codingrediente"]; ?>"><?php echo $busq[$i]["nomingrediente"]; ?></td>
-<td data-priority="3"><input type="text" class="form-control" name="cantidad[]" id="cantidad" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Cantidad Porción" value="<?php echo $busq[$i]["cantracion"]; ?>" title="Ingrese Cantidad" required="" aria-required="true"></td>
+<td data-priority="3"><input type="text" class="form-control" name="cantidad[]" id="cantidad" autocomplete="off" placeholder="Cantidad Porción" value="<?php echo $busq[$i]["cantracion"]; ?>" title="Ingrese Cantidad" required="" aria-required="true"></td>
 <td data-priority="5"><?php echo $busq[$i]["cantingrediente"]." ".$busq[$i]["unidadingrediente"]; ?></td>
 <td data-priority="6"><?php echo "<strong>".$config[0]['simbolo']."</strong>".number_format($busq[$i]["costoingrediente"], 2, '.', ','); ?></td>
 <td data-priority="7"><center><a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Ingrediente" onClick="EliminaIngrediente('<?php echo base64_encode($busq[$i]['codproducto']) ?>','<?php echo base64_encode($busq[$i]['codingrediente']) ?>','<?php echo base64_encode("ELIMINAINGREDIENTES") ?>')"><i class="fa fa-trash-o"></i></a></center></td>
@@ -583,7 +593,7 @@ for($i=0;$i<sizeof($busq);$i++){
         <div class="col-md-4">         
           <div class="form-group has-feedback"> 
         <label class="control-label">Nombre de Ingrediente: </label> 
-<input type="hidden" name="codingrediente[]" id="codingrediente"><input type="text" class="form-control" name="busqueda[]" id="busqueda" onKeyUp="this.value=this.value.toUpperCase(); autocompletar(this.name);" autocomplete="off" placeholder="Porción de Ingrediente">
+<input type="hidden" name="codingrediente[]" id="codingrediente"><input type="text" class="form-control" name="busqueda[]" id="busqueda" onKeyUp="autocompletar(this.name);" autocomplete="off" placeholder="Porción de Ingrediente">
                   <i class="fa fa-pencil form-control-feedback"></i>
                   </div> 
            </div>
@@ -591,7 +601,7 @@ for($i=0;$i<sizeof($busq);$i++){
          <div class="col-md-4">         
           <div class="form-group has-feedback"> 
         <label class="control-label">Cantidad de Porción: </label> 
-<input type="text" class="form-control" name="cantidad[]" id="cantidad1" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Cantidad Porción">
+<input type="text" class="form-control" name="cantidad[]" id="cantidad1" autocomplete="off" placeholder="Cantidad Porción">
                   <i class="fa fa-pencil form-control-feedback"></i>
                   </div> 
            </div>
@@ -599,7 +609,7 @@ for($i=0;$i<sizeof($busq);$i++){
          <div class="col-md-4">         
           <div class="form-group has-feedback"> 
         <label class="control-label">Unidad de Medida: </label> 
-<input type="text" class="form-control" name="unidadingrediente[]" id="unidadingrediente" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Medida" readonly="readonly">
+<input type="text" class="form-control" name="unidadingrediente[]" id="unidadingrediente" autocomplete="off" placeholder="Medida" readonly="readonly">
                   <i class="fa fa-pencil form-control-feedback"></i>
                   </div> 
            </div>
@@ -668,7 +678,7 @@ var indiceFila=1;
 myNewRow = document.getElementById('tabla').insertRow(-1);
 myNewRow.id=indiceFila;
 myNewCell=myNewRow.insertCell(-1);
-myNewCell.innerHTML='<div class="col-md-4"><div class="form-group has-feedback"><label class="control-label">Nombre de Ingrediente: <span class="symbol required"></span></label><input type="hidden" name="codingrediente[]'+cont+'" id="codingrediente'+cont+'"><input type="text" class="form-control" name="busqueda[]'+cont+'" id="busqueda'+cont+'" onKeyUp="this.value=this.value.toUpperCase(); autocompletar(this.name);" title="Realice la busqueda de Ingrediente" autocomplete="off" placeholder="Porción de Ingrediente" required="" aria-required="true"><i class="fa fa-pencil form-control-feedback"></i></div></div><div class="col-md-4"><div class="form-group has-feedback"><label class="control-label">Cantidad de Porción: <span class="symbol required"></span></label><input type="text" class="form-control" name="cantidad[]'+cont+'" id="cantidad'+cont+'" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Cantidad Porción" title="Ingrese Cantidad de Porcion" required="" aria-required="true"><i class="fa fa-pencil form-control-feedback"></i></div></div><div class="col-md-4"><div class="form-group has-feedback"><label class="control-label">Unidad de Medida: <span class="symbol required"></span></label><input type="text" class="form-control" name="unidadingrediente[]'+cont+'" id="unidadingrediente'+cont+'" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Medida" readonly="readonly"><i class="fa fa-pencil form-control-feedback"></i></div></div>';
+myNewCell.innerHTML='<div class="col-md-4"><div class="form-group has-feedback"><label class="control-label">Nombre de Ingrediente: <span class="symbol required"></span></label><input type="hidden" name="codingrediente[]" id="codingrediente'+cont+'"><input type="text" class="form-control" name="busqueda[]" id="busqueda'+cont+'" onKeyUp="autocompletar(\''+cont+'\');" title="Realice la busqueda de Ingrediente" autocomplete="off" placeholder="Porción de Ingrediente" required="" aria-required="true"><i class="fa fa-pencil form-control-feedback"></i></div></div><div class="col-md-4"><div class="form-group has-feedback"><label class="control-label">Cantidad de Porción: <span class="symbol required"></span></label><input type="text" class="form-control" name="cantidad[]" id="cantidad'+cont+'" autocomplete="off" placeholder="Cantidad Porción" title="Ingrese Cantidad de Porcion" required="" aria-required="true"><i class="fa fa-pencil form-control-feedback"></i></div></div><div class="col-md-4"><div class="form-group has-feedback"><label class="control-label">Unidad de Medida: <span class="symbol required"></span></label><input type="text" class="form-control" name="unidadingrediente[]" id="unidadingrediente'+cont+'" autocomplete="off" placeholder="Medida" readonly="readonly"><i class="fa fa-pencil form-control-feedback"></i></div></div>';
 indiceFila++;
 }
 
@@ -685,20 +695,16 @@ function borrar() {
 ////////////FUNCION ASIGNA VALOR DE CONT PARA EL FOR DE MOSTRAR DATOS MP-MOD-TT////////
 function asigna()
 {
-  valor=document.form.var_cont.value=cont;
+  var form = document.getElementById('productos') || document.getElementById('updateproducto');
+  if (form) {
+    var vc = form.querySelector('input[name="var_cont"]');
+    if (vc) {
+      vc.value = cont;
+    }
+  }
+  return true;
 }
 </script>
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 

@@ -1,7 +1,10 @@
 <?php
-require_once("class/class.php"); 
-if(isset($_SESSION['acceso'])) { 
-if ($_SESSION['acceso'] == "administrador") {
+require_once("class/class.php");
+if (!isset($_SESSION['acceso'])) {
+	echo '<script type="text/javascript">alert("NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\\nDEBERA DE INICIAR SESION");document.location.href="logout.php";</script>';
+	exit;
+}
+pos_require_administrador_pos("Solo el Administrador puede gestionar usuarios.");
 
 $con = new Login();
 $con = $con->ContarRegistros();
@@ -30,7 +33,7 @@ $reg = $tra->ListarUsuarios();
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <!-- script jquery -->
 
 </head>
@@ -255,7 +258,7 @@ $reg = $tra->ListarUsuarios();
 <button type="button" class="btn btn-default waves-effect waves-light"><span class="fa fa-cog"></span> Procesos</button>
         <button type="button" class="btn btn-default dropdown-toggle waves-effect waves-light" data-toggle="dropdown" aria-expanded="false"><i class="caret"></i></button>
             <ul class="dropdown-menu" role="menu">
-<li><a href="forusuario" data-toggle="tooltip" data-placement="left" title="" data-original-title="Nuevo Usuario"><i class="fa fa-plus"></i> Nuevo</a></li>
+<li><a href="forusuario.php" data-toggle="tooltip" data-placement="left" title="" data-original-title="Nuevo Usuario"><i class="fa fa-plus"></i> Nuevo</a></li>
 <li><a href="reportepdf?tipo=<?php echo base64_encode("USUARIOS") ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-placement="left" title="" data-original-title="Listado (Pdf)"><i class="fa fa-file-pdf-o"></i> Listado (Pdf)</a></li>
 <li><a href="reporteexcel?tipo=<?php echo base64_encode("USUARIOS") ?>" data-toggle="tooltip" data-placement="left" title="" data-original-title="Listado (Excel)"><i class="fa fa-file-excel-o"></i> Listado (Excel)</a></li>
             </ul>
@@ -297,7 +300,7 @@ $reg = $tra->ListarUsuarios();
 		case 4:
 		echo "<div class='alert alert-warning'>";
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-		echo "<center><span class='fa fa-info-circle'></span> NO TIENE PERMISO PARA EDITAR ESE USUARIO </center>";
+		echo "<center><span class='fa fa-info-circle'></span> NO SE PUDO CARGAR EL USUARIO PARA EDITAR (NO EXISTE O NO PERTENECE A ESTE RESTAURANTE).</center>";
 		echo "</div>";
 		break;
 		
@@ -339,15 +342,12 @@ for($i=0;$i<sizeof($reg);$i++){
 
 <?php
 $esPropio = isset($_SESSION['codigo']) && (int) $reg[$i]['codigo'] === (int) $_SESSION['codigo'];
-$puedeEditar = ($reg[$i]['nivel'] !== 'ADMINISTRADOR') || $esPropio;
 $puedeEliminar = ($reg[$i]['nivel'] !== 'ADMINISTRADOR') && !$esPropio;
-if ($puedeEditar) { ?>
-<a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Usuario" onClick="actualizar('forusuario?codigo=<?php echo base64_encode($reg[$i]["codigo"]) ?>')"><i class="fa fa-pencil"></i></a>
-<?php } else { ?>
-<a href="#" class="btn btn-primary btn-xs disabled" style="pointer-events:none;opacity:.45;" data-toggle="tooltip" data-placement="left" title="" data-original-title="No se puede editar otro administrador"><i class="fa fa-pencil"></i></a>
-<?php }
+?>
+<a href="forusuario.php?codigo=<?php echo rawurlencode(base64_encode((string) $reg[$i]['codigo'])); ?>" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Editar Usuario" onClick="return confirm('ESTA SEGURO DE ACTUALIZAR ESTE REGISTRO ?');"><i class="fa fa-pencil"></i></a>
+<?php
 if ($puedeEliminar) { ?>
-<a href="#" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Usuario" onClick="eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codigo=<?php echo base64_encode($reg[$i]["codigo"]) ?>&tipo=<?php echo base64_encode("USUARIOS") ?>')"><i class="fa fa-trash-o"></i></a>
+<a href="javascript:void(0)" class="btn btn-danger btn-xs" data-toggle="tooltip" data-placement="left" title="" data-original-title="Eliminar Usuario" onClick="return eliminar('eliminar?<?php echo base64_encode('eliminar'); ?>&codigo=<?php echo base64_encode($reg[$i]["codigo"]) ?>&tipo=<?php echo base64_encode("USUARIOS") ?>')"><i class="fa fa-trash-o"></i></a>
 <?php } else { ?>
 <a href="#" class="btn btn-danger btn-xs disabled" style="pointer-events:none;opacity:.45;" data-toggle="tooltip" data-placement="left" title="" data-original-title="<?php echo $esPropio ? 'No puede eliminar su propia cuenta' : 'No se puede eliminar un administrador'; ?>"><i class="fa fa-trash-o"></i></a>
 <?php } ?></td>
@@ -448,14 +448,3 @@ if ($puedeEliminar) { ?>
 
    </body>
    </html>
-<?php } else { ?>   
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO')  
-        document.location.href='panel'   
-        </script> 
-<?php } } else { ?>
-        <script type='text/javascript' language='javascript'>
-        alert('NO TIENES PERMISO PARA ACCEDER AL SISTEMA.\nDEBERA DE INICIAR SESION')  
-        document.location.href='logout'  
-        </script> 
-<?php } ?> 

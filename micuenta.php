@@ -7,6 +7,13 @@ include "db/core/app/model/ProductoData.php";
 include "db/core/app/model/CarritoData.php";
 
 include "db/core/app/model/ClientesData.php";
+
+if (!empty($_SESSION['id_cliente'])) {
+  $__cliSes = ClientesData::getById($_SESSION['id_cliente']);
+  if (!$__cliSes) {
+    unset($_SESSION['id_cliente'], $_SESSION['loggedin'], $_SESSION['username']);
+  }
+}
 ?>
 <!doctype html>
 <html lang="es"  class="default" >
@@ -16,6 +23,9 @@ include "db/core/app/model/ClientesData.php";
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <title>Carrito</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <?php if (function_exists('web_tenant_slug') && web_tenant_slug() !== '') { ?>
+  <base href="<?php echo htmlspecialchars(web_base_href()); ?>">
+  <?php } ?>
   <link rel="stylesheet" href="css/estilos.css" type="text/css" media="all">
 
 <link rel="stylesheet" href="css/bos.css" type="text/css" media="all">
@@ -433,6 +443,9 @@ include "db/core/app/model/ClientesData.php";
                 <h1>Ingrese a su cuenta</h1>
               </header>
             <section id="content" class="page-content card card-block">
+            <?php if (isset($_GET['login']) && $_GET['login'] === 'error') { ?>
+            <div class="alert alert-danger">Email o contraseña incorrectos. Verifique e intente de nuevo.</div>
+            <?php } ?>
             <section class="login-form">
             <form id="login-form" action="procesarlogin.php" method="post">
 

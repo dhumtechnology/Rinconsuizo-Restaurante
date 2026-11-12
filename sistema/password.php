@@ -34,7 +34,7 @@ exit;
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script> 
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/jscript" language="javascript" src="assets/script/script2.js"></script>
+<script type="text/jscript" language="javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->  	
@@ -247,7 +247,7 @@ exit;
                               <div class="form-group has-feedback"> 
                   <label class="control-label">Cédula de Usuario: <span class="symbol required"></span></label> 
  <input name="codigo" type="hidden" value="<?php echo $_SESSION['codigo']; ?>" id="codigo" />
- <input name="cedula" class="form-control" type="text" id="cedula" onKeyUp="this.value=this.value.toUpperCase();" placeholder="Ingrese Cédula de Usuario" autocomplete="off" value="<?php echo $_SESSION['cedula']; ?>" readonly="readonly"/>
+ <input name="cedula" class="form-control" type="text" id="cedula" placeholder="Ingrese Cédula de Usuario" autocomplete="off" value="<?php echo $_SESSION['cedula']; ?>" readonly="readonly"/>
                         <i class="fa fa-pencil form-control-feedback"></i>   
                                                                 </div> 
                                                             </div>
@@ -255,7 +255,7 @@ exit;
 							<div class="col-md-3"> 
                               <div class="form-group has-feedback"> 
                    <label class="control-label">Usuarios de Acceso: <span class="symbol required"></span></label> 
-<input name="usuario" class="form-control" type="text" id="usuario" onKeyUp="this.value=this.value.toUpperCase();" placeholder="Ingrese Usuario de Acceso" autocomplete="off" value="<?php echo $_SESSION['usuario']; ?>" required="" aria-required="true"/>
+<input name="usuario" class="form-control" type="text" id="usuario" placeholder="Ingrese Usuario de Acceso" autocomplete="off" value="<?php echo $_SESSION['usuario']; ?>" required="" aria-required="true"/>
                         <i class="fa fa-user form-control-feedback"></i>   
                                                                 </div> 
                                                             </div>	

@@ -39,7 +39,7 @@ exit;
 <!-- script jquery -->
 <script src="assets/js/jquery.min.js"></script>
 <script type="text/javascript" src="assets/script/titulos.js"></script>
-<script type="text/javascript" src="assets/script/script2.js"></script>
+<script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/validation.min.js"></script>
 <script type="text/javascript" src="assets/script/script.js"></script>
 <!-- script jquery -->	
@@ -266,7 +266,7 @@ exit;
                  
           <?php if (isset($reg[0]['tipomovimientocaja'])) { ?>
 
-<input type="text" class="form-control" name="tipomovimientocaja" id="tipomovimientocaja" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Tipo de Movimiento" value="<?php echo $tipo = ( $reg[0]['tipomovimientocaja'] == 'INGRESO' ? $reg[0]['tipomovimientocaja'] : $reg[0]['tipomovimientocaja']); ?>" readonly="readonly">
+<input type="text" class="form-control" name="tipomovimientocaja" id="tipomovimientocaja" autocomplete="off" placeholder="Tipo de Movimiento" value="<?php echo $tipo = ( $reg[0]['tipomovimientocaja'] == 'INGRESO' ? $reg[0]['tipomovimientocaja'] : $reg[0]['tipomovimientocaja']); ?>" readonly="readonly">
                         <i class="fa fa-folder-open-o form-control-feedback"></i>
 
                              <?php } else { ?> 
@@ -287,7 +287,7 @@ exit;
         <div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
       <label class="control-label">Caja de Venta: <span class="symbol required"></span></label>
- <input type="hidden" name="codcaja" id="codcaja" value="<?php echo $_SESSION["codcaja"]; ?>"><input type="text" class="form-control" name="nrocaja" id="nrocaja" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" value="<?php echo $_SESSION["nrocaja"].": ".$_SESSION["nombrecaja"]; ?>" readonly="readonly">
+ <input type="hidden" name="codcaja" id="codcaja" value="<?php echo $_SESSION["codcaja"]; ?>"><input type="text" class="form-control" name="nrocaja" id="nrocaja" autocomplete="off" value="<?php echo $_SESSION["nrocaja"].": ".$_SESSION["nombrecaja"]; ?>" readonly="readonly">
                         <i class="fa fa-desktop form-control-feedback"></i>  
                               </div> 
                         </div>  
@@ -328,7 +328,7 @@ exit;
     <label class="control-label">Monto Movimiento: <span class="symbol required"></span></label> 
 <div id="cargamovimientoinput"><input type="hidden" name="montomovimientocajadb" id="montomovimientocajadb" <?php if (isset($reg[0]['montomovimientocaja'])) { ?> value="<?php echo $reg[0]['montomovimientocaja']; ?>"<?php } ?>></div>
 
-  <input class="form-control" type="text" name="montomovimientocaja" id="montomovimientocaja" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Monto de Movimiento" <?php if (isset($reg[0]['montomovimientocaja'])) { ?> value="<?php echo $reg[0]['montomovimientocaja']; ?>"<?php } ?> required="" aria-required="true">
+  <input class="form-control" type="text" name="montomovimientocaja" id="montomovimientocaja" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Monto de Movimiento" <?php if (isset($reg[0]['montomovimientocaja'])) { ?> value="<?php echo $reg[0]['montomovimientocaja']; ?>"<?php } ?> required="" aria-required="true">
                         <i class="fa fa-money form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -370,7 +370,7 @@ exit;
                             <div class="col-md-4"> 
                               <div class="form-group has-feedback"> 
 <label class="control-label">Descripción de Movimiento: <span class="symbol required"></span></label> 
-<textarea name="descripcionmovimientocaja" class="form-control" id="descripcionmovimientocaja" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Descripción de Movimiento" required="" aria-required="true"><?php if (isset($reg[0]['descripcionmovimientocaja'])) { ?><?php echo $reg[0]['descripcionmovimientocaja']; ?><?php } ?></textarea>
+<textarea name="descripcionmovimientocaja" class="form-control" id="descripcionmovimientocaja" autocomplete="off" placeholder="Ingrese Descripción de Movimiento" required="" aria-required="true"><?php if (isset($reg[0]['descripcionmovimientocaja'])) { ?><?php echo $reg[0]['descripcionmovimientocaja']; ?><?php } ?></textarea>
                         <i class="fa fa-comments form-control-feedback"></i> 
                               </div> 
                         </div>
@@ -378,7 +378,7 @@ exit;
 							<div class="col-md-4"> 
                                <div class="form-group has-feedback"> 
     <label class="control-label">Fecha de Movimiento: <span class="symbol required"></span></label> 
-    <input type="text" class="form-control" name="fecharegistro" id="fecharegistro" onKeyUp="this.value=this.value.toUpperCase();" autocomplete="off" placeholder="Ingrese Fecha de Movimiento" <?php if (isset($reg[0]['fechamovimientocaja'])) { ?> value="<?php echo $reg[0]['fechamovimientocaja']; ?>"<?php } ?> readonly="readonly">
+    <input type="text" class="form-control" name="fecharegistro" id="fecharegistro" autocomplete="off" placeholder="Ingrese Fecha de Movimiento" <?php if (isset($reg[0]['fechamovimientocaja'])) { ?> value="<?php echo $reg[0]['fechamovimientocaja']; ?>"<?php } ?> readonly="readonly">
                         <i class="fa fa-calendar form-control-feedback"></i> 
                               </div> 
                         </div> 	
