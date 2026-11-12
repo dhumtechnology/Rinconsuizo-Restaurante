@@ -4787,20 +4787,20 @@ $('document').ready(function()
 			montopagado: {
 				required: {
 					depends: function() {
-						return !$('#pagomixto').is(':checked');
+						return $('#montopagado').is(':enabled');
 					}
 				}
 			},
 			montodevuelto: {
 				required: {
 					depends: function() {
-						return !$('#pagomixto').is(':checked');
+						return $('#montodevuelto').is(':enabled');
 					}
 				}
 			},
 			observaciones: {
 				required: function() {
-					return window.ventasAccionSubmit !== 'btn-cerrar';
+					return window.ventasAccionSubmit === 'btn-venta';
 				}
 			},
 	   },
@@ -4819,6 +4819,11 @@ $('document').ready(function()
        });  
 	   /* validation */
 	   
+	   function resetVentasBotonesPedido() {
+		   $("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
+		   $("#btn-agregapedidos").html('<span class="fa fa-save"></span> Confirmar Pedido');
+	   }
+
 	   /* form submit */
 	  function submitForm()
 	   {		
@@ -4919,9 +4924,7 @@ $('document').ready(function()
 											
 											
 	$("#error").html('<center><div class="alert alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LOS CAMPOS NO PUEDEN IR VACIOS, VERIFIQUE NUEVAMENTE POR FAVOR !</div></center>');
-											
-					$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
-										
+					resetVentasBotonesPedido();
 									});
 																				
 								}
@@ -4932,9 +4935,7 @@ $('document').ready(function()
 											
 											
 	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO HA AGREGADO PRODUCTOS PARA CONFIRMAR PEDIDO, VERIFIQUE POR FAVOR !</div></center>');
-											
-					$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
-										
+					resetVentasBotonesPedido();
 									});
 								}
 								else if(data=='3')
@@ -4944,9 +4945,7 @@ $('document').ready(function()
 											
 											
 	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> NO HA AGREGADO PRODUCTOS PARA CONFIRMAR PEDIDO, VERIFIQUE POR FAVOR !</div></center>');
-											
-					$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
-										
+					resetVentasBotonesPedido();
 									});
 								}
 								
@@ -4957,9 +4956,7 @@ $('document').ready(function()
 											
 											
 	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> LA CANTIDAD SOLICITADA DE PRODUCTOS NO PUEDE SER MAYOR QUE LA EXISTENCIA EN ALMACEN, VERIFIQUE DE NUEVO POR FAVOR !</div></center>');
-											
-					$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
-										
+					resetVentasBotonesPedido();
 									});
 								}
 								else if(data=='8')
@@ -4968,7 +4965,7 @@ $('document').ready(function()
 	$("#error").html('<center><div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span class="fa fa-info-circle"></span> ESTA MESA YA TIENE UN PEDIDO ACTIVO. AGREGUE SOLO LOS PRODUCTOS NUEVOS Y USE EL BOT&Oacute;N CONFIRMAR PEDIDO (MODO ADICIONAL).</div></center>');
 					$("#btn-venta").hide();
 					$("#btn-agregapedidos").show();
-					$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
+					resetVentasBotonesPedido();
 									});
 								}
 								else if(data=='9')
@@ -5087,13 +5084,19 @@ $('document').ready(function()
 		    });
 		}
 		setTimeout(function() { $("#error").html(""); }, 15000);
-		$("#btn-venta").html('<span class="fa fa-save"></span> Confirmar Pedido');
-		$("#btn-agregapedidos").html('<span class="fa fa-save"></span> Confirmar Pedido');
+		resetVentasBotonesPedido();
 		$("#btn-cerrar").html('<span class="fa fa-save"></span> Cerrar Mesa');
 						
 									});
 								}
-						   }
+						   },
+				error: function() {
+					$("#error").fadeIn(400, function() {
+						$("#error").html('<center><div class="alert alert-danger"><span class="fa fa-info-circle"></span> No se pudo confirmar el pedido. Revise su conexi&oacute;n e intente de nuevo.</div></center>');
+					});
+					resetVentasBotonesPedido();
+					$("#btn-cerrar").html('<span class="fa fa-save"></span> Cerrar Mesa');
+				}
 				});
 				return false;
 		         }

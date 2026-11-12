@@ -11,14 +11,12 @@ include "db/core/app/model/ClientesData.php";
 require_once __DIR__ . '/mail/enviar_correo.php';
 
 if (empty($_SESSION['id_cliente'])) {
-    echo "<script>alert('Debe iniciar sesión para reservar.');window.location='micuenta.php';</script>";
-    exit;
+    rs_alert_go('Debe iniciar sesión para reservar.', 'micuenta.php');
 }
 
 $cliente = ClientesData::getById($_SESSION['id_cliente']);
 if (!$cliente || empty($cliente->codcliente)) {
-    echo "<script>alert('No se encontró su cuenta. Inicie sesión nuevamente.');window.location='micuenta.php';</script>";
-    exit;
+    rs_alert_go('No se encontró su cuenta. Inicie sesión nuevamente.', 'micuenta.php');
 }
 
 $id_cliente = $cliente->codcliente;
@@ -37,13 +35,11 @@ if ($telefono === '' && !empty($cliente->tlfcliente)) {
 }
 
 if ($cantidad < 1 || $fecha === '' || $hora === '') {
-    echo "<script>alert('Complete cantidad, fecha y hora de la reserva.');window.location='reserva.php';</script>";
-    exit;
+    rs_alert_go('Complete cantidad, fecha y hora de la reserva.', 'reserva.php');
 }
 
 if ($telefono === '') {
-    echo "<script>alert('Ingrese un teléfono de contacto para la reserva.');window.location='reserva.php';</script>";
-    exit;
+    rs_alert_go('Ingrese un teléfono de contacto para la reserva.', 'reserva.php');
 }
 
 // Normalizar fecha/hora a datetime MySQL
@@ -51,8 +47,7 @@ $horaNorm = strlen($hora) === 5 ? ($hora . ':00') : $hora;
 $fechaHora = $fecha . ' ' . $horaNorm;
 $ts = strtotime($fechaHora);
 if ($ts === false) {
-    echo "<script>alert('Fecha u hora inválida. Verifique e intente de nuevo.');window.location='reserva.php';</script>";
-    exit;
+    rs_alert_go('Fecha u hora inválida. Verifique e intente de nuevo.', 'reserva.php');
 }
 $fechaHora = date('Y-m-d H:i:s', $ts);
 
@@ -65,8 +60,7 @@ $reserva->telefono = $telefono;
 $okAdd = $reserva->add();
 
 if (!$okAdd) {
-    echo "<script>alert('No se pudo registrar la reserva. Intente de nuevo o contacte al restaurante.');window.location='reserva.php';</script>";
-    exit;
+    rs_alert_go('No se pudo registrar la reserva. Intente de nuevo o contacte al restaurante.', 'reserva.php');
 }
 
 // Actualizar datos del cliente si cambiaron
@@ -111,13 +105,11 @@ if ($para !== '') {
     if (!$envio['ok']) {
         error_log('Reserva web: fallo envío correo a ' . $para . ' — ' . $envio['error']);
         $msg = 'Su reserva fue registrada correctamente, pero no se pudo enviar el correo de confirmación. Revise spam o contacte al restaurante.';
-        echo "<script>alert(" . json_encode($msg, JSON_UNESCAPED_UNICODE) . ");window.location='gracias.php?tipo=reserva';</script>";
-        exit;
+        rs_alert_go($msg, 'gracias.php?tipo=reserva');
     }
 } else {
     $msg = 'Su reserva fue registrada. No se envió correo porque no hay un email válido en su cuenta.';
-    echo "<script>alert(" . json_encode($msg, JSON_UNESCAPED_UNICODE) . ");window.location='gracias.php?tipo=reserva';</script>";
-    exit;
+    rs_alert_go($msg, 'gracias.php?tipo=reserva');
 }
 
 header('Location: gracias.php?tipo=reserva');

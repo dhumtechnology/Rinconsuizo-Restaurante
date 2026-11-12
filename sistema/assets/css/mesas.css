@@ -1,3 +1,27 @@
+/* Pestañas de salas: ancho repartido desde el primer frame (sin esperar a waves.js) */
+#salas-mesas .mesas-salas-tabs,
+#salas-mesas-cocinero .mesas-salas-tabs {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+#salas-mesas .mesas-salas-tabs > li,
+#salas-mesas-cocinero .mesas-salas-tabs > li {
+    display: table-cell;
+    float: none;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#salas-mesas .mesas-salas-tabs > li > a,
+#salas-mesas-cocinero .mesas-salas-tabs > li > a {
+    margin-right: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Cuadrícula de mesas: baldosas cuadradas, nombre centrado, hover táctil */
 .mesas-grid,
 #salas-mesas .users-list,

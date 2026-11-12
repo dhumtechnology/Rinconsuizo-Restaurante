@@ -14,9 +14,7 @@ $codigo = ClientesData::getById($idCliente);
 if ($codigo && isset($codigo->codigo) && isset($_POST['codigo']) && $codigo->codigo == $_POST['codigo']) {
 	$codigo->estado = "1";
 	$codigo->updateCantidad();
-	echo '<script>alert(' . json_encode('Gracias por confirmar', JSON_UNESCAPED_UNICODE) . ');window.location=' . json_encode($dest) . ';</script>';
-	exit;
+	rs_alert_go('Gracias por confirmar', $dest);
 }
 
-echo '<script>alert(' . json_encode('El código brindado no es igual, verifique por favor!!', JSON_UNESCAPED_UNICODE) . ');window.location=' . json_encode($dest) . ';</script>';
-exit;
+rs_alert_go('El código brindado no es igual, verifique por favor!!', $dest);

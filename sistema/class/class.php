@@ -32,7 +32,19 @@ if (!defined('RS_BRAND_OB') && PHP_SAPI !== 'cli') {
 				return $html;
 			}
 			if (strpos($html, '</head>') === false && strpos($html, '</HEAD>') === false) {
+				if (function_exists('rs_dialog_wrap_bare_alert')) {
+					$wrapped = rs_dialog_wrap_bare_alert($html);
+					if ($wrapped !== null) {
+						return $wrapped;
+					}
+				}
 				return $html;
+			}
+			if (strpos($html, 'rs-dialog.js') === false && function_exists('rs_dialog_assets_html')) {
+				$dlg = rs_dialog_assets_html();
+				if (stripos($html, '</head>') !== false) {
+					$html = str_ireplace('</head>', $dlg . '</head>', $html);
+				}
 			}
 			if (!empty($_SESSION['acceso']) && $_SESSION['acceso'] === 'superadministrador') {
 				return $html;
@@ -141,10 +153,18 @@ class Login extends Db
 	$inactividad = 36000; // 10 horas
 
 	if (($now - $tiempo) >= $inactividad) {
+		$msgExpira = "SU SESIÓN HA EXPIRADO\nPOR FAVOR INICIE SESIÓN DE NUEVO PARA ACCEDER AL SISTEMA";
+		if (function_exists('rs_dialog_redirect')) {
+			rs_dialog_redirect($msgExpira, $logoutUrl);
+		}
 		?>					
 		<script type='text/javascript' language='javascript'>
-			alert('SU SESSION A EXPIRADO \nPOR FAVOR LOGUEESE DE NUEVO PARA ACCEDER AL SISTEMA') 
-			document.location.href=<?php echo json_encode($logoutUrl); ?>	 
+			if (window.rsAlertRedirect) {
+				rsAlertRedirect(<?php echo json_encode($msgExpira); ?>, <?php echo json_encode($logoutUrl); ?>);
+			} else {
+				alert('SU SESSION A EXPIRADO \nPOR FAVOR LOGUEESE DE NUEVO PARA ACCEDER AL SISTEMA');
+				document.location.href=<?php echo json_encode($logoutUrl); ?>;
+			}
 		</script> 
 		<?php
 		exit;
@@ -2283,31 +2303,123 @@ public function MediosPagosPorId()
 ############################### FUNCION PARA ELIMINAR MEDIOS DE PAGO ############################
 		public function EliminarMediosPagos()
 		{
-
-			$sql = " select codmediopago from ventas where codmediopago = ? ";
-			$stmt = $this->dbh->prepare($sql);
-			$stmt->execute( array(base64_decode($_GET["codmediopago"])) );
-			$num = $stmt->rowCount();
-			if($num == 0)
-			{
-
-				$sql = " delete from mediospagos where codmediopago = ? ";
-				$stmt = $this->dbh->prepare($sql);
-				$stmt->bindParam(1,$codmediopago);
-				$codmediopago = base64_decode($_GET["codmediopago"]);
-				$stmt->execute();
-
-				header("Location: mediospagos?mesage=1");
+			self::SetNames();
+			$irMediosPagos = function ($mesage) {
+				$url = (function_exists('sistema_url') ? sistema_url('mediospagos') : 'mediospagos') . '?mesage=' . (int) $mesage;
+				header('Location: ' . $url);
 				exit;
+			};
 
-			}else {
-
-				header("Location: mediospagos?mesage=2");
-				exit;
+			$codmediopago = isset($_GET['codmediopago']) ? (int) base64_decode($_GET['codmediopago']) : 0;
+			if ($codmediopago <= 0) {
+				$irMediosPagos(2);
 			}
 
+			$sqlOwn = 'SELECT codmediopago FROM mediospagos WHERE codmediopago = ? AND ' . tenantWhere('mediospagos');
+			$stmtOwn = $this->dbh->prepare($sqlOwn);
+			$stmtOwn->execute(array($codmediopago));
+			if ($stmtOwn->rowCount() === 0) {
+				$irMediosPagos(2);
+			}
+
+			$enUso = false;
+
+			$sqlV = 'SELECT 1 FROM ventas WHERE CAST(NULLIF(TRIM(formapagove), \'\') AS UNSIGNED) = ? AND ' . tenantWhere('ventas') . ' LIMIT 1';
+			$stmtV = $this->dbh->prepare($sqlV);
+			$stmtV->execute(array($codmediopago));
+			if ($stmtV->fetch(PDO::FETCH_NUM)) {
+				$enUso = true;
+			}
+
+			if (!$enUso) {
+				$sqlC = 'SELECT 1 FROM compras WHERE CAST(NULLIF(TRIM(formacompra), \'\') AS UNSIGNED) = ? AND ' . tenantWhere('compras') . ' LIMIT 1';
+				$stmtC = $this->dbh->prepare($sqlC);
+				$stmtC->execute(array($codmediopago));
+				if ($stmtC->fetch(PDO::FETCH_NUM)) {
+					$enUso = true;
+				}
+			}
+
+			if (!$enUso) {
+				$sqlM = 'SELECT 1 FROM movimientoscajas WHERE mediopagomovimientocaja = ? AND ' . tenantWhere('movimientoscajas') . ' LIMIT 1';
+				$stmtM = $this->dbh->prepare($sqlM);
+				$stmtM->execute(array($codmediopago));
+				if ($stmtM->fetch(PDO::FETCH_NUM)) {
+					$enUso = true;
+				}
+			}
+
+			if (!$enUso) {
+				try {
+					$this->AsegurarTablaPagosVenta();
+					$sqlP = 'SELECT 1 FROM pagosventa p INNER JOIN ventas v ON v.codventa = (p.codventa COLLATE utf8mb3_spanish_ci) WHERE p.codmediopago = ? AND ' . tenantWhere('v') . ' LIMIT 1';
+					$stmtP = $this->dbh->prepare($sqlP);
+					$stmtP->execute(array($codmediopago));
+					if ($stmtP->fetch(PDO::FETCH_NUM)) {
+						$enUso = true;
+					}
+				} catch (PDOException $e) {
+					$sqlP2 = 'SELECT 1 FROM pagosventa p INNER JOIN ventas v ON BINARY v.codventa = BINARY p.codventa WHERE p.codmediopago = ? AND ' . tenantWhere('v') . ' LIMIT 1';
+					$stmtP2 = $this->dbh->prepare($sqlP2);
+					$stmtP2->execute(array($codmediopago));
+					if ($stmtP2->fetch(PDO::FETCH_NUM)) {
+						$enUso = true;
+					}
+				}
+			}
+
+			if ($enUso) {
+				$irMediosPagos(2);
+			}
+
+			$sqlDel = 'DELETE FROM mediospagos WHERE codmediopago = ? AND ' . tenantWhere('mediospagos');
+			$stmtDel = $this->dbh->prepare($sqlDel);
+			$stmtDel->execute(array($codmediopago));
+
+			$irMediosPagos(1);
 		}
 ############################### FUNCION PARA ELIMINAR MEDIOS DE PAGO ############################
+
+	public function DescargarRespaldoRestaurante()
+	{
+		self::SetNames();
+		if (function_exists('tenant_enforce_or_redirect')) {
+			tenant_enforce_or_redirect();
+		}
+		require_once __DIR__ . '/tenant_backup.php';
+		$pack = rs_tenant_export_sql($this->dbh, tenantId());
+		if (empty($pack['ok'])) {
+			header('Content-Type: text/plain; charset=UTF-8');
+			echo isset($pack['error']) ? $pack['error'] : 'No se pudo generar el respaldo.';
+			exit;
+		}
+		if (!rs_tenant_backup_download_headers($pack['filename'])) {
+			echo $pack['sql'];
+			exit;
+		}
+		echo $pack['sql'];
+		exit;
+	}
+
+	/**
+	 * @return array{ok:bool,error?:string,rows?:int}
+	 */
+	public function RestaurarRespaldoRestauranteFromFile($tmpPath)
+	{
+		self::SetNames();
+		if (function_exists('tenant_enforce_or_redirect')) {
+			tenant_enforce_or_redirect();
+		}
+		require_once __DIR__ . '/tenant_backup.php';
+		if (!is_readable($tmpPath)) {
+			return array('ok' => false, 'error' => 'No se pudo leer el archivo subido.');
+		}
+		$content = file_get_contents($tmpPath);
+		if ($content === false || trim($content) === '') {
+			return array('ok' => false, 'error' => 'El archivo está vacío.');
+		}
+		return rs_tenant_restore_sql($this->dbh, tenantId(), $content);
+	}
 
 ############################### FIN DE CLASE MEDIOS DE PAGO ####################################
 
@@ -3546,7 +3658,7 @@ public function ProveedoresPorId()
         $filename = $_FILES['sel_file']['tmp_name'];
         $handle = fopen($filename, "r");
         
-        while (($data = fgetcsv($handle, 1000, ";")) !== FALSE)
+        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE)
         {
                //Insertamos los datos con los valores...
 			   
@@ -3983,7 +4095,7 @@ public function BuscarKardexIngrediente()
         $filename = $_FILES['sel_file']['tmp_name'];
         $handle = fopen($filename, "r");
         
-        while (($data = fgetcsv($handle, 1000, ";")) !== FALSE)
+        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE)
         {
                //Insertamos los datos con los valores...
 			   
@@ -8872,26 +8984,28 @@ $query = " insert into kardexingredientes values (null, ?, ?, ?, ?, ?, ?, ?, ?, 
 		$stmt->execute( array($idventaPedido));
 		$num = $stmt->rowCount();
 
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-		{
-			$p[] = $row;
+		$preciocompraiva = 0;
+		$importeiva = 0;
+		$importe2iva = 0;
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$preciocompraiva = isset($row['preciocompra']) ? (float) $row['preciocompra'] : 0;
+			$importeiva = isset($row['importe']) ? (float) $row['importe'] : 0;
+			$importe2iva = isset($row['importe2']) ? (float) $row['importe2'] : 0;
 		}
-		$preciocompraiva = $p[0]["preciocompra"];
-		$importeiva = $p[0]["importe"];
-		$importe2iva = $p[0]["importe2"];
 
 		$sql5 = "select sum(d.importe) as importe, sum(d.importe2) as importe2, sum(d.preciocompra) as preciocompra from detalleventas d inner join ventas v on v.codventa = d.codventa".$this->SqlFiltroDetallePorVenta('v', 'd')." where v.idventa = ? and d.ivaproducto = 'NO'";
 		$stmt = $this->dbh->prepare($sql5);
 		$stmt->execute( array($idventaPedido));
 		$num = $stmt->rowCount();
 
-		if($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			{
-				$pae[] = $row;
-			}
-			$preciocompra = $row["preciocompra"];
-			$importe = $row["importe"];
-			$importe2 = $row["importe2"];		
+		$preciocompra = 0;
+		$importe = 0;
+		$importe2 = 0;
+		if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$preciocompra = isset($row['preciocompra']) ? (float) $row['preciocompra'] : 0;
+			$importe = isset($row['importe']) ? (float) $row['importe'] : 0;
+			$importe2 = isset($row['importe2']) ? (float) $row['importe2'] : 0;
+		}		
 
 			$sql = " update ventas set "
 			." subtotalivasive = ?, "
@@ -10721,7 +10835,8 @@ $sql5 = "select sum(importe) as importe, sum(importe2) as importe2, sum(precioco
 
 	?>
 		<script type='text/javascript' language='javascript'>
-	    alert('EL PEDIDO DE PRODUCTOS FUE ELIMINADOS, \nDE LA MESA EXITOSAMENTE')  
+	    if (window.rsAlert) { rsAlert('EL PEDIDO DE PRODUCTOS FUE ELIMINADO DE LA MESA EXITOSAMENTE'); }
+	    else { alert('EL PEDIDO DE PRODUCTOS FUE ELIMINADOS, \nDE LA MESA EXITOSAMENTE'); }
         </script> 
 		<?php 
 			exit;
@@ -10844,7 +10959,8 @@ if($num>0) {
 
 ?>
 		<script type='text/javascript' language='javascript'>
-	    alert('LOS PEDIDOS DE PRODUCTOS HAN SIDO ELIMINADOS, \nDE LA MESA EXITOSAMENTE')  
+	    if (window.rsAlert) { rsAlert('LOS PEDIDOS DE PRODUCTOS HAN SIDO ELIMINADOS DE LA MESA EXITOSAMENTE'); }
+	    else { alert('LOS PEDIDOS DE PRODUCTOS HAN SIDO ELIMINADOS, \nDE LA MESA EXITOSAMENTE'); }
         </script> 
 		<?php 
 		exit;
@@ -11928,7 +12044,10 @@ $sql = "select
 		if ($chk->rowCount() > 0) {
 			return;
 		}
-		$base = $this->dbh->query("SELECT * FROM configuracion WHERE id_restaurante = 1 OR id = 1 LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+		$base = $this->dbh->query("SELECT * FROM configuracion WHERE id_restaurante = 0 LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+		if (!$base) {
+			$base = $this->dbh->query("SELECT * FROM configuracion WHERE id_restaurante = 1 OR id = 1 LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+		}
 		$ivac = $base ? $base['ivac'] : 18;
 		$ivav = $base ? $base['ivav'] : 18;
 		$simbolo = $base ? $base['simbolo'] : 'S/';
@@ -11964,7 +12083,10 @@ $sql = "select
 		if ($row && (int) $row['c'] > 0) {
 			return;
 		}
-		$base = $this->dbh->query("SELECT mediopago FROM mediospagos WHERE id_restaurante = 1")->fetchAll(PDO::FETCH_ASSOC);
+		$base = $this->dbh->query("SELECT mediopago FROM mediospagos WHERE id_restaurante = 0")->fetchAll(PDO::FETCH_ASSOC);
+		if (!$base) {
+			$base = $this->dbh->query("SELECT mediopago FROM mediospagos WHERE id_restaurante = 1")->fetchAll(PDO::FETCH_ASSOC);
+		}
 		if (!$base) {
 			$base = array(
 				array('mediopago' => 'EFECTIVO'),

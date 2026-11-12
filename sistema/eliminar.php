@@ -1,6 +1,11 @@
 <?php
 require_once("class/class.php");
 $tra = new Login();
+$tra->ExpiraSession();
+if (!isset($_GET['tipo'])) {
+	header('Location: panel');
+	exit;
+}
 $tipo = base64_decode($_GET['tipo']);
 switch($tipo)
 	{

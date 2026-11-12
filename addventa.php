@@ -12,20 +12,17 @@ include "db/core/app/model/DetalleVentaData.php";
 require_once __DIR__ . '/mail/enviar_correo.php';
 
 if (empty($_SESSION['id_cliente'])) {
-    echo "<script>alert('Debe iniciar sesión para confirmar el pedido.');window.location='micuenta.php';</script>";
-    exit;
+    rs_alert_go('Debe iniciar sesión para confirmar el pedido.', 'micuenta.php');
 }
 
 $cliente = ClientesData::getById($_SESSION['id_cliente']);
 if (!$cliente || empty($cliente->codcliente)) {
-    echo "<script>alert('No se encontró su cuenta. Inicie sesión nuevamente.');window.location='micuenta.php';</script>";
-    exit;
+    rs_alert_go('No se encontró su cuenta. Inicie sesión nuevamente.', 'micuenta.php');
 }
 
 $tmps = CarritoData::getAllTemporal($session_id);
 if (!is_array($tmps) || count($tmps) === 0) {
-    echo "<script>alert('Su carrito está vacío.');window.location='carrito.php';</script>";
-    exit;
+    rs_alert_go('Su carrito está vacío.', 'carrito.php');
 }
 
 $id_cliente = $cliente->codcliente;
@@ -33,8 +30,7 @@ $fechaventa = isset($_POST['fechaventa']) ? $_POST['fechaventa'] : date('Y-m-d H
 $subtotal = isset($_POST['subtotalivanove']) ? $_POST['subtotalivanove'] : 0;
 $id_restaurante = function_exists('web_tenant_id') ? (int) web_tenant_id() : 0;
 if ($id_restaurante <= 0) {
-    echo "<script>alert('No se pudo identificar el restaurante. Recargue la página e intente de nuevo.');window.location='carrito.php';</script>";
-    exit;
+    rs_alert_go('No se pudo identificar el restaurante. Recargue la página e intente de nuevo.', 'carrito.php');
 }
 
 // Siguiente código de venta (numérico) = código de confirmación del pedido
@@ -161,8 +157,7 @@ if (!$mailOk) {
 }
 if (!$mailOk) {
     $msg = 'Su pedido fue registrado con código ' . $codigo . ', pero no se pudo enviar el correo de confirmación. Revise spam o verifique su email en la cuenta.';
-    echo "<script>alert(" . json_encode($msg, JSON_UNESCAPED_UNICODE) . ");window.location='gracias.php?" . $qs . "';</script>";
-    exit;
+    rs_alert_go($msg, 'gracias.php?' . $qs);
 }
 
 header('Location: gracias.php?' . $qs);

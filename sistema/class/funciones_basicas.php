@@ -727,6 +727,9 @@ function pos_require_auth($roles = null)
         $roles = is_array($roles) ? $roles : array($roles);
         if (!in_array($_SESSION['acceso'], $roles, true)) {
             $panelUrl = function_exists('sistema_url') ? sistema_url('panel') : 'panel';
+            if (function_exists('rs_dialog_redirect')) {
+                rs_dialog_redirect("NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO", $panelUrl);
+            }
             echo '<script type="text/javascript">alert("NO TIENES PERMISO PARA ACCEDER A ESTA PAGINA.\\nCONSULTA CON EL ADMINISTRADOR PARA QUE TE DE ACCESO");document.location.href=';
             echo json_encode($panelUrl);
             echo ';</script>';
@@ -945,6 +948,9 @@ function pos_require_administrador_pos($mensaje = null, $redirect = 'usuarios.ph
         if (function_exists('sistema_url')) {
             $redirect = sistema_url(preg_replace('/\.php$/i', '', (string) $redirect));
         }
+        if (function_exists('rs_dialog_redirect')) {
+            rs_dialog_redirect($msg, $redirect);
+        }
         echo '<script type="text/javascript">alert(' . json_encode($msg) . ');document.location.href=' . json_encode($redirect) . ';</script>';
         exit;
     }
@@ -1072,9 +1078,9 @@ function renderMesasPanel($imgStyle = 'display:inline;margin:18px;float:left;wid
         <?php
     }
     ?>
-                        <ul class="nav nav-tabs tabs">
+                        <ul class="nav nav-tabs mesas-salas-tabs">
     <?php for ($i = 0; $i < sizeof($salas); $i++) { ?>
-    <li class="tab <?php echo $i === 0 ? 'active' : ''; ?>">
+    <li class="<?php echo $i === 0 ? 'active' : ''; ?>">
         <a href="#<?php echo $salas[$i]['codsala'];?>" data-toggle="tab" aria-expanded="true" role="tab">
         <span class="visible-xs" title="<?php echo htmlspecialchars($salas[$i]['nombresala']);?>"><i class="fa fa-building"></i></span>
         <span class="hidden-xs"><?php echo htmlspecialchars($salas[$i]['nombresala']);?></span>
@@ -1202,9 +1208,9 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
         return ob_get_clean();
     }
     ?>
-                        <ul class="nav nav-tabs tabs" id="cocinero-tabs">
+                        <ul class="nav nav-tabs mesas-salas-tabs" id="cocinero-tabs">
     <?php if ($deliveryCount > 0) { ?>
-    <li class="tab">
+    <li>
         <a href="#cocina-delivery" data-toggle="tab" aria-expanded="false" role="tab">
         <span class="visible-xs" title="Delivery"><i class="fa fa-motorcycle"></i> <span class="label label-danger"><?php echo $deliveryCount; ?></span></span>
         <span class="hidden-xs">Delivery <span class="label label-danger"><?php echo $deliveryCount; ?></span></span>
@@ -1215,7 +1221,7 @@ function renderMesasPanelCocinero($imgStyle = 'display:inline;margin:18px;float:
             $codigoSala = (string) $salas[$i]['codsala'];
             $countSala = isset($pendientesPorSala[$codigoSala]) ? (int) $pendientesPorSala[$codigoSala] : 0;
     ?>
-    <li class="tab <?php echo $i === 0 ? 'active' : ''; ?>">
+    <li class="<?php echo $i === 0 ? 'active' : ''; ?>">
         <a href="#cocina-sala-<?php echo $codigoSala;?>" data-toggle="tab" aria-expanded="<?php echo $i === 0 ? 'true' : 'false'; ?>" role="tab">
         <span class="visible-xs" title="<?php echo htmlspecialchars($salas[$i]['nombresala']);?>"><i class="fa fa-building"></i><?php if ($countSala > 0) { ?> <span class="label label-danger"><?php echo $countSala; ?></span><?php } ?></span>
         <span class="hidden-xs"><?php echo htmlspecialchars($salas[$i]['nombresala']); ?><?php if ($countSala > 0) { ?> <span class="label label-danger"><?php echo $countSala; ?></span><?php } ?></span>

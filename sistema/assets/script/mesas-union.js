@@ -167,10 +167,7 @@
     }
 
     function separarMesas(codmesa) {
-        if (!confirm('¿Separar las mesas unidas?')) {
-            return;
-        }
-
+        var runSeparar = function () {
         $.ajax({
             type: 'POST',
             url: 'funciones.php',
@@ -194,6 +191,14 @@
                 notificar('Error al separar las mesas.', 'error');
             }
         });
+        };
+        if (typeof window.rsConfirm === 'function') {
+            window.rsConfirm('¿Separar las mesas unidas?', 'Confirmar').then(function (ok) {
+                if (ok) { runSeparar(); }
+            });
+        } else if (confirm('¿Separar las mesas unidas?')) {
+            runSeparar();
+        }
     }
 
     $(document).ready(function() {

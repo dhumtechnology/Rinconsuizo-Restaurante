@@ -17,6 +17,9 @@ function rs_web_redirect($path, $query = '')
 function rs_web_alert_redirect($message, $path)
 {
 	$url = function_exists('web_url') ? web_url($path) : $path;
+	if (function_exists('rs_dialog_redirect')) {
+		rs_dialog_redirect($message, $url);
+	}
 	echo '<script>alert(' . json_encode($message, JSON_UNESCAPED_UNICODE) . ');window.location=' . json_encode($url) . ';</script>';
 	exit;
 }

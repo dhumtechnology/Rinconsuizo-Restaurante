@@ -20,6 +20,11 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'SepararMesasUnion') {
     $union = new Login();
     $union->SepararMesasUnion();
 }
+$__funciones_fragmento_ajax = (
+    (isset($_GET['BuscaMesaReservas']) && isset($_GET['codmesa']))
+    || (isset($_GET['PedidoCocina']) && isset($_GET['codmesa']))
+);
+if (!$__funciones_fragmento_ajax) {
 ?>
 <script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
 <script type="text/javascript" src="assets/script/jscompras.js"></script>
@@ -27,6 +32,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'SepararMesasUnion') {
 <script src="assets/script/jscalendario.js"></script>
 <script src="assets/script/autocompleto.js"></script> 
 <!-- Calendario -->
+<?php } ?>
 
 <?php
 $con = new Login();
@@ -2044,25 +2050,6 @@ if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] ==
   <div id="filas-pago-mixto"></div>
   <button type="button" class="btn btn-info btn-sm btn-block" onclick="AgregarFilaPagoMixto(); return false;"><i class="fa fa-plus"></i> Agregar medio de pago</button>
   <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma a cuenta: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
-  <div id="pago-mixto-vuelto" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed #ddd;">
-    <p class="help-block" style="margin-top:0;">Hay EFECTIVO en el mixto: el monto recibido y el vuelto se calculan solos según la fila de efectivo; puede ajustar el recibido si el cliente entrega otro billete.</p>
-    <div class="row">
-      <div class="col-md-6">
-        <div class="form-group has-feedback">
-          <label class="control-label">Monto recibido en efectivo:</label>
-          <input class="form-control number" type="text" id="montorecibido_mix_efectivo" value="0.00" autocomplete="off" placeholder="Monto que entrega el cliente" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', ''); ActualizarSumaPagoMixto();" onKeyUp="ActualizarSumaPagoMixto();">
-          <i class="fa fa-usd form-control-feedback"></i>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="form-group has-feedback">
-          <label class="control-label">Cambio / Vuelto:</label>
-          <input class="form-control number" type="text" id="montodevuelto_mix_visible" value="0.00" autocomplete="off" readonly>
-          <i class="fa fa-usd form-control-feedback"></i>
-        </div>
-      </div>
-    </div>
-  </div>
   <input type="hidden" name="formapagove" id="formapagove_mix_hidden" value="" disabled>
   <input type="hidden" name="montopagado" id="montopagado_mix_hidden" value="0.00" disabled>
   <input type="hidden" name="montodevuelto" id="montodevuelto_mix_hidden" value="0.00" disabled>
@@ -2070,7 +2057,7 @@ if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] ==
 <textarea id="html-opciones-medios-pago" style="display:none"><?php echo htmlspecialchars($optsMedios, ENT_QUOTES, 'UTF-8'); ?></textarea>
 </div>
  
- <div id="muestracambiospagos"><div class="row"> 
+ <div id="muestracambiospagos"><div id="pago-contado-cambio"><div class="row"> 
   <div class="col-md-12"> 
     <div class="form-group has-feedback"> 
       <label class="control-label">Monto Pagado: <span class="symbol required"></span></label>
@@ -2084,11 +2071,11 @@ if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] ==
   <div class="col-md-12"> 
      <div class="form-group has-feedback"> 
       <label class="control-label">Cambio Devuelto: <span class="symbol required"></span></label>
-<input class="form-control number" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" value="0.00" autocomplete="off" placeholder="Ingrese Cambio Devuelto a Cliente"  aria-required="true"> 
+<input class="form-control number vuelto-auto-campo" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" value="0.00" autocomplete="off" placeholder="Se calcula al cambiar el monto pagado"  aria-required="true"> 
                         <i class="fa fa-usd form-control-feedback"></i>
       </div> 
   </div>
-</div>
+</div></div>
 
 <div class="modal-footer"> 
 <button type="button" id="mostrar-mesa" class="btn btn-warning btn-block"><span class="fa fa-cutlery"></span> Mostrar Mesas</button>   
@@ -2105,6 +2092,7 @@ if ($codCajaCobro === '' && isset($_SESSION['acceso']) && $_SESSION['acceso'] ==
 </div><!-- mesa-detalle-reserva -->
 
 <?php
+	exit;
 }
 ####################### MUESTRA FORMULARIO PARA RESERVAR MESAS PARA VENTAS ####################
 ?>
@@ -2150,25 +2138,6 @@ if (isset($_GET['BuscaFormaPagoVentas']) && isset($_GET['tipopagove'])) {
   <div id="filas-pago-mixto"></div>
   <button type="button" class="btn btn-info btn-sm btn-block" onclick="AgregarFilaPagoMixto(); return false;"><i class="fa fa-plus"></i> Agregar medio de pago</button>
   <p class="help-block" style="margin-top:8px;margin-bottom:0;">Suma a cuenta: <strong id="suma-pago-mixto">0.00</strong> | Total: <strong id="total-cuenta-mixto">0.00</strong> | Diferencia: <strong id="diff-pago-mixto">0.00</strong></p>
-  <div id="pago-mixto-vuelto" style="display:none;margin-top:12px;padding-top:10px;border-top:1px dashed #ddd;">
-    <p class="help-block" style="margin-top:0;">Hay EFECTIVO en el mixto: el monto recibido y el vuelto se calculan solos según la fila de efectivo; puede ajustar el recibido si el cliente entrega otro billete.</p>
-    <div class="row">
-      <div class="col-md-6">
-        <div class="form-group has-feedback">
-          <label class="control-label">Monto recibido en efectivo:</label>
-          <input class="form-control number" type="text" id="montorecibido_mix_efectivo" value="0.00" autocomplete="off" placeholder="Monto que entrega el cliente" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', ''); ActualizarSumaPagoMixto();" onKeyUp="ActualizarSumaPagoMixto();">
-          <i class="fa fa-usd form-control-feedback"></i>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="form-group has-feedback">
-          <label class="control-label">Cambio / Vuelto:</label>
-          <input class="form-control number" type="text" id="montodevuelto_mix_visible" value="0.00" autocomplete="off" readonly>
-          <i class="fa fa-usd form-control-feedback"></i>
-        </div>
-      </div>
-    </div>
-  </div>
   <input type="hidden" name="formapagove" id="formapagove_mix_hidden" value="" disabled>
   <input type="hidden" name="montopagado" id="montopagado_mix_hidden" value="0.00" disabled>
   <input type="hidden" name="montodevuelto" id="montodevuelto_mix_hidden" value="0.00" disabled>
@@ -2224,7 +2193,7 @@ $reg = $tra->MediosPagosId();
   <div class="col-md-12"> 
     <div class="form-group has-feedback"> 
       <label for="field-6" class="control-label">Cambio Devuelto: <span class="symbol required"></span></label>
-<input class="form-control number" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Ingrese Cambio Devuelto a Cliente" value="0.00" aria-required="true"> 
+<input class="form-control number vuelto-auto-campo" type="text" name="montodevuelto" id="montodevuelto" onKeyPress="EvaluateText('%f', this);" onBlur="this.value = NumberFormat(this.value, '2', '.', '')" autocomplete="off" placeholder="Se calcula al cambiar el monto pagado" value="0.00" aria-required="true"> 
                         <i class="fa fa-usd form-control-feedback"></i>
     </div> 
   </div>

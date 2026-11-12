@@ -21,7 +21,8 @@ El proyecto acumula varios dumps SQL de distintas etapas. **La base de datos act
 
 | Archivo | Base de datos | Estado | Uso |
 |---------|---------------|--------|-----|
-| **`rinconsuizo.sql`** (raíz) | `rinconsuizo` | **Actual** (jun 2026) | Importar este en producción/Docker |
+| **`rinconsuizo_plantilla.sql`** (raíz) | `rinconsuizo` | **Plantilla** (nov 2026) | Instalación limpia: estructura actual + SuperAdmin + medios de pago; **sin** datos de restaurantes |
+| **`rinconsuizo.sql`** (raíz) | `rinconsuizo` | Demo completo (jun 2026) | Importar con datos de ejemplo en Docker |
 | `restord.sql` (raíz) | `restord` | Antiguo (abr 2022) | Solo referencia histórica |
 | `sistema/db_sql/softrestaurant_backup_24-03-2021.sql` | `softrestaurant` | Plantilla original | No usar; es el proyecto base |
 | `sistema/db_sql/mediospagos.sql` | `resto` | Parcial | Solo tabla `mediospagos` (migración suelta) |

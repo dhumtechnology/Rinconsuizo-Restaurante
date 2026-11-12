@@ -502,6 +502,104 @@ if (!function_exists('web_brand_head_styles')) {
 		echo "  background: var(--brand-accent) !important;\n";
 		echo "}\n";
 		echo "</style>\n";
+		if (function_exists('rs_dialog_assets_html')) {
+			echo rs_dialog_assets_html();
+		}
+	}
+}
+
+if (!function_exists('rs_dialog_assets_html')) {
+	function rs_dialog_assets_html()
+	{
+		$base = '';
+		if (function_exists('sistema_static_base_href')) {
+			$base = rtrim(sistema_static_base_href(), '/');
+		} elseif (function_exists('app_url')) {
+			$base = rtrim(app_url('/sistema'), '/');
+		} else {
+			$base = '/sistema';
+		}
+		$href = htmlspecialchars($base . '/assets', ENT_QUOTES, 'UTF-8');
+		return '<link rel="stylesheet" href="' . $href . '/css/rs-dialog.css?v=1">'
+			. '<script src="' . $href . '/js/rs-dialog.js?v=1"></script>';
+	}
+}
+
+if (!function_exists('rs_dialog_standalone_page')) {
+	function rs_dialog_standalone_page($message, $url, $title = 'Aviso')
+	{
+		$assets = function_exists('rs_dialog_assets_html') ? rs_dialog_assets_html() : '';
+		if (function_exists('sistema_brand_colors')) {
+			$c = sistema_brand_colors();
+			$assets = '<style>:root{--brand-primary:' . htmlspecialchars($c['primario'], ENT_QUOTES, 'UTF-8')
+				. ';--brand-secondary:' . htmlspecialchars($c['secundario'], ENT_QUOTES, 'UTF-8')
+				. ';--brand-accent:' . htmlspecialchars($c['acento'], ENT_QUOTES, 'UTF-8')
+				. ';}</style>' . $assets;
+		}
+		$msgJs = json_encode((string) $message, JSON_UNESCAPED_UNICODE);
+		$urlJs = json_encode((string) $url, JSON_UNESCAPED_UNICODE);
+		$titleJs = json_encode((string) $title, JSON_UNESCAPED_UNICODE);
+		return '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+			. $assets
+			. '</head><body><script>'
+			. 'function rsGo(){ if(window.rsAlertRedirect){ rsAlertRedirect(' . $msgJs . ', ' . $urlJs . '); }'
+			. ' else { alert(' . $msgJs . '); location.href=' . $urlJs . '; } }'
+			. 'if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",rsGo);}else{rsGo();}'
+			. '</script></body></html>';
+	}
+}
+
+if (!function_exists('rs_dialog_redirect')) {
+	function rs_dialog_redirect($message, $url)
+	{
+		if (!headers_sent()) {
+			header('Content-Type: text/html; charset=UTF-8');
+		}
+		echo rs_dialog_standalone_page($message, $url);
+		exit;
+	}
+}
+
+if (!function_exists('rs_alert_go')) {
+	function rs_alert_go($message, $url)
+	{
+		$url = (string) $url;
+		if (function_exists('web_url') && $url !== '' && !preg_match('#^(https?:)?//#i', $url) && strpos($url, '/') !== 0) {
+			$q = '';
+			$p = $url;
+			if (strpos($url, '?') !== false) {
+				$parts = explode('?', $url, 2);
+				$p = $parts[0];
+				$q = $parts[1];
+			}
+			$url = web_url($p) . ($q !== '' ? '?' . $q : '');
+		}
+		if (function_exists('rs_dialog_redirect')) {
+			rs_dialog_redirect($message, $url);
+		}
+		echo '<script>alert(' . json_encode((string) $message, JSON_UNESCAPED_UNICODE) . ');location.href=' . json_encode($url) . ';</script>';
+		exit;
+	}
+}
+
+if (!function_exists('rs_dialog_wrap_bare_alert')) {
+	function rs_dialog_wrap_bare_alert($html)
+	{
+		if (!is_string($html) || stripos($html, 'alert(') === false) {
+			return null;
+		}
+		if (stripos($html, '</head>') !== false) {
+			return null;
+		}
+		$msg = 'Aviso';
+		if (preg_match('/alert\s*\(\s*([\'"])((?:\\\\.|(?!\1).)*)\1/s', $html, $m)) {
+			$msg = str_replace(array('\\n', '\\r', '\\t', "\\'"), array("\n", "\r", "\t", "'"), $m[2]);
+		}
+		$url = 'panel';
+		if (preg_match('/(?:document\.location(?:\.href)?|window\.location(?:\.href)?)\s*=\s*([\'"])([^\'"]+)\1/', $html, $m)) {
+			$url = $m[2];
+		}
+		return rs_dialog_standalone_page($msg, $url);
 	}
 }
 
@@ -633,6 +731,9 @@ if (!function_exists('sistema_brand_head_styles_html')) {
 		$css .= ".waves-effect.waves-light .waves-ripple{background:rgba(var(--brand-accent-rgb),.4);}\n";
 		$css .= "</style>\n";
 		$css .= "<script>window.__BRAND_PRIMARY={$jp};window.__BRAND_SECONDARY={$js};window.__BRAND_ACCENT={$ja};</script>\n";
+		if (function_exists('rs_dialog_assets_html')) {
+			$css .= rs_dialog_assets_html();
+		}
 		return $cache = $css;
 	}
 }

@@ -253,7 +253,7 @@ $reg = $tra->ListarMediosPagos();
 		case 2:
 		echo "<div class='alert alert-warning'>";
 		echo "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>";
-		echo "<center><span class='fa fa-info-circle'></span> ESTE MEDIO DE PAGO NO PUEDE SER ELIMINADO, TIENE VENTAS ASOCIADOS ACTUALMENTE </center>";
+		echo "<center><span class='fa fa-info-circle'></span> NO SE PUEDE ELIMINAR: TIENE VENTAS, COMPRAS, MOVIMIENTOS DE CAJA O PAGOS MIXTOS ASOCIADOS, O EL REGISTRO NO PERTENECE A SU RESTAURANTE.</center>";
         echo "</div>";   
 		break;
 		

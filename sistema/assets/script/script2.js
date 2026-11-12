@@ -168,11 +168,37 @@ function rsNavigateConfirm(url, mensaje)
 	if (window.event) {
 		window.event.preventDefault ? window.event.preventDefault() : (window.event.returnValue = false);
 	}
+	var go = function () {
+		window.location.href = rsSistemaDirUrl(url);
+	};
+	if (typeof window.rsConfirm === 'function') {
+		window.rsConfirm(mensaje, 'Confirmar', { danger: /eliminar/i.test(mensaje) }).then(function (ok) {
+			if (ok) {
+				go();
+			}
+		});
+		return false;
+	}
 	if (!confirm(mensaje)) {
 		return false;
 	}
-	window.location.href = rsSistemaDirUrl(url);
+	go();
 	return false;
+}
+
+function rsAsk(msg, thenFn, extra)
+{
+	if (typeof window.rsConfirm === 'function') {
+		window.rsConfirm(msg, 'Confirmar', extra || {}).then(function (ok) {
+			if (ok && typeof thenFn === 'function') {
+				thenFn();
+			}
+		});
+		return;
+	}
+	if (confirm(msg) && typeof thenFn === 'function') {
+		thenFn();
+	}
 }
 
 function actualizar(url)
@@ -457,10 +483,7 @@ $.ajax({
 function EliminarCliente(codcliente,tipo,busqueda) {
 
 var dataString = 'codcliente='+codcliente+'&tipo='+tipo;
-var eliminar = confirm("ESTA SEGURO DE ELIMINAR ESTE CLIENTE?")
-    
-        if ( eliminar ) { 
-        
+var runEliminarCliente = function () {
         $.ajax({
             type: "GET",
             url: "eliminar.php",
@@ -473,7 +496,14 @@ $("#resultadocliente").load("funciones.php?BusquedaClientes=si&buscacliente="+bu
                 $('#'+parent).remove();
             }
         });
-      }
+};
+if (typeof window.rsConfirm === 'function') {
+	window.rsConfirm("ESTA SEGURO DE ELIMINAR ESTE CLIENTE?", "Confirmar", { danger: true }).then(function (ok) {
+		if (ok) { runEliminarCliente(); }
+	});
+} else if (confirm("ESTA SEGURO DE ELIMINAR ESTE CLIENTE?")) {
+	runEliminarCliente();
+}
 }
 
 // FUNCION PARA CARGAR LOS DATOS DE CLIENTES
@@ -669,9 +699,7 @@ var url = 'funciones.php?BuscaKardexProducto=si';
 // FUNCION PARA ELIMINAR INGREDIENTES AGREGADOS
 function EliminaIngrediente(codproducto,codingrediente,tipo){
 
-var eliminarreferencia = confirm("ESTA SEGURO DE ELIMINAR ESTE INGREDIENTE EN EL PRODUCTO?")
-
-	    if ( eliminarreferencia ) {
+rsAsk("ESTA SEGURO DE ELIMINAR ESTE INGREDIENTE EN EL PRODUCTO?", function () {
 								
 $('#delete-ok').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
 
@@ -689,16 +717,14 @@ $.ajax({
                 $('#'+parent).remove();
            }
       });
-   }
+   }, { danger: true });
 }
 
 
 // FUNCION PARA ELIMINAR NUEVOS INGREDIENTES AGREGADOS
 function EliminaNuevoIngrediente(codproducto,codingrediente,tipo){
 
-var eliminarreferencia = confirm("ESTA SEGURO DE ELIMINAR ESTE INGREDIENTE EN EL PRODUCTO?")
-
-if ( eliminarreferencia ) {
+rsAsk("ESTA SEGURO DE ELIMINAR ESTE INGREDIENTE EN EL PRODUCTO?", function () {
 
 $('#delete-ok').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
 								
@@ -716,7 +742,7 @@ $.ajax({
                 $('#'+parent).remove();
            }
       });
-   }
+   }, { danger: true });
 }
 
 
@@ -778,9 +804,7 @@ $(document).ready(function (){
 // FUNCION PARA ELIMINAR NUEVOS INGREDIENTES AGREGADOS
 function EliminaDetalleProducto(codmesa,coddetalleventa,codventa,codproducto,cantventa,ivaproducto,tipo){
 
-var eliminar = confirm("ESTA SEGURO DE ELIMINAR ESTE PRODUCTO EN PEDIDOS?")
-
-if ( eliminar ) {
+rsAsk("ESTA SEGURO DE ELIMINAR ESTE PRODUCTO EN PEDIDOS?", function () {
 							
 var dataString = 'codmesa='+codmesa+'&coddetalleventa='+coddetalleventa+'&codventa='+codventa+'&codproducto='+codproducto+'&cantventa='+cantventa+'&ivaproducto='+ivaproducto+'&tipo='+tipo;
 
@@ -798,7 +822,7 @@ $.ajax({
                 $('#'+parent).remove();
            }
       });
-   }
+   }, { danger: true });
 }
 
 
@@ -807,9 +831,7 @@ $.ajax({
 // FUNCION PARA ENTREGAR PEDIDOS DE PRODUCTOS EN COCINA
 function EntregarPedidos(codventa,nombresala,nombremesa,tipo,numerocomanda){
 
-var entrega = confirm("ESTA SEGURO DE REALIZAR LA ENTREGA DE ESTE PEDIDO?")
-
-if ( entrega ) {
+rsAsk("ESTA SEGURO DE REALIZAR LA ENTREGA DE ESTE PEDIDO?", function () {
 
 $('#entrega').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
 
@@ -838,7 +860,7 @@ $.ajax({
         setTimeout(function() { $("#entrega").html(""); }, 5000);
            }
       });
-   }
+   });
 }
 
 
@@ -853,8 +875,7 @@ function refrescarListaDelivery(){
 }
 
 function TomarDelivery(codventa,tipo){
-var toma = confirm("Desea tomar este pedido de delivery? Quedara asignado a usted.");
-if ( toma ) {
+rsAsk("¿Desea tomar este pedido de delivery? Quedará asignado a usted.", function () {
 $('#entregadelivery').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
 var dataString = 'codventa='+codventa+'&tipo='+tipo;
 $.ajax({
@@ -868,14 +889,12 @@ $.ajax({
 		setTimeout(function() { $("#entregadelivery").html(""); }, 5000);
 	}
 });
-}
+});
 }
 
 function ProcesarDelivery(codventa,tipo){
 
-var entrega = confirm("ESTA SEGURO DE REALIZAR LA ENTREGA DE DELIVERY?")
-
-if ( entrega ) {
+rsAsk("ESTA SEGURO DE REALIZAR LA ENTREGA DE DELIVERY?", function () {
 
 $('#entregadelivery').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
                 
@@ -892,7 +911,7 @@ $.ajax({
         setTimeout(function() { $("#entregadelivery").html(""); }, 5000);
            }
       });
-   }
+   });
 }
 
 
@@ -1152,7 +1171,11 @@ $.ajax({
                 window.mesaCargando = false;
                 toggleAccionesPedido();
                 var mesaCarrito = (typeof obtenerCodmesaActiva === 'function') ? obtenerCodmesaActiva() : mesaId;
-                cargarCarritoMesa(mesaCarrito, function() {});
+                cargarCarritoMesa(mesaCarrito, function() {
+                    if (typeof ActualizarVueltoDesdeMontoPagadoSimple === 'function') {
+                        ActualizarVueltoDesdeMontoPagadoSimple();
+                    }
+                });
            },
            error: function() {
                 window.mesaCargando = false;
@@ -1304,31 +1327,46 @@ var url = 'funciones.php?BuscaFormaPagoVentas=si';
 }
 
 // ---- Pago mixto (varios medios, misma cuenta) ----
+function $ctxMesaPago() {
+	var $r = $('#recibemesa .mesa-detalle-reserva').first();
+	if ($r.length) {
+		return $r;
+	}
+	var $v = $('#ventas').first();
+	return $v.length ? $v : $(document);
+}
+
 function TogglePagoMixto(el) {
+	var $ctx = $ctxMesaPago();
 	var activo = el && el.checked;
 	if (activo) {
-		$('#pago-simple-wrap').hide();
-		$('#muestracambiospagos').hide().find('input,select').prop('disabled', true);
-		$('#pago-simple-wrap').find('input,select').prop('disabled', true);
-		$('#pago-mixto-wrap').show();
-		$('#formapagove_mix_hidden,#montopagado_mix_hidden,#montodevuelto_mix_hidden').prop('disabled', false);
-		if ($('#filas-pago-mixto .fila-pago-mixto').length === 0) {
+		$ctx.find('#pago-simple-wrap').hide();
+		$ctx.find('#pago-simple-wrap').find('input,select').prop('disabled', true);
+		$ctx.find('#pago-mixto-wrap').show();
+		$ctx.find('#formapagove_mix_hidden,#montopagado_mix_hidden,#montodevuelto_mix_hidden').prop('disabled', false);
+		$ctx.find('#pago-contado-cambio').hide();
+		$ctx.find('#montopagado, #montodevuelto').prop('disabled', true);
+		if ($ctx.find('#filas-pago-mixto .fila-pago-mixto').length === 0) {
 			AgregarFilaPagoMixto();
 			AgregarFilaPagoMixto();
-			var total = parseFloat(String($('#txtTotall').val() || '0').replace(',', '')) || 0;
+			SeleccionarMedioEfectivoEnSelect($ctx.find('#filas-pago-mixto .formapagove-mix').eq(0));
+			var total = parseFloat(String($ctx.find('#txtTotall').val() || $('#txtTotall').val() || '0').replace(',', '')) || 0;
 			var mitad = (Math.round((total / 2) * 100) / 100).toFixed(2);
 			var resto = (Math.round((total - parseFloat(mitad)) * 100) / 100).toFixed(2);
-			$('#filas-pago-mixto .montopago-mix').eq(0).val(mitad);
-			$('#filas-pago-mixto .montopago-mix').eq(1).val(resto);
+			$ctx.find('#filas-pago-mixto .montopago-mix').eq(0).val(mitad);
+			$ctx.find('#filas-pago-mixto .montopago-mix').eq(1).val(resto);
 		}
 		ActualizarSumaPagoMixto();
 	} else {
-		$('#pago-mixto-wrap').hide();
-		$('#pago-mixto-vuelto').hide();
-		$('#formapagove_mix_hidden,#montopagado_mix_hidden,#montodevuelto_mix_hidden').prop('disabled', true);
-		$('#pago-simple-wrap').show().find('input,select').prop('disabled', false);
-		$('#muestracambiospagos').show().find('input,select').prop('disabled', false);
-		if (typeof MuestraCambiosVentas === 'function' && $('#formapagove').length) {
+		$ctx.find('#pago-mixto-wrap').hide();
+		$ctx.find('#formapagove_mix_hidden,#montopagado_mix_hidden,#montodevuelto_mix_hidden').prop('disabled', true);
+		$ctx.find('#pago-simple-wrap').show().find('input,select').prop('disabled', false);
+		$ctx.find('#pago-contado-cambio').show();
+		$ctx.find('#montopagado, #montodevuelto').prop('disabled', false);
+		if (typeof ActualizarVueltoDesdeMontoPagadoSimple === 'function') {
+			ActualizarVueltoDesdeMontoPagadoSimple();
+		}
+		if (typeof MuestraCambiosVentas === 'function' && $ctx.find('#formapagove').length) {
 			MuestraCambiosVentas();
 		}
 	}
@@ -1339,10 +1377,26 @@ function MedioPagoMixEsEfectivo($select) {
 	return txt.indexOf('EFECTIVO') !== -1;
 }
 
+function SeleccionarMedioEfectivoEnSelect($select) {
+	if (!$select || !$select.length) {
+		return false;
+	}
+	var elegido = false;
+	$select.find('option').each(function() {
+		if ($.trim(String($(this).text() || '')).toUpperCase().indexOf('EFECTIVO') !== -1) {
+			$select.val($(this).val());
+			elegido = true;
+			return false;
+		}
+	});
+	return elegido;
+}
+
 function ObtenerMontosEfectivoMixto() {
+	var $ctx = $ctxMesaPago();
 	var cuentaEfectivo = 0;
 	var filasEfectivo = 0;
-	$('#filas-pago-mixto .fila-pago-mixto').each(function() {
+	$ctx.find('#filas-pago-mixto .fila-pago-mixto').each(function() {
 		var $sel = $(this).find('.formapagove-mix');
 		if (!MedioPagoMixEsEfectivo($sel)) {
 			return;
@@ -1357,29 +1411,9 @@ function ObtenerMontosEfectivoMixto() {
 	};
 }
 
-/** Ajusta monto recibido si sigue ligado a la parte en efectivo; devuelve el monto recibido numérico. */
-function SincronizarMontoRecibidoEfectivoMixto(cuentaEfectivo) {
-	var $recibido = $('#montorecibido_mix_efectivo');
-	var recibido = parseFloat(String($recibido.val() || '0').replace(',', '')) || 0;
-	var lastSync = parseFloat(String($recibido.data('last-sync-cuenta') || ''));
-	var touched = !!$recibido.data('touched');
-	var sigueAuto = !touched
-		|| recibido <= 0
-		|| (!isNaN(lastSync) && Math.abs(recibido - lastSync) < 0.001);
-	if (cuentaEfectivo > 0 && sigueAuto) {
-		recibido = cuentaEfectivo;
-		$recibido.val(recibido.toFixed(2));
-		$recibido.data('last-sync-cuenta', cuentaEfectivo);
-	} else if (cuentaEfectivo <= 0 && !touched) {
-		$recibido.val('0.00');
-		$recibido.removeData('last-sync-cuenta');
-		recibido = 0;
-	}
-	return recibido;
-}
-
 function AgregarFilaPagoMixto() {
-	var opts = ($('#html-opciones-medios-pago').length ? $('#html-opciones-medios-pago').val() : '') || window.htmlOpcionesMediosPago || '<option value="">SELECCIONE</option>';
+	var $ctx = $ctxMesaPago();
+	var opts = ($ctx.find('#html-opciones-medios-pago').length ? $ctx.find('#html-opciones-medios-pago').val() : '') || window.htmlOpcionesMediosPago || '<option value="">SELECCIONE</option>';
 	var html = ''
 		+ '<div class="row fila-pago-mixto" style="margin-bottom:6px;">'
 		+ '  <div class="col-xs-6 col-md-6">'
@@ -1392,12 +1426,12 @@ function AgregarFilaPagoMixto() {
 		+ '    <button type="button" class="btn btn-danger btn-sm btn-block" onclick="QuitarFilaPagoMixto(this); return false;"><i class="fa fa-trash"></i></button>'
 		+ '  </div>'
 		+ '</div>';
-	$('#filas-pago-mixto').append(html);
+	$ctx.find('#filas-pago-mixto').append(html);
 	ActualizarSumaPagoMixto();
 }
 
 function QuitarFilaPagoMixto(btn) {
-	var $filas = $('#filas-pago-mixto .fila-pago-mixto');
+	var $filas = $ctxMesaPago().find('#filas-pago-mixto .fila-pago-mixto');
 	if ($filas.length <= 2) {
 		alert('El pago mixto requiere al menos 2 medios de pago.');
 		return;
@@ -1407,76 +1441,146 @@ function QuitarFilaPagoMixto(btn) {
 }
 
 function ActualizarSumaPagoMixto() {
+	var $ctx = $ctxMesaPago();
 	var suma = 0;
-	$('#filas-pago-mixto .montopago-mix').each(function() {
+	$ctx.find('#filas-pago-mixto .montopago-mix').each(function() {
 		var v = parseFloat(String($(this).val() || '0').replace(',', '')) || 0;
 		suma += v;
 	});
-	var total = parseFloat(String($('#txtTotall').val() || '0').replace(',', '')) || 0;
+	var total = parseFloat(String($ctx.find('#txtTotall').val() || $('#txtTotall').val() || '0').replace(',', '')) || 0;
 	var diff = Math.round((suma - total) * 100) / 100;
-	$('#suma-pago-mixto').text(suma.toFixed(2));
-	$('#total-cuenta-mixto').text(total.toFixed(2));
-	$('#diff-pago-mixto').text(diff.toFixed(2));
+	$ctx.find('#suma-pago-mixto').text(suma.toFixed(2));
+	$ctx.find('#total-cuenta-mixto').text(total.toFixed(2));
+	$ctx.find('#diff-pago-mixto').text(diff.toFixed(2));
 	var accent = (window.getComputedStyle && document.documentElement)
 		? (getComputedStyle(document.documentElement).getPropertyValue('--brand-accent') || '').trim()
 		: '';
 	if (Math.abs(diff) < 0.05) {
-		$('#diff-pago-mixto').css('color', accent || '#01ba9a');
+		$ctx.find('#diff-pago-mixto').css('color', accent || '#01ba9a');
 	} else {
-		$('#diff-pago-mixto').css('color', '#e74c3c');
+		$ctx.find('#diff-pago-mixto').css('color', '#e74c3c');
 	}
 	var primerMedio = '';
-	$('#filas-pago-mixto .formapagove-mix').each(function() {
+	$ctx.find('#filas-pago-mixto .formapagove-mix').each(function() {
 		if (!primerMedio && $(this).val()) {
 			primerMedio = $(this).val();
 			return false;
 		}
 	});
-	$('#formapagove_mix_hidden').val(primerMedio || '');
+	$ctx.find('#formapagove_mix_hidden').val(primerMedio || '');
+
+	if (!$ctx.find('#pagomixto').is(':checked')) {
+		return;
+	}
+	$ctx.find('#pago-contado-cambio').hide();
+	$ctx.find('#montopagado, #montodevuelto').prop('disabled', true);
+	$ctx.find('#montopagado_mix_hidden, #montodevuelto_mix_hidden').prop('disabled', false);
 
 	var ef = ObtenerMontosEfectivoMixto();
 	var vuelto = 0;
-	var montopagado = suma;
 	if (ef.hayEfectivo && ef.cuenta > 0) {
-		$('#pago-mixto-vuelto').show();
-		var recibido = SincronizarMontoRecibidoEfectivoMixto(ef.cuenta);
-		vuelto = Math.round((recibido - ef.cuenta) * 100) / 100;
+		var $pagado = $ctx.find('#montopagado');
+		if (!$pagado.data('mix-ef-synced')) {
+			var actual = parseFloat(String($pagado.val() || '0').replace(',', '')) || 0;
+			if (actual <= 0 || Math.abs(actual - total) < 0.001) {
+				$pagado.val(ef.cuenta.toFixed(2));
+			}
+			$pagado.data('mix-ef-synced', true);
+		}
+		ActualizarVueltoPagoMixtoEfectivo();
+		vuelto = parseFloat(String($ctx.find('#montodevuelto').val() || '0').replace(',', '')) || 0;
+	} else {
+		$ctx.find('#montodevuelto').val('0.00');
+		$ctx.find('#montopagado').removeData('mix-ef-synced');
+	}
+	if (vuelto < 0) {
+		vuelto = 0;
+	}
+	$ctx.find('#montopagado_mix_hidden').val((Math.round((suma + vuelto) * 100) / 100).toFixed(2));
+	$ctx.find('#montodevuelto_mix_hidden').val(vuelto.toFixed(2));
+}
+
+function ActualizarVueltoPagoMixtoEfectivo() {
+	var $ctx = $ctxMesaPago();
+	if (!$ctx.find('#pagomixto').is(':checked')) {
+		return;
+	}
+	var ef = ObtenerMontosEfectivoMixto();
+	if (!ef.hayEfectivo) {
+		return;
+	}
+	var recibido = parseFloat(String($ctx.find('#montopagado').val() || '0').replace(',', '')) || 0;
+	var vuelto = Math.round((recibido - ef.cuenta) * 100) / 100;
+	if (vuelto < 0) {
+		vuelto = 0;
+	}
+	var $vuelto = $ctx.find('#montodevuelto');
+	if ($vuelto.length && !$vuelto.data('vuelto-touched')) {
+		$vuelto.val(vuelto.toFixed(2));
+	} else {
+		vuelto = parseFloat(String($vuelto.val() || '0').replace(',', '')) || 0;
 		if (vuelto < 0) {
 			vuelto = 0;
 		}
-		montopagado = Math.round((suma - ef.cuenta + recibido) * 100) / 100;
-		$('#montodevuelto_mix_visible').val(vuelto.toFixed(2));
-	} else if (ef.hayEfectivo) {
-		$('#pago-mixto-vuelto').show();
-		$('#montodevuelto_mix_visible').val('0.00');
-		vuelto = 0;
-		montopagado = suma;
-	} else {
-		$('#pago-mixto-vuelto').hide();
-		$('#montorecibido_mix_efectivo').val('0.00').removeData('touched').removeData('last-sync-cuenta');
-		$('#montodevuelto_mix_visible').val('0.00');
-		vuelto = 0;
-		montopagado = suma;
 	}
-	$('#montopagado_mix_hidden').val(montopagado.toFixed(2));
-	$('#montodevuelto_mix_hidden').val(vuelto.toFixed(2));
 }
+window.ActualizarVueltoPagoMixtoEfectivo = ActualizarVueltoPagoMixtoEfectivo;
+window.ActualizarSumaPagoMixto = ActualizarSumaPagoMixto;
 
-$(document).on('input', '#montorecibido_mix_efectivo', function() {
-	$(this).data('touched', true);
-	ActualizarSumaPagoMixto();
+function ActualizarVueltoDesdeMontoPagadoSimple() {
+	var $ctx = $ctxMesaPago();
+	if ($ctx.find('#pagomixto').is(':checked')) {
+		return;
+	}
+	var montototal = parseFloat(String($ctx.find('#txtTotall').val() || $('#txtTotall').val() || '0').replace(',', '')) || 0;
+	var $pagado = $ctx.find('#montopagado:enabled').first();
+	if (!$pagado.length) {
+		$pagado = $ctx.find('#montopagado').first();
+	}
+	var montopagado = parseFloat(String($pagado.val() || '0').replace(',', '')) || 0;
+	var vuelto = Math.round((montopagado - montototal) * 100) / 100;
+	if (vuelto < 0) {
+		vuelto = 0;
+	}
+	var $vuelto = $ctx.find('#montodevuelto:enabled').first();
+	if (!$vuelto.length) {
+		$vuelto = $ctx.find('#montodevuelto').first();
+	}
+	if ($vuelto.length && !$vuelto.data('vuelto-touched')) {
+		$vuelto.val(vuelto.toFixed(2));
+	}
+}
+window.ActualizarVueltoDesdeMontoPagadoSimple = ActualizarVueltoDesdeMontoPagadoSimple;
+
+$(document).on('input keyup change blur', '#montopagado, input.calculodevolucion', function() {
+	var $ctx = $ctxMesaPago();
+	if ($ctx.find('#pagomixto').is(':checked')) {
+		$ctx.find('#montodevuelto').removeData('vuelto-touched');
+		ActualizarVueltoPagoMixtoEfectivo();
+		ActualizarSumaPagoMixto();
+		return;
+	}
+	$ctx.find('#montodevuelto').removeData('vuelto-touched');
+	ActualizarVueltoDesdeMontoPagadoSimple();
 });
-$(document).on('change keyup', '#filas-pago-mixto .formapagove-mix, #filas-pago-mixto .montopago-mix', function() {
+$(document).on('input change blur', '#montodevuelto:not(:disabled)', function() {
+	$(this).data('vuelto-touched', true);
+});
+$(document).on('change keyup input blur', '#filas-pago-mixto .formapagove-mix, #filas-pago-mixto .montopago-mix', function() {
+	var $ctx = $ctxMesaPago();
+	$ctx.find('#montodevuelto').removeData('vuelto-touched');
+	$ctx.find('#montopagado').removeData('mix-ef-synced');
 	ActualizarSumaPagoMixto();
 });
 
 function ValidarPagoMixtoAntesDeCerrar() {
-	if (!$('#pagomixto').is(':checked')) {
+	var $ctx = $ctxMesaPago();
+	if (!$ctx.find('#pagomixto').is(':checked')) {
 		return true;
 	}
 	var filasOk = 0;
 	var suma = 0;
-	$('#filas-pago-mixto .fila-pago-mixto').each(function() {
+	$ctx.find('#filas-pago-mixto .fila-pago-mixto').each(function() {
 		var medio = $(this).find('.formapagove-mix').val();
 		var monto = parseFloat(String($(this).find('.montopago-mix').val() || '0').replace(',', '')) || 0;
 		if (medio && monto > 0) {
@@ -1488,14 +1592,14 @@ function ValidarPagoMixtoAntesDeCerrar() {
 		alert('En pago mixto debe indicar al menos 2 medios con monto.');
 		return false;
 	}
-	var total = parseFloat(String($('#txtTotall').val() || '0').replace(',', '')) || 0;
+	var total = parseFloat(String($ctx.find('#txtTotall').val() || $('#txtTotall').val() || '0').replace(',', '')) || 0;
 	if (Math.abs(suma - total) > 0.05) {
 		alert('La suma de los medios a cuenta (' + suma.toFixed(2) + ') debe ser igual al total de la cuenta (' + total.toFixed(2) + ').');
 		return false;
 	}
 	var ef = ObtenerMontosEfectivoMixto();
 	if (ef.hayEfectivo && ef.cuenta > 0) {
-		var recibido = parseFloat(String($('#montorecibido_mix_efectivo').val() || '0').replace(',', '')) || 0;
+		var recibido = parseFloat(String($ctx.find('#montopagado:enabled').val() || $ctx.find('#montopagado').val() || '0').replace(',', '')) || 0;
 		if (recibido + 0.001 < ef.cuenta) {
 			alert('El monto recibido en efectivo (' + recibido.toFixed(2) + ') no puede ser menor a la parte en efectivo de la cuenta (' + ef.cuenta.toFixed(2) + ').');
 			return false;
@@ -1508,40 +1612,37 @@ function ValidarPagoMixtoAntesDeCerrar() {
 
 // FUNCION PARA MOSTRAR FORMA DE PAGO PARA VENTAS
 function MuestraCambiosVentas(){
-    
-$('#muestracambiospagos').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
-var tipopagove = $("#tipopagove").val();
-var formapagove = $("#formapagove").val();
-var dataString = $("#ventas").serialize();
-var url = 'funciones.php?MuestraCambiosVentas=si';
+	var $ctx = (typeof $ctxMesaPago === 'function') ? $ctxMesaPago() : $('#ventas');
+	if ($ctx.find('#pagomixto').is(':checked')) {
+		if (typeof ActualizarSumaPagoMixto === 'function') {
+			ActualizarSumaPagoMixto();
+		}
+		return;
+	}
+	var $dest = $ctx.find('#pago-contado-cambio').length ? $ctx.find('#pago-contado-cambio') : $('#muestracambiospagos');
+	$dest.html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
+	var tipopagove = $("#tipopagove").val();
+	var formapagove = $("#formapagove").val();
+	var dataString = $("#ventas").serialize();
+	var url = 'funciones.php?MuestraCambiosVentas=si';
 
-        $.ajax({
-            type: "GET",
-      url: url,
-            data: dataString,
-            success: function(response) {            
-                $('#muestracambiospagos').empty();
-                $('#muestracambiospagos').append(''+response+'').fadeIn("slow");
-                $('#'+parent).remove();
-            }
-      });
+	$.ajax({
+		type: "GET",
+		url: url,
+		data: dataString,
+		success: function(response) {
+			$dest.empty();
+			$dest.append('' + response + '').fadeIn("slow");
+			$('#' + parent).remove();
+			if (typeof ActualizarVueltoDesdeMontoPagadoSimple === 'function') {
+				ActualizarVueltoDesdeMontoPagadoSimple();
+			}
+		}
+	});
 }
 
 //FUNCION PARA ACTUALIZAR IMPORTE EN DETALLE DE COMPRA DE PRODUCTOS
-$(document).ready(function (){
-          $('.calculodevolucion').keyup(function (){
-			
-			var montototal = $('input#txtTotall').val();
-		  var montopagado = $('input#montopagado').val();
-			var montodevuelto = $('input#montodevuelto').val();
-						
-			//REALIZO EL CALCULO Y MUESTRO LA DEVOLUCION
-			total=montopagado - montototal;
-			var original=parseFloat(total.toFixed(2));
-			$("#montodevuelto").val(original.toFixed(2));/**/
-			
-          });
-     });
+// (delegado en input.calculodevolucion — soporta recarga AJAX de la forma de pago)
 
 
 //FUNCIONES PARA LIMPIAR BUSQUEDA DE VENTAS
@@ -1761,10 +1862,7 @@ $(document).ready(function (){
 function EliminarDetalleVenta(codmesa,coddetalleventa,codcaja,tipopagove,idventa,codventa,codcliente,codproducto,cantventa,precioventa,ivaproducto,tipo,tipobusquedad,fecha) {
 
 var dataString = 'codmesa='+codmesa+'&coddetalleventa='+coddetalleventa+'&codcaja='+codcaja+'&tipopagove='+tipopagove+'&codventa='+codventa+'&codcliente='+codcliente+'&codproducto='+codproducto+'&cantventa='+cantventa+'&precioventa='+precioventa+'&ivaproducto='+ivaproducto+'&tipo='+tipo;
-var eliminar = confirm("ESTA SEGURO DE ELIMINAR ESTE DETALLE DE VENTA?")
-    
-        if ( eliminar ) { 
-        
+rsAsk("ESTA SEGURO DE ELIMINAR ESTE DETALLE DE VENTA?", function () {
         $.ajax({
             type: "GET",
             url: "eliminar.php",
@@ -1777,7 +1875,7 @@ $("#muestradetallesventas").load("funciones.php?BuscarDetallesVentas=si&tipobusq
                 $('#'+parent).remove();
             }
         });
-      }
+      }, { danger: true });
 }
 
 

@@ -76,19 +76,19 @@
         <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
         <link href="assets/css/icons.css" rel="stylesheet" type="text/css">
         <link href="assets/css/style.css" rel="stylesheet" type="text/css">
-        <link href="assets/css/mesas.css?v=3" rel="stylesheet" type="text/css">
+        <link href="assets/css/mesas.css?v=4" rel="stylesheet" type="text/css">
         <?php if (function_exists('sistema_brand_head_styles')) { sistema_brand_head_styles(); } ?>
         <!-- script jquery -->
         <script src="assets/js/jquery.min.js"></script> 
       <script type="text/javascript" src="assets/script/jquery.mask.js"></script>
         <script type="text/javascript" src="assets/script/titulos.js"></script>
-        <script type="text/javascript" src="assets/script/script2.js?v=editnav2"></script>
+        <script type="text/javascript" src="assets/script/script2.js?v=rsdialog1"></script>
         <script type="text/javascript" src="assets/script/jsventas.js"></script>
 <?php if (in_array($_SESSION['acceso'], array('mesero', 'cajero', 'administrador'), true)) { ?>
         <script type="text/javascript" src="assets/script/mesas-union.js"></script>
 <?php } ?>
         <script type="text/javascript" src="assets/script/validation.min.js"></script>
-        <script type="text/javascript" src="assets/script/script.js?v=arqueo-caja4"></script>
+        <script type="text/javascript" src="assets/script/script.js?v=pedido-adicional1"></script>
         <!-- Teclado observaciones: solo panel / crear orden -->
         <link rel="stylesheet" href="assets/css/teclado-obs-pedido.css?v=3">
         <script src="assets/script/teclado-obs-pedido.js?v=3"></script>
@@ -563,9 +563,7 @@ function refrescarListaDelivery(){
 	}
 }
 function TomarDelivery(codventa, tipo){
-	if (!confirm("Desea tomar este pedido de delivery? Quedara asignado a usted.")) {
-		return;
-	}
+	var runTomar = function () {
 	$('#entregadelivery').html('<center><img src="assets/images/loading.gif" width="30" height="30"/></center>');
 	$.ajax({
 		type: "GET",
@@ -577,6 +575,14 @@ function TomarDelivery(codventa, tipo){
 			setTimeout(function() { $("#entregadelivery").html(""); }, 5000);
 		}
 	});
+	};
+	if (typeof window.rsConfirm === 'function') {
+		window.rsConfirm("¿Desea tomar este pedido de delivery? Quedará asignado a usted.", "Confirmar").then(function (ok) {
+			if (ok) { runTomar(); }
+		});
+	} else if (confirm("Desea tomar este pedido de delivery? Quedara asignado a usted.")) {
+		runTomar();
+	}
 }
 $('document').ready(function() {
 	setTimeout(function run() {
